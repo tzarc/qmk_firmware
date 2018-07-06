@@ -5,7 +5,7 @@
 ps2avrGB based number-pad sold fully assembled by YMDK on Aliexpress.
 
 Keyboard Maintainer: [QMK Community](https://github.com/qmk)  
-Hardware Supported: Atmega32A
+Hardware Supported: Atmega32A  
 Hardware Availability: [AliExpress](https://www.aliexpress.com/item/21-Key-NPKC-Programmable-Cherry-MX-Kailh-Gateron-Switches-Mechanical-Keyboard-Numpad-Free-shipping/32812732361.html)
 
 Make example for this keyboard (after setting up your build environment):
