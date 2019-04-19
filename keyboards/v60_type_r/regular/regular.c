@@ -13,6 +13,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "v60_type_r.h"
+#include "regular.h"
 
 #include "quantum.h"
