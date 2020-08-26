@@ -83,6 +83,46 @@ ifeq ($(strip $(POINTING_DEVICE_ENABLE)), yes)
     SRC += $(QUANTUM_DIR)/pointing_device.c
 endif
 
+VALID_QUANTUM_PAINTER_DRIVERS := ili9341 ili9488
+QUANTUM_PAINTER_DRIVERS ?=
+ifneq ($(strip $(QUANTUM_PAINTER_DRIVERS)),)
+    OPT_DEFS += -DQUANTUM_PAINTER_ENABLE
+    COMMON_VPATH += \
+        $(LIB_PATH)/lzf \
+        $(QUANTUM_DIR)/painter \
+        $(DRIVER_PATH)/painter/fallback
+    SRC += \
+        $(LIB_PATH)/lzf/lzf_d.c \
+        $(QUANTUM_DIR)/painter/qp.c \
+        $(QUANTUM_DIR)/painter/qp_utils.c \
+        $(DRIVER_PATH)/painter/fallback/qp_fallback.c
+endif
+define handle_quantum_painter_driver
+    CURRENT_PAINTER_DRIVER := $1
+    ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341)
+        OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE
+        QUANTUM_LIB_SRC += spi_master.c
+        COMMON_VPATH += \
+            $(DRIVER_PATH)/painter/ili9xxx_common \
+            $(DRIVER_PATH)/painter/ili9341
+        SRC += \
+            $(DRIVER_PATH)/painter/ili9xxx_common/qp_ili9xxx.c \
+            $(DRIVER_PATH)/painter/ili9341/qp_ili9341.c
+    else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9488)
+        OPT_DEFS += -DQUANTUM_PAINTER_ILI9488_ENABLE
+        QUANTUM_LIB_SRC += spi_master.c
+        COMMON_VPATH += \
+            $(DRIVER_PATH)/painter/ili9xxx_common \
+            $(DRIVER_PATH)/painter/ili9488
+        SRC += \
+            $(DRIVER_PATH)/painter/ili9xxx_common/qp_ili9xxx.c \
+            $(DRIVER_PATH)/painter/ili9488/qp_ili9488.c
+    else
+        $$(error "$$(CURRENT_PAINTER_DRIVER)" is not a valid quantum painter driver)
+    endif
+endef
+$(foreach qp_driver,$(QUANTUM_PAINTER_DRIVERS),$(eval $(call handle_quantum_painter_driver,$(qp_driver))))
+
 VALID_EEPROM_DRIVER_TYPES := vendor custom transient i2c spi
 EEPROM_DRIVER ?= vendor
 ifeq ($(filter $(EEPROM_DRIVER),$(VALID_EEPROM_DRIVER_TYPES)),)
