@@ -33,21 +33,6 @@ bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_
             }
         }
     } else {
-    if (x0 == x1) {
-        // Vertical line
-        for (uint16_t y = y0; y <= y1; ++y) {
-            if (!qp_setpixel(device, x0, y, hue, sat, val)) {
-                return false;
-            }
-        }
-    } else if (y0 == y1) {
-        // Horizontal line
-        for (uint16_t x = x0; x <= x1; ++x) {
-            if (!qp_setpixel(device, x, y0, hue, sat, val)) {
-                return false;
-            }
-        }
-    } else {
         // draw angled line using Bresenham's algo
         // Note: if x0 or y0 is outside the drawable area, this will fail to draw any line
         uint16_t x = x0;
