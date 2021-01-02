@@ -17,7 +17,7 @@
 #include "qp_fallback.h"
 
 // Fallback implementation for drawing lines
-bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,   uint8_t hue, uint8_t sat, uint8_t val) {
+bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val) {
     if (x0 == x1) {
         // Vertical line
         for (uint16_t y = y0; y <= y1; ++y) {
