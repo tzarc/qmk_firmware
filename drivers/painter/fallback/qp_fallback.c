@@ -46,7 +46,7 @@ bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_
         uint16_t e2 = 2 * e;
 
         // draw the first pixel
-        while (x0 != x1 && y0 != y1) {
+        while (x != x1 && y != y1) {
             if (!qp_setpixel(device, x, y, hue, sat, val)) {
                 return false;
             }
