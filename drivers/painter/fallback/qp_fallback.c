@@ -33,7 +33,51 @@ bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_
             }
         }
     } else {
-        // TODO: Angled lines
+    if (x0 == x1) {
+        // Vertical line
+        for (uint16_t y = y0; y <= y1; ++y) {
+            if (!qp_setpixel(device, x0, y, hue, sat, val)) {
+                return false;
+            }
+        }
+    } else if (y0 == y1) {
+        // Horizontal line
+        for (uint16_t x = x0; x <= x1; ++x) {
+            if (!qp_setpixel(device, x, y0, hue, sat, val)) {
+                return false;
+            }
+        }
+    } else {
+        // draw angled line using Bresenham's algo
+        // Note: if x0 or y0 is outside the drawable area, this will fail to draw any line
+        uint16_t x = x0;
+        uint16_t y = y0;
+        uint16_t slopex = x0 < x1 ? 1 : -1;
+        uint16_t slopey = y0 < y1 ? 1 : -1;
+        uint16_t dx = abs(x1 - x0);
+        uint16_t dy = -abs(y1 - y0);
+
+        uint16_t e = dx + dy;
+        uint16_t e2 = 2 * e;
+
+        // draw the first pixel
+        while (x0 != x1 && y0 != y1) {
+            if (!qp_setpixel(device, x, y, hue, sat, val)) {
+                return false;
+            }
+            e2 = 2 * e;
+            if (e2 >= dy) {
+                e += dy;
+                x += slopex;
+            }
+            if (e2 <= dx) {
+                e += dx;
+                y += slopey;
+            }
+        }
+        if (!qp_setpixel(device, x, y, hue, sat, val)) {
+            return false;
+        }
     }
 
     return true;
