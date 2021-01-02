@@ -68,7 +68,6 @@ bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_
     return true;
 }
 
-
 // Fallback implementation for drawing rectangles
 bool qp_fallback_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
     if (filled) {
