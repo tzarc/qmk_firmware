@@ -34,7 +34,6 @@ bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_
         }
     } else {
         // draw angled line using Bresenham's algo
-        // Note: if x0 or y0 is outside the drawable area, this will fail to draw any line
         uint16_t x = x0;
         uint16_t y = y0;
         uint16_t slopex = x0 < x1 ? 1 : -1;
