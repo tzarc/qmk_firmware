@@ -95,3 +95,137 @@ bool qp_fallback_rect(painter_device_t device, uint16_t left, uint16_t top, uint
 
     return true;
 }
+
+// Fallback implementation for drawing circles
+bool qp_fallback_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+
+// plot the initial set of points for x, y and r
+    uint16_t xcalc, ycalc, err;
+    xcalc = 0;
+    ycalc = radius;
+    err = ((5 - (radius >> 2)) >> 2);
+
+    qp_fallback_circle_drawpixels(device, x, y, xcalc, ycalc, hue, sat, val, filled);
+    while (xcalc < ycalc) {
+        xcalc++;
+        if (err < 0) {
+            err += (xcalc << 1) + 1;
+        } else {
+            ycalc--;
+            err += ((xcalc - ycalc) << 1) + 1;
+        }
+        qp_fallback_circle_drawpixels(device, x, y, xcalc, ycalc, hue, sat, val, filled);
+    }
+
+    return true;
+}
+
+bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+
+    /*
+    Circles have the property of 8-way symmetry, so eight pixels can be drawn
+    for each computed [offsetx,offsety] given the center coordinates
+    represented by [centerx,centery].
+
+    For filled circles, we can draw horizontal lines between each pair of
+    pixels with the same final value of y.
+
+    Two special cases exist and have been optimized:
+    1) offsetx == offsety (the final point), makes half the coordinates
+    equivalent, so we can omit them (and the corresponding fill lines)
+    2) offsetx == 0 (the starting point) means that some horizontal lines
+    would be a single pixel in length, so we write individual pixels instead.
+    This also makes half the symmetrical points identical to their twins,
+    so we only need four points or tqo points and one line
+    */
+
+    if(offsetx == 0) {
+        if (!qp_setpixel(device, centerx, centery + offsety, hue, sat, val)) {
+            return false;
+        }
+        if (!qp_setpixel(device, centerx, centery - offsety, hue, sat, val)) {
+            return false;
+        }
+        if (filled) {
+            if (!qp_line(device, centerx + offsety, centery, centerx - offsety, centery, hue, sat, val)) {
+                return false;
+            }
+        } else {
+            if (!qp_setpixel(device, centerx + offsety, centery, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx - offsety, centery, hue, sat, val)) {
+                return false;
+            }
+        }
+    }
+    else if(offsetx == offsety)
+    {
+        if (filled) {
+            if (!qp_line(device, centerx + offsety, centery + offsety, centerx - offsety, centery + offsety, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_line(device, centerx + offsety, centery - offsety, centerx - offsety, centery - offsety, hue, sat, val)) {
+                return false;
+            }
+        }
+        else
+        {
+            if (!qp_setpixel(device, centerx + offsety, centery + offsety, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx - offsety, centery + offsety, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx + offsety, centery - offsety, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx - offsety, centery - offsety, hue, sat, val)) {
+                return false;
+            }
+        }
+
+    }else{
+        if (filled) {
+            if (!qp_line(device, centerx + offsetx, centery + offsety, centerx - offsetx, centery + offsety, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_line(device, centerx + offsetx, centery - offsety, centerx - offsetx, centery - offsety, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_line(device, centerx + offsety, centery + offsetx, centerx - offsety, centery + offsetx, hue, sat, val)) {
+            return false;
+            }
+            if (!qp_line(device, centerx + offsety, centery - offsetx, centerx - offsety, centery - offsetx, hue, sat, val)) {
+                return false;
+            }
+            }else{
+            if (!qp_setpixel(device, centerx + offsetx, centery + offsety, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx - offsetx, centery + offsety, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx + offsetx, centery - offsety, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx - offsetx, centery - offsety, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx + offsety, centery + offsetx, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx - offsety, centery + offsetx, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx + offsety, centery - offsetx, hue, sat, val)) {
+                return false;
+            }
+            if (!qp_setpixel(device, centerx - offsety, centery - offsetx, hue, sat, val)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
