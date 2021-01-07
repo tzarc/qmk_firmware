@@ -204,7 +204,9 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
             if (!qp_line(device, centerx + offsety, centery - offsetx, centerx - offsety, centery - offsetx, hue, sat, val)) {
                 return false;
             }
-            }else{
+        }
+        else
+        {
             if (!qp_setpixel(device, centerx + offsetx, centery + offsety, hue, sat, val)) {
                 return false;
             }
@@ -286,14 +288,25 @@ bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t x, uint16_
     uint16_t yy = y + dy;
     uint16_t yl = y - dy;
 
-    if (filled)
+    if (dx == 0)
     {
-
-        if (!qp_line(device, xx, yy, xx, yl, hue, sat, val))
+        if (!qp_setpixel(device, xx, yy, hue, sat, val))
         {
             return false;
         }
-        if (!qp_line(device, xl, yy, xl, yl, hue, sat, val))
+        if (!qp_setpixel(device, xx, yl, hue, sat, val))
+        {
+            return false;
+        }
+    }
+    else if (filled)
+    {
+
+        if (!qp_line(device, xx, yy, xl, yy, hue, sat, val))
+        {
+            return false;
+        }
+        if (!qp_line(device, xx, yl, xl, yl, hue, sat, val))
         {
             return false;
         }
