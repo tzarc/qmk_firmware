@@ -17,6 +17,9 @@
 #include <stdlib.h>
 #include "qp_fallback.h"
 
+/* internal function declaration */
+bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
+
 // Fallback implementation for drawing lines
 bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val) {
     if (x0 == x1) {
@@ -120,6 +123,7 @@ bool qp_fallback_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_
     return true;
 }
 
+// Utilize 8-way symmetry to draw circle
 bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
 
     /*
@@ -136,7 +140,7 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
     2) offsetx == 0 (the starting point) means that some horizontal lines
     would be a single pixel in length, so we write individual pixels instead.
     This also makes half the symmetrical points identical to their twins,
-    so we only need four points or tqo points and one line
+    so we only need four points or two points and one line
     */
 
     if(offsetx == 0) {
