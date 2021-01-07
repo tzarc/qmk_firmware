@@ -237,6 +237,7 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
     return true;
 }
 
+// Fallback implementation for drawing ellipses
 bool qp_fallback_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled)
 {
     uint16_t aa = sizex * sizex;
@@ -281,8 +282,20 @@ bool qp_fallback_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16
     return true;
 }
 
+// Utilize 4-way symmetry to draw an ellipse
 bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t x, uint16_t y, uint16_t dx, uint16_t dy, uint8_t hue, uint8_t sat, uint8_t val, bool filled)
 {
+    /*
+    Ellipses have the property of 4-way symmetry, so four pixels can be drawn
+    for each computed [dx,dy] given the center coordinates
+    represented by [x,y].
+
+    For filled ellipses, we can draw horizontal lines between each pair of
+    pixels with the same final value of y.
+
+    When dx == 0 only two pixels can be drawn for filled or unfilled ellipses
+    */
+
     uint16_t xx = x + dx;
     uint16_t xl = x - dx;
     uint16_t yy = y + dy;
@@ -306,7 +319,7 @@ bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t x, uint16_
         {
             return false;
         }
-        if (!qp_line(device, xx, yl, xl, yl, hue, sat, val))
+        if (dy > 0 && !qp_line(device, xx, yl, xl, yl, hue, sat, val))
         {
             return false;
         }
