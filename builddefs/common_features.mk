@@ -116,6 +116,12 @@ ifeq ($(strip $(STENO_ENABLE)), yes)
     endif
 endif
 
+ifeq ($(strip $(LUA_ENABLE)), yes)
+    OPT_DEFS += -DLUA_ENABLE -DMAKE_LIB
+    COMMON_VPATH += $(LIB_PATH)/lua
+    SRC += onelua.c
+endif
+
 ifeq ($(strip $(VIRTSER_ENABLE)), yes)
     OPT_DEFS += -DVIRTSER_ENABLE
 endif
