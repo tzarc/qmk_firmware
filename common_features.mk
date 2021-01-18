@@ -106,6 +106,12 @@ ifeq ($(strip $(MOUSEKEY_ENABLE)), yes)
     SRC += $(QUANTUM_DIR)/mousekey.c
 endif
 
+ifeq ($(strip $(LUA_ENABLE)), yes)
+    OPT_DEFS += -DLUA_ENABLE -DMAKE_LIB
+    COMMON_VPATH += $(LIB_PATH)/lua
+    SRC += onelua.c
+endif
+
 ifeq ($(strip $(POINTING_DEVICE_ENABLE)), yes)
     OPT_DEFS += -DPOINTING_DEVICE_ENABLE
     OPT_DEFS += -DMOUSE_ENABLE
