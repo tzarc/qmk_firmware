@@ -56,6 +56,8 @@ typedef bool (*painter_driver_pixdata_func)(painter_device_t driver, const void 
 typedef bool (*painter_driver_setpixel_func)(painter_device_t driver, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
 typedef bool (*painter_driver_line_func)(painter_device_t driver, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val);
 typedef bool (*painter_driver_rect_func)(painter_device_t driver, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
+typedef bool (*painter_driver_circle_func)(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
+typedef bool (*painter_driver_ellipse_func)(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
 typedef bool (*painter_driver_drawimage_func)(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val);
 
 // Driver base definition
@@ -68,5 +70,7 @@ struct painter_driver_t {
     painter_driver_setpixel_func  setpixel;
     painter_driver_line_func      line;
     painter_driver_rect_func      rect;
+    painter_driver_circle_func    circle;
+    painter_driver_ellipse_func   ellipse;
     painter_driver_drawimage_func drawimage;
 };
