@@ -83,6 +83,22 @@ bool qp_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t righ
     return false;
 }
 
+bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (driver->circle) {
+        return driver->circle(device, x, y, radius, hue, sat, val, filled);
+    }
+    return false;
+}
+
+bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (driver->ellipse) {
+        return driver->ellipse(device, x, y, sizex, sizey, hue, sat, val, filled);
+    }
+    return false;
+}
+
 bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image) { return qp_drawimage_recolor(device, x, y, image, 0, 0, 255); }
 
 bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue, uint8_t sat, uint8_t val) {
