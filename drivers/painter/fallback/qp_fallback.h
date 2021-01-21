@@ -27,3 +27,9 @@ bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_
 
 // Fallback method of drawing rects using lines
 bool qp_fallback_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
+
+// Fallback method of drawing circles using lines and/or pixels as needed
+bool qp_fallback_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
+
+// Fallback method of drawing ellipses using lines or pixels as needed
+bool qp_fallback_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
