@@ -39,17 +39,17 @@ bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_
         }
     } else {
         // draw angled line using Bresenham's algo
-        uint16_t x = x0;
-        uint16_t y = y0;
-        uint16_t slopex = x0 < x1 ? 1 : -1;
-        uint16_t slopey = y0 < y1 ? 1 : -1;
-        uint16_t dx = abs(x1 - x0);
-        uint16_t dy = -abs(y1 - y0);
+        int16_t x      = x0;
+        int16_t y      = y0;
+        int16_t slopex = x0 < x1 ? 1 : -1;
+        int16_t slopey = y0 < y1 ? 1 : -1;
+        int16_t dx     = abs(x1 - x0);
+        int16_t dy     = -abs(y1 - y0);
 
-        uint16_t e = dx + dy;
-        uint16_t e2 = 2 * e;
+        int16_t e  = dx + dy;
+        int16_t e2 = 2 * e;
 
-        while (x != x1 && y != y1) {
+        while (x != x1 || y != y1) {
             if (!qp_setpixel(device, x, y, hue, sat, val)) {
                 return false;
             }
@@ -102,12 +102,11 @@ bool qp_fallback_rect(painter_device_t device, uint16_t left, uint16_t top, uint
 
 // Fallback implementation for drawing circles
 bool qp_fallback_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
-
-// plot the initial set of points for x, y and r
-    uint16_t xcalc, ycalc, err;
+    // plot the initial set of points for x, y and r
+    int16_t xcalc, ycalc, err;
     xcalc = 0;
     ycalc = radius;
-    err = ((5 - (radius >> 2)) >> 2);
+    err   = ((5 - (radius >> 2)) >> 2);
 
     qp_fallback_circle_drawpixels(device, x, y, xcalc, ycalc, hue, sat, val, filled);
     while (xcalc < ycalc) {
@@ -126,7 +125,6 @@ bool qp_fallback_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_
 
 // Utilize 8-way symmetry to draw circle
 bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
-
     /*
     Circles have the property of 8-way symmetry, so eight pixels can be drawn
     for each computed [offsetx,offsety] given the center coordinates
@@ -144,7 +142,7 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
     so we only need four points or two points and one line
     */
 
-    if(offsetx == 0) {
+    if (offsetx == 0) {
         if (!qp_setpixel(device, centerx, centery + offsety, hue, sat, val)) {
             return false;
         }
@@ -163,9 +161,7 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
                 return false;
             }
         }
-    }
-    else if(offsetx == offsety)
-    {
+    } else if (offsetx == offsety) {
         if (filled) {
             if (!qp_line(device, centerx + offsety, centery + offsety, centerx - offsety, centery + offsety, hue, sat, val)) {
                 return false;
@@ -173,9 +169,7 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
             if (!qp_line(device, centerx + offsety, centery - offsety, centerx - offsety, centery - offsety, hue, sat, val)) {
                 return false;
             }
-        }
-        else
-        {
+        } else {
             if (!qp_setpixel(device, centerx + offsety, centery + offsety, hue, sat, val)) {
                 return false;
             }
@@ -190,7 +184,7 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
             }
         }
 
-    }else{
+    } else {
         if (filled) {
             if (!qp_line(device, centerx + offsetx, centery + offsety, centerx - offsetx, centery + offsety, hue, sat, val)) {
                 return false;
@@ -199,14 +193,12 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
                 return false;
             }
             if (!qp_line(device, centerx + offsety, centery + offsetx, centerx - offsety, centery + offsetx, hue, sat, val)) {
-            return false;
+                return false;
             }
             if (!qp_line(device, centerx + offsety, centery - offsetx, centerx - offsety, centery - offsetx, hue, sat, val)) {
                 return false;
             }
-        }
-        else
-        {
+        } else {
             if (!qp_setpixel(device, centerx + offsetx, centery + offsety, hue, sat, val)) {
                 return false;
             }
@@ -238,25 +230,21 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
 }
 
 // Fallback implementation for drawing ellipses
-bool qp_fallback_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled)
-{
-    uint16_t aa = sizex * sizex;
-    uint16_t bb = sizey * sizey;
-    uint16_t fa = 4 * aa;
-    uint16_t fb = 4 * bb;
+bool qp_fallback_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+    int16_t aa = ((int16_t)sizex) * ((int16_t)sizex);
+    int16_t bb = ((int16_t)sizey) * ((int16_t)sizey);
+    int16_t fa = 4 * ((int16_t)aa);
+    int16_t fb = 4 * ((int16_t)bb);
 
-    uint16_t dx = 0;
-    uint16_t dy = sizey;
+    int16_t dx = 0;
+    int16_t dy = sizey;
 
-    for (uint16_t delta = (2 * bb) + (aa * (1 - (2 * sizey))); bb * dx <= aa * dy; dx++)
-    {
-        if (!qp_fallback_ellipse_drawpixels(device, x, y, dx, dy, hue, sat, val, filled))
-        {
+    for (int16_t delta = (2 * bb) + (aa * (1 - (2 * sizey))); bb * dx <= aa * dy; dx++) {
+        if (!qp_fallback_ellipse_drawpixels(device, x, y, dx, dy, hue, sat, val, filled)) {
             return false;
         }
-        if(delta >= 0 )
-        {
-            delta += fa * (1 - dy) ;
+        if (delta >= 0) {
+            delta += fa * (1 - dy);
             dy--;
         }
         delta += bb * (4 * dx + 6);
@@ -265,14 +253,11 @@ bool qp_fallback_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16
     dx = sizex;
     dy = 0;
 
-    for (uint16_t delta = (2 * aa) + (bb * (1 - (2 * sizex))); aa * dy <= bb * dx; dy++)
-    {
-        if (!qp_fallback_ellipse_drawpixels(device, x, y, dx, dy, hue, sat, val, filled))
-        {
+    for (int16_t delta = (2 * aa) + (bb * (1 - (2 * sizex))); aa * dy <= bb * dx; dy++) {
+        if (!qp_fallback_ellipse_drawpixels(device, x, y, dx, dy, hue, sat, val, filled)) {
             return false;
         }
-        if (delta >= 0)
-        {
+        if (delta >= 0) {
             delta += fb * (1 - dx);
             dx--;
         }
@@ -283,8 +268,7 @@ bool qp_fallback_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16
 }
 
 // Utilize 4-way symmetry to draw an ellipse
-bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offestx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled)
-{
+bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offestx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
     /*
     Ellipses have the property of 4-way symmetry, so four pixels can be drawn
     for each computed [offsetx,offsety] given the center coordinates
@@ -296,50 +280,36 @@ bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t centerx, u
     When offsetx == 0 only two pixels can be drawn for filled or unfilled ellipses
     */
 
-    uint16_t xx = centerx + offestx;
-    uint16_t xl = centerx - offestx;
-    uint16_t yy = centery + offsety;
-    uint16_t yl = centery - offsety;
+    int16_t xx = centerx + offestx;
+    int16_t xl = centerx - offestx;
+    int16_t yy = centery + offsety;
+    int16_t yl = centery - offsety;
 
-    if (offestx == 0)
-    {
-        if (!qp_setpixel(device, xx, yy, hue, sat, val))
-        {
+    if (offestx == 0) {
+        if (!qp_setpixel(device, xx, yy, hue, sat, val)) {
             return false;
         }
-        if (!qp_setpixel(device, xx, yl, hue, sat, val))
-        {
+        if (!qp_setpixel(device, xx, yl, hue, sat, val)) {
             return false;
         }
-    }
-    else if (filled)
-    {
-
-        if (!qp_line(device, xx, yy, xl, yy, hue, sat, val))
-        {
+    } else if (filled) {
+        if (!qp_line(device, xx, yy, xl, yy, hue, sat, val)) {
             return false;
         }
-        if (offsety > 0 && !qp_line(device, xx, yl, xl, yl, hue, sat, val))
-        {
+        if (offsety > 0 && !qp_line(device, xx, yl, xl, yl, hue, sat, val)) {
             return false;
         }
-    }
-    else
-    {
-        if (!qp_setpixel(device, xx, yy, hue, sat, val))
-        {
+    } else {
+        if (!qp_setpixel(device, xx, yy, hue, sat, val)) {
             return false;
         }
-        if (!qp_setpixel(device, xx, yl, hue, sat, val))
-        {
+        if (!qp_setpixel(device, xx, yl, hue, sat, val)) {
             return false;
         }
-        if (!qp_setpixel(device, xl, yy, hue, sat, val))
-        {
+        if (!qp_setpixel(device, xl, yy, hue, sat, val)) {
             return false;
         }
-        if (!qp_setpixel(device, xl, yl, hue, sat, val))
-        {
+        if (!qp_setpixel(device, xl, yl, hue, sat, val)) {
             return false;
         }
     }
