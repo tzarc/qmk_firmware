@@ -276,6 +276,12 @@ bool qp_ili9xxx_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t
 bool qp_ili9xxx_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
 
+    // Cater for cases where people have submitted the coordinates backwards
+    uint16_t l = left < right ? left : right;
+    uint16_t r = left > right ? left : right;
+    uint16_t t = top < bottom ? top : bottom;
+    uint16_t b = top > bottom ? top : bottom;
+
     if (filled) {
         // Convert the color to RGB565
         rgb565_t clr = hsv_to_ili9xxx(hue, sat, val);
@@ -287,10 +293,10 @@ bool qp_ili9xxx_rect(painter_device_t device, uint16_t left, uint16_t top, uint1
         qp_ili9xxx_internal_lcd_start(lcd);
 
         // Configure where we're going to be rendering to
-        qp_ili9xxx_internal_lcd_viewport(lcd, left, top, right, bottom);
+        qp_ili9xxx_internal_lcd_viewport(lcd, l, t, r, b);
 
         // Transmit the data to the LCD in chunks
-        uint32_t remaining = (right - left + 1) * (bottom - top + 1);
+        uint32_t remaining = (r - l + 1) * (b - t + 1);
         while (remaining > 0) {
             uint32_t transmit = (remaining < ILI9XXX_PIXDATA_BUFSIZE ? remaining : ILI9XXX_PIXDATA_BUFSIZE);
             uint32_t bytes    = transmit * sizeof(rgb565_t);
@@ -300,16 +306,16 @@ bool qp_ili9xxx_rect(painter_device_t device, uint16_t left, uint16_t top, uint1
 
         qp_ili9xxx_internal_lcd_stop();
     } else {
-        if (!qp_ili9xxx_rect(device, left, top, right, top, hue, sat, val, true)) {
+        if (!qp_ili9xxx_rect(device, l, t, r, t, hue, sat, val, true)) {
             return false;
         }
-        if (!qp_ili9xxx_rect(device, left, bottom, right, bottom, hue, sat, val, true)) {
+        if (!qp_ili9xxx_rect(device, l, b, r, b, hue, sat, val, true)) {
             return false;
         }
-        if (!qp_ili9xxx_rect(device, left, top + 1, left, bottom - 1, hue, sat, val, true)) {
+        if (!qp_ili9xxx_rect(device, l, t + 1, l, b - 1, hue, sat, val, true)) {
             return false;
         }
-        if (!qp_ili9xxx_rect(device, right, top + 1, right, bottom - 1, hue, sat, val, true)) {
+        if (!qp_ili9xxx_rect(device, r, t + 1, r, b - 1, hue, sat, val, true)) {
             return false;
         }
     }
