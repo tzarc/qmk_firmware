@@ -268,7 +268,7 @@ bool qp_fallback_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16
 }
 
 // Utilize 4-way symmetry to draw an ellipse
-bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offestx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
     /*
     Ellipses have the property of 4-way symmetry, so four pixels can be drawn
     for each computed [offsetx,offsety] given the center coordinates
@@ -280,12 +280,12 @@ bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t centerx, u
     When offsetx == 0 only two pixels can be drawn for filled or unfilled ellipses
     */
 
-    int16_t xx = centerx + offestx;
-    int16_t xl = centerx - offestx;
+    int16_t xx = centerx + offsetx;
+    int16_t xl = centerx - offsetx;
     int16_t yy = centery + offsety;
     int16_t yl = centery - offsety;
 
-    if (offestx == 0) {
+    if (offsetx == 0) {
         if (!qp_setpixel(device, xx, yy, hue, sat, val)) {
             return false;
         }
