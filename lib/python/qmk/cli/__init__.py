@@ -61,6 +61,7 @@ subcommands = [
     'qmk.cli.multibuild',
     'qmk.cli.new.keyboard',
     'qmk.cli.new.keymap',
+    'qmk.cli.painter',
     'qmk.cli.pyformat',
     'qmk.cli.pytest',
 ]
