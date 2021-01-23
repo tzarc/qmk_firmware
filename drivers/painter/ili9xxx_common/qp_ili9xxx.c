@@ -105,8 +105,11 @@ HSV             hsv_lookup_table[16];
 static rgb565_t rgb565_palette[16];
 #endif
 
+#ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
 // Static buffer used for decompression
 static uint8_t decompressed_buf[QUANTUM_PAINTER_COMPRESSED_CHUNK_SIZE];
+#endif  // QUANTUM_PAINTER_COMPRESSION_ENABLE
+
 // Static buffer used for transmitting image data
 static rgb565_t pixdata_transmit_buf[ILI9XXX_PIXDATA_BUFSIZE];
 
@@ -333,6 +336,7 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
 
     uint32_t pixel_count = (((uint32_t)image->width) * image->height);
     if (image->compression == IMAGE_COMPRESSED_LZF) {
+#ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
         const painter_compressed_image_descriptor_t *comp_image_desc = (const painter_compressed_image_descriptor_t *)image;
         for (uint16_t i = 0; i < comp_image_desc->chunk_count; ++i) {
             // Check if we're the last chunk
@@ -358,6 +362,10 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
                 pixel_count -= pixels_this_loop;
             }
         }
+#else
+        qp_ili9xxx_internal_lcd_stop();
+        return false;
+#endif  // QUANTUM_PAINTER_COMPRESSION_ENABLE
     } else if (image->compression == IMAGE_UNCOMPRESSED) {
         const painter_raw_image_descriptor_t *raw_image_desc = (const painter_raw_image_descriptor_t *)image;
         // Stream data to the LCD

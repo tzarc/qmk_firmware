@@ -6,4 +6,6 @@ dotty-dict
 hjson
 jsonschema
 milc
+pillow
 pygments
+python-lzf
