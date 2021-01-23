@@ -25,6 +25,7 @@ from . import lint
 from . import list
 from . import kle2json
 from . import new
+from . import painter
 from . import pyformat
 from . import pytest
 
