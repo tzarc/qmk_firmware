@@ -32,6 +32,10 @@ def _check_modules(requirements):
             # Not every module is importable by its own name.
             if module['name'] == "pep8-naming":
                 module['import'] = "pep8ext_naming"
+            if module['name'] == "pillow":
+                module['import'] = "PIL"
+            if module['name'] == "python-lzf":
+                module['import'] = "lzf"
 
             if not find_spec(module['import']):
                 print('Could not find module %s!' % module['name'])

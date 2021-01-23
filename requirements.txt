@@ -5,4 +5,6 @@ colorama
 hjson
 jsonschema
 milc
+pillow
 pygments
+python-lzf
