@@ -2,7 +2,7 @@
 """
 import math
 import lzf
-from PIL import Image, ImageFont
+from PIL import Image, ImageFont, ImageOps
 
 
 def rescale_byte(val, maxval):
@@ -55,7 +55,7 @@ def palettize_image(im, ncolors, mono=False):
             if byte_offset < image_bytes_len:
                 if mono:
                     # If mono, each input byte is a grayscale [0,255] pixel -- rescale to the range we want then pack together
-                    byte = byte | (rescale(image_bytes[byte_offset], ncolors - 1) << int(n * shifter))
+                    byte = byte | (rescale_byte(image_bytes[byte_offset], ncolors - 1) << int(n * shifter))
                 else:
                     # If color, each input byte is the index into the colour palette -- pack them together
                     byte = byte | ((image_bytes[byte_offset] & (ncolors - 1)) << int(n * shifter))
@@ -81,4 +81,20 @@ def image_to_rgb565(im):
         rgb565array.append((rgb565 >> 8) & 0xFF)
         rgb565array.append(rgb565 & 0xFF)
 
-    return rgb565array
+    return ([], rgb565array)
+
+
+def compress_data(chunksize, data):
+    compressed_data = []
+    offsets = []
+    sizes = []
+    raw_data = data.copy()
+    while len(raw_data) > 0:
+        chunk_size = min(chunksize, len(raw_data))
+        chunk = raw_data[0:chunk_size]
+        raw_data = raw_data[chunk_size:]
+        compressed = lzf.compress(bytes(chunk), int(len(chunk) * 2))
+        offsets.append(len(compressed_data))  # keep track of where this chunk starts
+        sizes.append(len(compressed))  # keep track of this chunk size
+        compressed_data.extend(compressed)  # append the chunk data to the overall compressed data
+    return (compressed_data, offsets, sizes)
