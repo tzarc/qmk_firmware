@@ -144,73 +144,56 @@ compressed_chunk_offset_line_template = """\
 
 valid_formats = {
     'rgb565': {
+        'image_format': 'IMAGE_FORMAT_RGB565',
         'bpp': 16,
-        'uncompressed_source_template': None,
-        'compressed_source_template': None,
     },
     'pal256': {
         'image_format': 'IMAGE_FORMAT_PALETTE',
         'bpp': 8,
         'has_palette': True,
         'num_colors': 256,
-        'uncompressed_source_template': uncompressed_source_file_template,
-        'compressed_source_template': compressed_source_file_template,
     },
     'pal16': {
         'image_format': 'IMAGE_FORMAT_PALETTE',
         'bpp': 4,
         'has_palette': True,
         'num_colors': 16,
-        'uncompressed_source_template': uncompressed_source_file_template,
-        'compressed_source_template': compressed_source_file_template,
     },
     'pal4': {
         'image_format': 'IMAGE_FORMAT_PALETTE',
         'bpp': 2,
         'has_palette': True,
         'num_colors': 4,
-        'uncompressed_source_template': uncompressed_source_file_template,
-        'compressed_source_template': compressed_source_file_template,
     },
     'pal2': {
         'image_format': 'IMAGE_FORMAT_PALETTE',
         'bpp': 1,
         'has_palette': True,
         'num_colors': 2,
-        'uncompressed_source_template': uncompressed_source_file_template,
-        'compressed_source_template': compressed_source_file_template,
     },
     'mono256': {
         'image_format': 'IMAGE_FORMAT_GRAYSCALE',
         'bpp': 8,
         'has_palette': False,
         'num_colors': 256,
-        'uncompressed_source_template': uncompressed_source_file_template,
-        'compressed_source_template': compressed_source_file_template,
     },
     'mono16': {
         'image_format': 'IMAGE_FORMAT_GRAYSCALE',
         'bpp': 4,
         'has_palette': False,
         'num_colors': 16,
-        'uncompressed_source_template': uncompressed_source_file_template,
-        'compressed_source_template': compressed_source_file_template,
     },
     'mono4': {
         'image_format': 'IMAGE_FORMAT_GRAYSCALE',
         'bpp': 2,
         'has_palette': False,
         'num_colors': 4,
-        'uncompressed_source_template': uncompressed_source_file_template,
-        'compressed_source_template': compressed_source_file_template,
     },
     'mono2': {
         'image_format': 'IMAGE_FORMAT_GRAYSCALE',
         'bpp': 1,
         'has_palette': False,
         'num_colors': 2,
-        'uncompressed_source_template': uncompressed_source_file_template,
-        'compressed_source_template': compressed_source_file_template,
     }
 }
 
@@ -278,7 +261,7 @@ def render_source(format, palette, image_data, width, height, compress, chunksiz
                 'chunk_index': '{0:3d}'.format(n),
                 'offset': '{0:6d}'.format(offsets[n]),
                 'compressed_size': '{0:6d}'.format(sizes[n]),
-                'perc_of_uncompressed_size': '{0:.2f}%'.format(100 * sizes[n] / chunksize),
+                'perc_of_uncompressed_size': '{0:6.2f}%'.format(100 * sizes[n] / chunksize),
                 'chunk_size': chunksize,
             })
         subs.update({
@@ -295,7 +278,7 @@ def render_source(format, palette, image_data, width, height, compress, chunksiz
     else:
         subs.update({'byte_count': len(image_data), 'bytes_lines': render_bytes(image_data, subs)})
 
-    source_src = Template(format['compressed_source_template'] if cli.args.compress else format['uncompressed_source_template'])
+    source_src = Template(compressed_source_file_template if cli.args.compress else uncompressed_source_file_template)
     return source_src.substitute(subs)
 
 
