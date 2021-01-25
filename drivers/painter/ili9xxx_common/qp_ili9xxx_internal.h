@@ -46,7 +46,7 @@ typedef uint16_t rgb565_t;
 bool qp_ili9xxx_clear(painter_device_t device);
 bool qp_ili9xxx_power(painter_device_t device, bool power_on);
 bool qp_ili9xxx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
-bool qp_ili9xxx_pixdata(painter_device_t device, const void *pixel_data, uint32_t byte_count);
+bool qp_ili9xxx_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count);
 bool qp_ili9xxx_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
 bool qp_ili9xxx_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val);
 bool qp_ili9xxx_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
