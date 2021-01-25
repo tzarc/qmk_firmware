@@ -51,10 +51,10 @@ bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t 
     return false;
 }
 
-bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t byte_count) {
+bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (driver->pixdata) {
-        return driver->pixdata(device, pixel_data, byte_count);
+        return driver->pixdata(device, pixel_data, native_pixel_count);
     }
     return false;
 }
