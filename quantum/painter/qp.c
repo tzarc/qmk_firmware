@@ -77,8 +77,15 @@ bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uin
 
 bool qp_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+
+    // Cater for cases where people have submitted the coordinates backwards
+    uint16_t l = left < right ? left : right;
+    uint16_t r = left > right ? left : right;
+    uint16_t t = top < bottom ? top : bottom;
+    uint16_t b = top > bottom ? top : bottom;
+
     if (driver->rect) {
-        return driver->rect(device, left, top, right, bottom, hue, sat, val, filled);
+        return driver->rect(device, l, t, r, b, hue, sat, val, filled);
     }
     return false;
 }
