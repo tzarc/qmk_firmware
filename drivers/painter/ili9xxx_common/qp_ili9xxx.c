@@ -309,18 +309,10 @@ bool qp_ili9xxx_rect(painter_device_t device, uint16_t left, uint16_t top, uint1
 
         qp_ili9xxx_internal_lcd_stop();
     } else {
-        if (!qp_ili9xxx_rect(device, l, t, r, t, hue, sat, val, true)) {
-            return false;
-        }
-        if (!qp_ili9xxx_rect(device, l, b, r, b, hue, sat, val, true)) {
-            return false;
-        }
-        if (!qp_ili9xxx_rect(device, l, t + 1, l, b - 1, hue, sat, val, true)) {
-            return false;
-        }
-        if (!qp_ili9xxx_rect(device, r, t + 1, r, b - 1, hue, sat, val, true)) {
-            return false;
-        }
+        if (!qp_ili9xxx_rect(device, l, t, r, t, hue, sat, val, true)) return false;
+        if (!qp_ili9xxx_rect(device, l, b, r, b, hue, sat, val, true)) return false;
+        if (!qp_ili9xxx_rect(device, l, t + 1, l, b - 1, hue, sat, val, true)) return false;
+        if (!qp_ili9xxx_rect(device, r, t + 1, r, b - 1, hue, sat, val, true)) return false;
     }
 
     return true;
