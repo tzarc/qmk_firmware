@@ -26,7 +26,6 @@
 typedef struct painter_raw_image_descriptor_t {
     const painter_image_descriptor_t base;
     const uint32_t                   byte_count;     // number of bytes in the image
-    const uint8_t                    image_bpp;      // image depth
     const uint8_t *const             image_palette;  // pointer to the image data
     const uint8_t *const             image_data;     // pointer to the image data
 } painter_raw_image_descriptor_t;
@@ -34,7 +33,6 @@ typedef struct painter_raw_image_descriptor_t {
 // Compressed image descriptor
 typedef struct painter_compressed_image_descriptor_t {
     const painter_image_descriptor_t base;
-    const uint8_t                    image_bpp;        // image depth
     const uint8_t *const             image_palette;    // pointer to the image data
     const uint16_t                   chunk_count;      // number of chunks
     const uint16_t                   chunk_size;       // size of the base chunk -- the last one will usually be smaller and needs to be determined from compressed_size
@@ -52,7 +50,7 @@ typedef bool (*painter_driver_init_func)(painter_device_t driver, painter_rotati
 typedef bool (*painter_driver_clear_func)(painter_device_t driver);
 typedef bool (*painter_driver_power_func)(painter_device_t driver, bool power_on);
 typedef bool (*painter_driver_viewport_func)(painter_device_t driver, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
-typedef bool (*painter_driver_pixdata_func)(painter_device_t driver, const void *pixel_data, uint32_t byte_count);
+typedef bool (*painter_driver_pixdata_func)(painter_device_t driver, const void *pixel_data, uint32_t native_pixel_count);
 typedef bool (*painter_driver_setpixel_func)(painter_device_t driver, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
 typedef bool (*painter_driver_line_func)(painter_device_t driver, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val);
 typedef bool (*painter_driver_rect_func)(painter_device_t driver, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
