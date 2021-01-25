@@ -72,11 +72,11 @@ ${bytes_lines}
 static const painter_raw_image_descriptor_t gfx_${sane_name}_raw PROGMEM = {
     .base = {
         .image_format = ${image_format},
+        .image_bpp    = ${image_bpp},
         .compression  = IMAGE_UNCOMPRESSED,
         .width        = ${image_width},
         .height       = ${image_height}
     },
-    .image_bpp     = ${image_bpp},
     .image_palette = ${palette_ptr},
     .byte_count    = ${byte_count},
     .image_data    = gfx_${sane_name}_data,
@@ -118,11 +118,11 @@ ${bytes_lines}
 static const painter_compressed_image_descriptor_t gfx_${sane_name}_compressed PROGMEM = {
     .base = {
         .image_format = ${image_format},
+        .image_bpp    = ${image_bpp},
         .compression  = IMAGE_COMPRESSED_LZF,
         .width        = ${image_width},
         .height       = ${image_height}
     },
-    .image_bpp       = ${image_bpp},
     .image_palette   = ${palette_ptr},
     .chunk_count     = ${chunk_count},
     .chunk_size      = ${chunk_size},
