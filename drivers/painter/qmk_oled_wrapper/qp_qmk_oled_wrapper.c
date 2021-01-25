@@ -66,22 +66,22 @@ void translate_pixel_location(qmk_oled_painter_device_t *oled, uint16_t *x, uint
             // No change
             break;
         case QP_ROTATION_90: {
-            int new_x = *y;
-            int new_y = *x;
-            *x        = new_x;
-            *y        = new_y;
+            uint16_t new_x = (OLED_DISPLAY_WIDTH) - (*y) - 1;
+            uint16_t new_y = *x;
+            *x             = new_x;
+            *y             = new_y;
         } break;
         case QP_ROTATION_180: {
-            int new_x = (OLED_DISPLAY_HEIGHT) - *x - 1;
-            int new_y = (OLED_DISPLAY_WIDTH) - *y - 1;
-            *x        = new_x;
-            *y        = new_y;
+            uint16_t new_x = (OLED_DISPLAY_WIDTH) - (*x) - 1;
+            uint16_t new_y = (OLED_DISPLAY_HEIGHT) - (*y) - 1;
+            *x             = new_x;
+            *y             = new_y;
         } break;
         case QP_ROTATION_270: {
-            int new_x = *y;
-            int new_y = *x;
-            *x        = new_x;
-            *y        = new_y;
+            uint16_t new_x = *y;
+            uint16_t new_y = (OLED_DISPLAY_HEIGHT) - (*x) - 1;
+            *x             = new_x;
+            *y             = new_y;
         } break;
     }
 }
