@@ -42,6 +42,7 @@ typedef struct painter_image_descriptor_t {
     const painter_compression_t  compression;
     const uint16_t               width;
     const uint16_t               height;
+    const uint8_t                image_bpp;
 } painter_image_descriptor_t;
 typedef const painter_image_descriptor_t *painter_image_t;
 
@@ -62,7 +63,7 @@ bool qp_power(painter_device_t device, bool power_on);
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
 
 // Stream pixel data in the device's native format into the previously-set viewport
-bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t byte_count);
+bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count);
 
 // Set a specific pixel
 bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);

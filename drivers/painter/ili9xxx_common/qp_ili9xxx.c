@@ -92,7 +92,7 @@ void qp_ili9xxx_internal_lcd_viewport(ili9xxx_painter_device_t *lcd, uint16_t xb
 //       sizes than the normal stack frames would allow, and as such need to be external.
 //
 //       **** DO NOT refactor this and decide to place the variables inside the function calling them -- you will ****
-//       **** very likely get artifacts rendered to the LCD screen as a result.                                   ****
+//       **** very likely get artifacts rendered to the screen as a result.                                       ****
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -235,12 +235,12 @@ bool qp_ili9xxx_viewport(painter_device_t device, uint16_t left, uint16_t top, u
 }
 
 // Stream pixel data to the current write position in GRAM
-bool qp_ili9xxx_pixdata(painter_device_t device, const void *pixel_data, uint32_t byte_count) {
+bool qp_ili9xxx_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     qp_ili9xxx_internal_lcd_start(lcd);
 
     // Stream data to the LCD
-    qp_ili9xxx_internal_lcd_sendbuf(lcd, pixel_data, byte_count);
+    qp_ili9xxx_internal_lcd_sendbuf(lcd, pixel_data, native_pixel_count * sizeof(uint16_t));
 
     qp_ili9xxx_internal_lcd_stop();
 
@@ -345,12 +345,12 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
                 qp_ili9xxx_internal_lcd_sendbuf(lcd, decompressed_buf, decompressed_size);
                 pixel_count -= decompressed_size / 2;
             } else if (image->image_format == IMAGE_FORMAT_GRAYSCALE) {
-                uint32_t pixels_this_loop = last_chunk ? pixel_count : (comp_image_desc->chunk_size * 8 / comp_image_desc->image_bpp);
-                lcd_send_mono_pixdata_recolor(lcd, comp_image_desc->image_bpp, pixels_this_loop, decompressed_buf, decompressed_size, hue, sat, val, hue, sat, 0);
+                uint32_t pixels_this_loop = last_chunk ? pixel_count : (comp_image_desc->chunk_size * 8 / comp_image_desc->base.image_bpp);
+                lcd_send_mono_pixdata_recolor(lcd, comp_image_desc->base.image_bpp, pixels_this_loop, decompressed_buf, decompressed_size, hue, sat, val, hue, sat, 0);
                 pixel_count -= pixels_this_loop;
             } else if (image->image_format == IMAGE_FORMAT_PALETTE) {
-                uint32_t pixels_this_loop = last_chunk ? pixel_count : (comp_image_desc->chunk_size * 8 / comp_image_desc->image_bpp);
-                lcd_send_palette_pixdata(lcd, comp_image_desc->image_palette, comp_image_desc->image_bpp, pixels_this_loop, decompressed_buf, decompressed_size);
+                uint32_t pixels_this_loop = last_chunk ? pixel_count : (comp_image_desc->chunk_size * 8 / comp_image_desc->base.image_bpp);
+                lcd_send_palette_pixdata(lcd, comp_image_desc->image_palette, comp_image_desc->base.image_bpp, pixels_this_loop, decompressed_buf, decompressed_size);
                 pixel_count -= pixels_this_loop;
             }
         }
@@ -366,10 +366,10 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
             qp_ili9xxx_internal_lcd_sendbuf(lcd, raw_image_desc->image_data, raw_image_desc->byte_count);
         } else if (image->image_format == IMAGE_FORMAT_GRAYSCALE) {
             // Supplied pixel data is in 4bpp monochrome -- decode it to the equivalent pixel data
-            lcd_send_mono_pixdata_recolor(lcd, raw_image_desc->image_bpp, pixel_count, raw_image_desc->image_data, raw_image_desc->byte_count, hue, sat, val, hue, sat, 0);
+            lcd_send_mono_pixdata_recolor(lcd, raw_image_desc->base.image_bpp, pixel_count, raw_image_desc->image_data, raw_image_desc->byte_count, hue, sat, val, hue, sat, 0);
         } else if (image->image_format == IMAGE_FORMAT_PALETTE) {
             // Supplied pixel data is in 1bpp monochrome -- decode it to the equivalent pixel data
-            lcd_send_palette_pixdata(lcd, raw_image_desc->image_palette, raw_image_desc->image_bpp, pixel_count, raw_image_desc->image_data, raw_image_desc->byte_count);
+            lcd_send_palette_pixdata(lcd, raw_image_desc->image_palette, raw_image_desc->base.image_bpp, pixel_count, raw_image_desc->image_data, raw_image_desc->byte_count);
         }
     }
 
