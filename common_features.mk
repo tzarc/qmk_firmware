@@ -129,7 +129,7 @@ endif
 
 QUANTUM_PAINTER_ENABLE ?= no
 QUANTUM_PAINTER_COMPRESSION_ENABLE ?= yes
-VALID_QUANTUM_PAINTER_DRIVERS := ili9341 ili9488
+VALID_QUANTUM_PAINTER_DRIVERS := qmk_oled_wrapper ili9341 ili9488
 QUANTUM_PAINTER_DRIVERS ?=
 ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
     OPT_DEFS += -DQUANTUM_PAINTER_ENABLE
@@ -154,7 +154,12 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
 
     define handle_quantum_painter_driver
         CURRENT_PAINTER_DRIVER := $1
-        ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341)
+        ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),qmk_oled_wrapper)
+            OPT_DEFS += -DQUANTUM_PAINTER_QMK_OLED_WRAPPER_ENABLE
+            OLED_DRIVER_ENABLE = yes
+            COMMON_VPATH += $(DRIVER_PATH)/painter/qmk_oled_wrapper
+            SRC += $(DRIVER_PATH)/painter/qmk_oled_wrapper/qp_qmk_oled_wrapper.c
+        else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341)
             OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE
             QUANTUM_LIB_SRC += spi_master.c
             COMMON_VPATH += \
