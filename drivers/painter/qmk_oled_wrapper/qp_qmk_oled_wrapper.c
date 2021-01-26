@@ -175,24 +175,14 @@ bool qp_qmk_oled_wrapper_drawimage(painter_device_t device, uint16_t x, uint16_t
 #ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
         const painter_compressed_image_descriptor_t *comp_image_desc = (const painter_compressed_image_descriptor_t *)image;
 
-        struct decode_state {
-            qmk_oled_painter_device_t *                  oled;
-            const painter_compressed_image_descriptor_t *image;
-            uint32_t                                     pixels_left;
-        } decoder_state;
-
-        void stream_cb(void *arg, uint16_t chunk_index, const uint8_t *const decoded_bytes, uint32_t byte_count) {
-            struct decode_state *state            = (struct decode_state *)arg;
-            bool                 last_chunk       = (chunk_index == (state->image->chunk_count - 1));
-            uint32_t             pixels_this_loop = last_chunk ? state->pixels_left : (state->image->chunk_size * 8 / state->image->base.image_bpp);
+        void decode_cb(void *arg, uint16_t chunk_index, const uint8_t *const decoded_bytes, uint32_t byte_count) {
+            bool     last_chunk       = (chunk_index == (comp_image_desc->chunk_count - 1));
+            uint32_t pixels_this_loop = last_chunk ? pixel_count : (comp_image_desc->chunk_size * 8 / comp_image_desc->base.image_bpp);
             stream_pixdata(oled, decoded_bytes, pixels_this_loop);
-            state->pixels_left -= pixels_this_loop;
+            pixel_count -= pixels_this_loop;
         }
 
-        decoder_state.oled        = oled;
-        decoder_state.image       = comp_image_desc;
-        decoder_state.pixels_left = pixel_count;
-        qp_decode_chunks(comp_image_desc->compressed_data, comp_image_desc->compressed_size, comp_image_desc->chunk_offsets, comp_image_desc->chunk_count, &decoder_state, stream_cb);
+        qp_decode_chunks(comp_image_desc->compressed_data, comp_image_desc->compressed_size, comp_image_desc->chunk_offsets, comp_image_desc->chunk_count, NULL, decode_cb);
 #else
         return false;
 #endif  // QUANTUM_PAINTER_COMPRESSION_ENABLE
