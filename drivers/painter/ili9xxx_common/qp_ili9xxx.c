@@ -105,11 +105,6 @@ HSV             hsv_lookup_table[16];
 static rgb565_t rgb565_palette[16];
 #endif
 
-#ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
-// Static buffer used for decompression
-static uint8_t decompressed_buf[QUANTUM_PAINTER_COMPRESSED_CHUNK_SIZE];
-#endif  // QUANTUM_PAINTER_COMPRESSION_ENABLE
-
 // Static buffer used for transmitting image data
 static rgb565_t pixdata_transmit_buf[ILI9XXX_PIXDATA_BUFSIZE];
 
@@ -330,30 +325,38 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
     if (image->compression == IMAGE_COMPRESSED_LZF) {
 #ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
         const painter_compressed_image_descriptor_t *comp_image_desc = (const painter_compressed_image_descriptor_t *)image;
-        for (uint16_t i = 0; i < comp_image_desc->chunk_count; ++i) {
-            // Check if we're the last chunk
-            bool last_chunk = (i == (comp_image_desc->chunk_count - 1));
-            // Work out the current chunk size
-            uint32_t compressed_size = last_chunk ? (comp_image_desc->compressed_size - comp_image_desc->chunk_offsets[i])        // last chunk
-                                                  : (comp_image_desc->chunk_offsets[i + 1] - comp_image_desc->chunk_offsets[i]);  // any other chunk
-            // Decode the image data
-            uint32_t decompressed_size = qp_decode(&comp_image_desc->compressed_data[comp_image_desc->chunk_offsets[i]], compressed_size, decompressed_buf, sizeof(decompressed_buf));
 
-            // Stream data to the LCD
-            if (image->image_format == IMAGE_FORMAT_RAW || image->image_format == IMAGE_FORMAT_RGB565) {
-                // The pixel data is in the correct format already -- send it directly to the device
-                qp_ili9xxx_internal_lcd_sendbuf(lcd, decompressed_buf, decompressed_size);
-                pixel_count -= decompressed_size / 2;
-            } else if (image->image_format == IMAGE_FORMAT_GRAYSCALE) {
-                uint32_t pixels_this_loop = last_chunk ? pixel_count : (comp_image_desc->chunk_size * 8 / comp_image_desc->base.image_bpp);
-                lcd_send_mono_pixdata_recolor(lcd, comp_image_desc->base.image_bpp, pixels_this_loop, decompressed_buf, decompressed_size, hue, sat, val, hue, sat, 0);
-                pixel_count -= pixels_this_loop;
-            } else if (image->image_format == IMAGE_FORMAT_PALETTE) {
-                uint32_t pixels_this_loop = last_chunk ? pixel_count : (comp_image_desc->chunk_size * 8 / comp_image_desc->base.image_bpp);
-                lcd_send_palette_pixdata(lcd, comp_image_desc->image_palette, comp_image_desc->base.image_bpp, pixels_this_loop, decompressed_buf, decompressed_size);
-                pixel_count -= pixels_this_loop;
+        struct decode_state {
+            ili9xxx_painter_device_t *                   lcd;
+            const painter_compressed_image_descriptor_t *image;
+            uint32_t                                     pixels_left;
+            uint8_t                                      hue;
+            uint8_t                                      sat;
+            uint8_t                                      val;
+        } decoder_state;
+
+        void stream_cb(void *arg, uint16_t chunk_index, const uint8_t *const decoded_bytes, uint32_t byte_count) {
+            struct decode_state *state            = (struct decode_state *)arg;
+            bool                 last_chunk       = (chunk_index == (state->image->chunk_count - 1));
+            uint32_t             pixels_this_loop = last_chunk ? state->pixels_left : (state->image->chunk_size * 8 / state->image->base.image_bpp);
+
+            if (state->image->base.image_format == IMAGE_FORMAT_RAW || state->image->base.image_format == IMAGE_FORMAT_RGB565) {
+                qp_ili9xxx_internal_lcd_sendbuf(state->lcd, decoded_bytes, byte_count);
+            } else if (state->image->base.image_format == IMAGE_FORMAT_GRAYSCALE) {
+                lcd_send_mono_pixdata_recolor(state->lcd, state->image->base.image_bpp, pixels_this_loop, decoded_bytes, byte_count, state->hue, state->sat, state->val, state->hue, state->sat, 0);
+            } else if (state->image->base.image_format == IMAGE_FORMAT_PALETTE) {
+                lcd_send_palette_pixdata(state->lcd, state->image->image_palette, state->image->base.image_bpp, pixels_this_loop, decoded_bytes, byte_count);
             }
+            state->pixels_left -= pixels_this_loop;
         }
+
+        decoder_state.lcd         = lcd;
+        decoder_state.image       = comp_image_desc;
+        decoder_state.pixels_left = pixel_count;
+        decoder_state.hue         = hue;
+        decoder_state.sat         = sat;
+        decoder_state.val         = val;
+        qp_decode_chunks(comp_image_desc->compressed_data, comp_image_desc->compressed_size, comp_image_desc->chunk_offsets, comp_image_desc->chunk_count, &decoder_state, stream_cb);
 #else
         qp_ili9xxx_internal_lcd_stop();
         return false;

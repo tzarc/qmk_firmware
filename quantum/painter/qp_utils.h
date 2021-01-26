@@ -35,7 +35,9 @@
 
 #ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
 // Decodes a compressed chunk of data
-uint32_t qp_decode(const void* const input_buffer, const uint32_t input_size, void* output_buffer, const uint32_t output_size);
+uint32_t qp_decode(const uint8_t* const input_buffer, const uint32_t input_size, void* output_buffer, const uint32_t output_size);
+// Progressively decode chunks of data, invoking the callback for each decoded chunk
+void qp_decode_chunks(const uint8_t* const compressed_data, uint32_t compressed_size, const uint32_t* const chunk_offsets, uint16_t chunk_count, void* cb_arg, void (*callback)(void* arg, uint16_t chunk_index, const uint8_t* const decoded_bytes, uint32_t byte_count));
 #endif  // QUANTUM_PAINTER_COMPRESSION_ENABLE
 
 // Generates a color-interpolated lookup table based off the number of items, from foreground to background, for use with monochrome image rendering

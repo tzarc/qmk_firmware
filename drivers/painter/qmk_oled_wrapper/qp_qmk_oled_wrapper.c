@@ -46,19 +46,7 @@ typedef struct qmk_oled_painter_device_t {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Helpers
-//
-// NOTE: The variables in this section are intentionally outside a stack frame. They are able to be defined with larger
-//       sizes than the normal stack frames would allow, and as such need to be external.
-//
-//       **** DO NOT refactor this and decide to place the variables inside the function calling them -- you will ****
-//       **** very likely get artifacts rendered to the screen as a result.                                       ****
-//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
-// Static buffer used for decompression
-static uint8_t decompressed_buf[QUANTUM_PAINTER_COMPRESSED_CHUNK_SIZE];
-#endif  // QUANTUM_PAINTER_COMPRESSION_ENABLE
 
 void translate_pixel_location(qmk_oled_painter_device_t *oled, uint16_t *x, uint16_t *y) {
     switch (oled->rotation) {
@@ -186,18 +174,25 @@ bool qp_qmk_oled_wrapper_drawimage(painter_device_t device, uint16_t x, uint16_t
     if (image->compression == IMAGE_COMPRESSED_LZF) {
 #ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
         const painter_compressed_image_descriptor_t *comp_image_desc = (const painter_compressed_image_descriptor_t *)image;
-        for (uint16_t i = 0; i < comp_image_desc->chunk_count; ++i) {
-            // Check if we're the last chunk
-            bool last_chunk = (i == (comp_image_desc->chunk_count - 1));
-            // Work out the current chunk size
-            uint32_t compressed_size = last_chunk ? (comp_image_desc->compressed_size - comp_image_desc->chunk_offsets[i])        // last chunk
-                                                  : (comp_image_desc->chunk_offsets[i + 1] - comp_image_desc->chunk_offsets[i]);  // any other chunk
-            // Decode the image data
-            uint32_t decompressed_size = qp_decode(&comp_image_desc->compressed_data[comp_image_desc->chunk_offsets[i]], compressed_size, decompressed_buf, sizeof(decompressed_buf));
-            uint32_t pixels_this_loop  = last_chunk ? pixel_count : (decompressed_size / 8);
-            stream_pixdata(oled, decompressed_buf, pixels_this_loop);
-            pixel_count -= pixels_this_loop;
+
+        struct decode_state {
+            qmk_oled_painter_device_t *                  oled;
+            const painter_compressed_image_descriptor_t *image;
+            uint32_t                                     pixels_left;
+        } decoder_state;
+
+        void stream_cb(void *arg, uint16_t chunk_index, const uint8_t *const decoded_bytes, uint32_t byte_count) {
+            struct decode_state *state            = (struct decode_state *)arg;
+            bool                 last_chunk       = (chunk_index == (state->image->chunk_count - 1));
+            uint32_t             pixels_this_loop = last_chunk ? state->pixels_left : (state->image->chunk_size * 8 / state->image->base.image_bpp);
+            stream_pixdata(oled, decoded_bytes, pixels_this_loop);
+            state->pixels_left -= pixels_this_loop;
         }
+
+        decoder_state.oled        = oled;
+        decoder_state.image       = comp_image_desc;
+        decoder_state.pixels_left = pixel_count;
+        qp_decode_chunks(comp_image_desc->compressed_data, comp_image_desc->compressed_size, comp_image_desc->chunk_offsets, comp_image_desc->chunk_count, &decoder_state, stream_cb);
 #else
         return false;
 #endif  // QUANTUM_PAINTER_COMPRESSION_ENABLE
