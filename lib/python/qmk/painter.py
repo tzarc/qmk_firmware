@@ -2,7 +2,7 @@
 """
 import math
 import lzf
-from PIL import Image, ImageFont, ImageOps
+from PIL import Image, ImageOps
 
 
 def rescale_byte(val, maxval):
@@ -51,7 +51,7 @@ def palettize_image(im, ncolors, mono=False):
     for x in range(int(image_bytes_len / pixels_per_byte)):
         byte = 0
         for n in range(pixels_per_byte):
-            byte_offset = x*pixels_per_byte + n
+            byte_offset = x * pixels_per_byte + n
             if byte_offset < image_bytes_len:
                 if mono:
                     # If mono, each input byte is a grayscale [0,255] pixel -- rescale to the range we want then pack together
@@ -74,9 +74,9 @@ def image_to_rgb565(im):
     # Convert 24-bit RGB to 16-bit rgb565
     rgb565array = []
     for x in range(int(image_bytes_len / 3)):
-        r = image_bytes[x*3 + 0]
-        g = image_bytes[x*3 + 1]
-        b = image_bytes[x*3 + 2]
+        r = image_bytes[x * 3 + 0]
+        g = image_bytes[x * 3 + 1]
+        b = image_bytes[x * 3 + 2]
         rgb565 = rgb888_to_rgb565(r, g, b)
         rgb565array.append((rgb565 >> 8) & 0xFF)
         rgb565array.append(rgb565 & 0xFF)

@@ -185,7 +185,7 @@ def render_layout(layout_data, render_ascii, key_labels=None):
 
         label_blank = ' ' * label_len
         label_border = box_chars['h'] * label_len
-        label_middle = label + ' '*label_leftover  # noqa: yapf insists there be no whitespace around *
+        label_middle = label + ' ' * label_leftover  # noqa: yapf insists there be no whitespace around *
 
         top_line = array('u', box_chars['tl'] + label_border + box_chars['tr'])
         lab_line = array('u', box_chars['v'] + label_middle + box_chars['v'])
