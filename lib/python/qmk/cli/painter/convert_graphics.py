@@ -253,20 +253,20 @@ def render_source(format, palette, image_data, width, height, compress, chunksiz
     })
 
     if compress:
-        (compressed_data, offsets, sizes) = compress_data(chunksize, image_data)
+        (compressed_data, compressed_offsets, compressed_sizes, orig_sizes) = compress_data(chunksize, image_data)
         chunk_offsets_lines = ''
         chunk_offset_line_src = Template(compressed_chunk_offset_line_template)
-        for n in range(len(offsets)):
+        for n in range(len(compressed_offsets)):
             chunk_offsets_lines = chunk_offsets_lines + chunk_offset_line_src.substitute({
                 'chunk_index': '{0:3d}'.format(n),
-                'offset': '{0:6d}'.format(offsets[n]),
-                'compressed_size': '{0:6d}'.format(sizes[n]),
-                'perc_of_uncompressed_size': '{0:6.2f}%'.format(100 * sizes[n] / chunksize),
-                'chunk_size': chunksize,
+                'offset': '{0:6d}'.format(compressed_offsets[n]),
+                'compressed_size': '{0:6d}'.format(compressed_sizes[n]),
+                'perc_of_uncompressed_size': '{0:6.2f}%'.format(100 * compressed_sizes[n] / orig_sizes[n]),
+                'chunk_size': orig_sizes[n],
             })
         subs.update({
             'byte_count': len(compressed_data),
-            'chunk_count': len(sizes),
+            'chunk_count': len(compressed_sizes),
             'chunk_offsets_lines': chunk_offsets_lines.rstrip(),
             'bytes_lines': render_bytes(compressed_data, subs),
             'compressed_size': len(compressed_data),
