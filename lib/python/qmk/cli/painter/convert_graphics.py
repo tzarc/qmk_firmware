@@ -8,8 +8,6 @@ from string import Template
 from PIL import Image
 from milc import cli
 
-#-----------------------------------------------------------------------------------------------------------------------
-
 license_template = """\
 /* Copyright ${year} QMK
  *
@@ -140,8 +138,6 @@ compressed_chunk_offset_line_template = """\
     ${offset},  // chunk ${chunk_index} // compressed size: ${compressed_size} bytes / ${perc_of_uncompressed_size} of ${chunk_size} bytes
 """
 
-#-----------------------------------------------------------------------------------------------------------------------
-
 valid_formats = {
     'rgb565': {
         'image_format': 'IMAGE_FORMAT_RGB565',
@@ -197,16 +193,11 @@ valid_formats = {
     }
 }
 
-#-----------------------------------------------------------------------------------------------------------------------
-
 
 def clean_output(str):
     str = re.sub(r'\r', '', str)
     str = re.sub(r'[\n]{3,}', r'\n\n', str)
     return str
-
-
-#-----------------------------------------------------------------------------------------------------------------------
 
 
 def render_license(subs):
@@ -217,9 +208,6 @@ def render_license(subs):
 def render_header(format, subs):
     header_src = Template(header_file_template)
     return header_src.substitute(subs)
-
-
-#-----------------------------------------------------------------------------------------------------------------------
 
 
 def render_palette(palette, subs):
@@ -245,7 +233,7 @@ def render_bytes(bytes, subs):
 
 
 def render_source(format, palette, image_data, width, height, compress, chunksize, subs):
-    has_palette = True if 'has_palette' in format and format['has_palette'] == True else False
+    has_palette = True if 'has_palette' in format and format['has_palette'] is True else False
 
     subs.update({
         'palette': render_palette(palette, subs) if has_palette else '',
@@ -273,16 +261,13 @@ def render_source(format, palette, image_data, width, height, compress, chunksiz
             'original_size': len(image_data),
             'perc_of_uncompressed_size': '{0:.2f}%'.format(100 * len(compressed_data) / len(image_data)),
             'rgb24_size': 3 * width * height,
-            'perc_of_rgb24_size': '{0:.2f}%'.format(100 * len(compressed_data) / (3*width*height))
+            'perc_of_rgb24_size': '{0:.2f}%'.format(100 * len(compressed_data) / (3 * width * height))
         })
     else:
         subs.update({'byte_count': len(image_data), 'bytes_lines': render_bytes(image_data, subs)})
 
     source_src = Template(compressed_source_file_template if cli.args.compress else uncompressed_source_file_template)
     return source_src.substitute(subs)
-
-
-#-----------------------------------------------------------------------------------------------------------------------
 
 
 @cli.argument('-i', '--input', required=True, help='Specify input graphic file.')
@@ -311,7 +296,6 @@ def painter_convert_graphics(cli):
 
     cli.args.chunk_size = int(cli.args.chunk_size)
 
-    parent_dir = cli.args.input.parent
     sane_name = re.sub(r"[^a-zA-Z0-9]", "_", cli.args.input.stem)
 
     format = valid_formats[cli.args.format]
@@ -354,6 +338,3 @@ def painter_convert_graphics(cli):
         print(f"Writing {source_file}...")
         source.write(source_text)
         source.close()
-
-    #print(header_text)
-    #print(source_text)
