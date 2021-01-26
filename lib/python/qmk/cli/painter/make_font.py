@@ -26,9 +26,9 @@ def painter_make_font_image(cli):
     (l, t, r, b) = font.getbbox(test_string, anchor='lt')
     print(f"l={l}, t={t}, r={r}, b={b}")
 
-    img = Image.new("RGB", (r-l, b-t+1), (255, 255, 255))
+    img = Image.new("RGB", (r - l, b - t + 1), (255, 255, 255))
     draw = ImageDraw.Draw(img)
-    draw.text((0,1), test_string, font=font, fill=(0,0,0,255), anchor='lt')
+    draw.text((0, 1), test_string, font=font, fill=(0, 0, 0, 255), anchor='lt')
     img.save(cli.args.output)
 
     return
