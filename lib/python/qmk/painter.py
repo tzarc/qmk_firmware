@@ -86,15 +86,17 @@ def image_to_rgb565(im):
 
 def compress_data(chunksize, data):
     compressed_data = []
-    offsets = []
-    sizes = []
+    compressed_offsets = []
+    compressed_sizes = []
+    orig_sizes = []
     raw_data = data.copy()
     while len(raw_data) > 0:
         chunk_size = min(chunksize, len(raw_data))
         chunk = raw_data[0:chunk_size]
         raw_data = raw_data[chunk_size:]
         compressed = lzf.compress(bytes(chunk), int(len(chunk) * 2))
-        offsets.append(len(compressed_data))  # keep track of where this chunk starts
-        sizes.append(len(compressed))  # keep track of this chunk size
+        compressed_offsets.append(len(compressed_data))  # keep track of where this chunk starts
+        compressed_sizes.append(len(compressed))  # keep track of this chunk size
         compressed_data.extend(compressed)  # append the chunk data to the overall compressed data
-    return (compressed_data, offsets, sizes)
+        orig_sizes.append(chunk_size)  # keep track of this chunk size
+    return (compressed_data, compressed_offsets, compressed_sizes, orig_sizes)
