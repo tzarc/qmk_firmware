@@ -31,8 +31,8 @@ typedef struct qmk_rgb565_surface_device_t {
     struct painter_driver_t qp_driver;  // must be first, so it can be cast from the painter_device_t* type
 
     // Geometry and buffer
-    uint16_t width;
-    uint16_t height;
+    uint16_t  width;
+    uint16_t  height;
     uint16_t *buffer;
 
     // Manually manage the viewport for streaming pixel data to the display
@@ -96,9 +96,7 @@ static inline void increment_pixdata_location(qmk_rgb565_surface_device_t *surf)
     }
 }
 
-static inline void setpixel(qmk_rgb565_surface_device_t *surf, uint16_t x, uint16_t y, uint16_t color) {
-    surf->buffer[y * surf->width + x] = color;
-}
+static inline void setpixel(qmk_rgb565_surface_device_t *surf, uint16_t x, uint16_t y, uint16_t color) { surf->buffer[y * surf->width + x] = color; }
 
 static inline void append_pixel(qmk_rgb565_surface_device_t *surf, uint16_t pixel) {
     setpixel(surf, surf->pixdata_x, surf->pixdata_y, pixel);
@@ -117,10 +115,10 @@ static inline void stream_pixdata(qmk_rgb565_surface_device_t *surf, const uint1
 
 // Palette renderer
 static inline void stream_palette_pixdata_impl(qmk_rgb565_surface_device_t *surf, const uint16_t *const rgb565_palette, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data, uint32_t byte_count) {
-    const uint8_t  pixel_bitmask       = (1 << bits_per_pixel) - 1;
-    const uint8_t  pixels_per_byte     = 8 / bits_per_pixel;
-    const uint8_t *pixdata             = (const uint8_t *)pixel_data;
-    uint32_t       remaining_pixels    = pixel_count;  // don't try to derive from byte_count, we may not use an entire byte
+    const uint8_t  pixel_bitmask    = (1 << bits_per_pixel) - 1;
+    const uint8_t  pixels_per_byte  = 8 / bits_per_pixel;
+    const uint8_t *pixdata          = (const uint8_t *)pixel_data;
+    uint32_t       remaining_pixels = pixel_count;  // don't try to derive from byte_count, we may not use an entire byte
 
     // Transmit each block of pixels
     while (remaining_pixels > 0) {
@@ -167,9 +165,9 @@ static inline void stream_mono_pixdata_recolor(qmk_rgb565_surface_device_t *surf
 
 bool qp_rgb565_surface_init(painter_device_t device, painter_rotation_t rotation) {
     qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
-    surf->buffer = (uint16_t*)malloc(surf->width * surf->height * sizeof(uint16_t));
+    surf->buffer                      = (uint16_t *)malloc(surf->width * surf->height * sizeof(uint16_t));
     memset(surf->buffer, 0, sizeof(surf->width * surf->height * sizeof(uint16_t)));
-    (void)rotation; // no rotation supported.
+    (void)rotation;  // no rotation supported.
     return true;
 }
 
@@ -183,13 +181,11 @@ bool qp_rgb565_surface_clear(painter_device_t device) {
     return true;
 }
 
-bool qp_rgb565_surface_power(painter_device_t device, bool power_on) {
-    return true;
-}
+bool qp_rgb565_surface_power(painter_device_t device, bool power_on) { return true; }
 
 bool qp_rgb565_surface_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
     qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
-    const uint16_t *            data = (const uint16_t *)pixel_data;
+    const uint16_t *             data = (const uint16_t *)pixel_data;
     stream_pixdata(surf, data, native_pixel_count);
     return true;
 }
@@ -262,17 +258,17 @@ painter_device_t qp_rgb565_surface_make_device(uint16_t width, uint16_t height) 
     driver.qp_driver.circle    = qp_fallback_circle;
     driver.qp_driver.ellipse   = qp_fallback_ellipse;
     driver.qp_driver.drawimage = qp_rgb565_surface_drawimage;
-    driver.width = width;
-    driver.height = height;
+    driver.width               = width;
+    driver.height              = height;
     return (painter_device_t)&driver;
 }
 
-const void * const qp_rgb565_surface_get_buffer_ptr(painter_device_t device){
+const void *const qp_rgb565_surface_get_buffer_ptr(painter_device_t device) {
     qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
     return surf->buffer;
 }
 
-uint32_t qp_rgb565_surface_get_pixel_count(painter_device_t device){
+uint32_t qp_rgb565_surface_get_pixel_count(painter_device_t device) {
     qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
     return ((uint32_t)surf->width) * surf->height;
 }
