@@ -16,29 +16,12 @@
 
 #pragma once
 
-#include "color.h"
-
-#include "qp.h"
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter configurables
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// This value must match the chunk size used when converting images via qmk convert-image
-#ifndef QUANTUM_PAINTER_COMPRESSED_CHUNK_SIZE
-#    define QUANTUM_PAINTER_COMPRESSED_CHUNK_SIZE 128
-#endif
+#include <qp.h>
+#include <color.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter utility functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
-// Decodes a compressed chunk of data
-uint32_t qp_decode(const uint8_t* const input_buffer, const uint32_t input_size, void* output_buffer, const uint32_t output_size);
-// Progressively decode chunks of data, invoking the callback for each decoded chunk
-void qp_decode_chunks(const uint8_t* const compressed_data, uint32_t compressed_size, const uint32_t* const chunk_offsets, uint16_t chunk_count, void* cb_arg, void (*callback)(void* arg, uint16_t chunk_index, const uint8_t* const decoded_bytes, uint32_t byte_count));
-#endif  // QUANTUM_PAINTER_COMPRESSION_ENABLE
 
 // Generates a color-interpolated lookup table based off the number of items, from foreground to background, for use with monochrome image rendering
 void qp_generate_palette(HSV* lookup_table, int16_t items, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg);
