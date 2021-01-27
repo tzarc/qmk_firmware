@@ -327,7 +327,7 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
         // Stream data to the LCD
         if (image->image_format == IMAGE_FORMAT_RAW || image->image_format == IMAGE_FORMAT_RGB565) {
             // The pixel data is in the correct format already -- send it directly to the device
-            qp_ili9xxx_internal_lcd_sendbuf(lcd, raw_image_desc->image_data, raw_image_desc->byte_count);
+            qp_ili9xxx_internal_lcd_sendbuf(lcd, raw_image_desc->image_data, pixel_count);
         } else if (image->image_format == IMAGE_FORMAT_GRAYSCALE) {
             // Supplied pixel data is in 4bpp monochrome -- decode it to the equivalent pixel data
             lcd_send_mono_pixdata_recolor(lcd, raw_image_desc->base.image_bpp, pixel_count, raw_image_desc->image_data, raw_image_desc->byte_count, hue, sat, val, hue, sat, 0);
