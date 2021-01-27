@@ -14,10 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "quantum.h"
-
-#include "qp_internal.h"
-#include "qp_utils.h"
+#include <quantum.h>
+#include <qp_internal.h>
+#include <qp_utils.h>
 
 bool qp_init(painter_device_t device, painter_rotation_t rotation) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
