@@ -128,7 +128,6 @@ ifeq ($(strip $(POINTING_DEVICE_ENABLE)), yes)
 endif
 
 QUANTUM_PAINTER_ENABLE ?= no
-QUANTUM_PAINTER_COMPRESSION_ENABLE ?= yes
 VALID_QUANTUM_PAINTER_DRIVERS := qmk_oled_wrapper ili9341 ili9488
 QUANTUM_PAINTER_DRIVERS ?=
 ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
@@ -140,17 +139,6 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
         $(QUANTUM_DIR)/painter/qp.c \
         $(QUANTUM_DIR)/painter/qp_utils.c \
         $(DRIVER_PATH)/painter/fallback/qp_fallback.c
-
-    ifeq ($(PLATFORM),AVR)
-        # If we're on AVR, then forcefully disable compression. AVR doesn't have enough RAM to support LZF decoding.
-        QUANTUM_PAINTER_COMPRESSION_ENABLE = no
-    endif
-
-    ifeq ($(strip $(QUANTUM_PAINTER_COMPRESSION_ENABLE)), yes)
-        OPT_DEFS += -DQUANTUM_PAINTER_COMPRESSION_ENABLE
-        COMMON_VPATH += $(LIB_PATH)/lzf
-        SRC += $(LIB_PATH)/lzf/lzf_d.c
-    endif
 
     define handle_quantum_painter_driver
         CURRENT_PAINTER_DRIVER := $1
