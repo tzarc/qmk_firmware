@@ -24,10 +24,6 @@
 #    define QUANTUM_PAINTER_SUPPORTS_256_PALETTE FALSE
 #endif
 
-#ifndef QUANTUM_PAINTER_COMPRESSED_CHUNK_SIZE
-#    define QUANTUM_PAINTER_COMPRESSED_CHUNK_SIZE 128
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter types
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +36,7 @@ typedef enum { QP_ROTATION_0, QP_ROTATION_90, QP_ROTATION_180, QP_ROTATION_270 }
 
 // Image types -- handled by qmk convert-image
 typedef enum { IMAGE_FORMAT_RAW, IMAGE_FORMAT_RGB565, IMAGE_FORMAT_GRAYSCALE, IMAGE_FORMAT_PALETTE } painter_image_format_t;
-typedef enum { IMAGE_UNCOMPRESSED, IMAGE_COMPRESSED_LZF } painter_compression_t;
+typedef enum { IMAGE_UNCOMPRESSED } painter_compression_t;
 typedef struct painter_image_descriptor_t {
     const painter_image_format_t image_format;
     const painter_compression_t  compression;

@@ -15,15 +15,13 @@
  */
 
 #include <string.h>
-
-#include "spi_master.h"
-
-#include "qp.h"
-#include "qp_ili9341.h"
-#include "qp_internal.h"
-#include "qp_fallback.h"
-#include "qp_ili9xxx_internal.h"
-#include "qp_ili9xxx_opcodes.h"
+#include <spi_master.h>
+#include <qp.h>
+#include <qp_ili9341.h>
+#include <qp_internal.h>
+#include <qp_fallback.h>
+#include <qp_ili9xxx_internal.h>
+#include <qp_ili9xxx_opcodes.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialization
