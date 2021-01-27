@@ -15,7 +15,7 @@
  */
 
 #include <stdlib.h>
-#include "qp_fallback.h"
+#include <qp_fallback.h>
 
 /* internal function declarations */
 bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
