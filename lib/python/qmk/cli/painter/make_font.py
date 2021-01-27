@@ -18,17 +18,36 @@ def painter_make_font_image(cli):
     font = ImageFont.truetype(str(cli.args.font), int(cli.args.size))
 
     # Measure the whole text
-    test_string = ''
+    ascii_string = ''
     for c in range(0x20, 0x7F):
-        test_string += chr(c)
+        ascii_string += chr(c)
 
-    print(test_string)
-    (l, t, r, b) = font.getbbox(test_string, anchor='lt')
-    print(f"l={l}, t={t}, r={r}, b={b}")
+    print(ascii_string)
+    (ls_l, ls_t, ls_r, ls_b) = font.getbbox(ascii_string, anchor='ls')
+    print(f"ls_l={ls_l}, t={ls_t}, r={ls_r}, b={ls_b}")
 
-    img = Image.new("RGB", (r - l, b - t + 1), (255, 255, 255))
+    y_offset = ls_t
+
+    img = Image.new("RGB", (int(1.3 * (ls_r - ls_l)), ls_b - ls_t + 1), (0, 0, 0, 255))
     draw = ImageDraw.Draw(img)
-    draw.text((0, 1), test_string, font=font, fill=(0, 0, 0, 255), anchor='lt')
+
+    current_x = 0
+    offsets = []
+    widths = []
+    for c in range(0x20, 0x7F):
+        sc = chr(c)
+        draw.text((current_x, 1 - y_offset), sc, font=font, fill=(255, 255, 255, 255), anchor='ls')
+        (l, t, r, b) = font.getbbox(sc, anchor='ls')
+        width = (r-l)
+        offsets.append(current_x)
+        widths.append(current_x)
+        current_x += width
+
+    img = img.crop((0, 0, current_x, ls_b - ls_t + 1))
+    pixels = img.load()
+    for i in range(len(offsets)):
+        pixels[offsets[i],0] = (255,0,255)
+
     img.save(cli.args.output)
 
     return
