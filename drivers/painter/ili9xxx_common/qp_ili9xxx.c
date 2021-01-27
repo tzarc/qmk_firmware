@@ -14,19 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "color.h"
-#include "spi_master.h"
+#include <color.h>
+#include <spi_master.h>
 
 #ifdef BACKLIGHT_ENABLE
-#    include "backlight/backlight.h"
+#    include <backlight/backlight.h>
 #endif
 
-#include "qp_internal.h"
-#include "qp_utils.h"
-#include "qp_fallback.h"
-#include "qp_ili9xxx.h"
-#include "qp_ili9xxx_internal.h"
-#include "qp_ili9xxx_opcodes.h"
+#include <qp_internal.h>
+#include <qp_utils.h>
+#include <qp_fallback.h>
+#include <qp_ili9xxx.h>
+#include <qp_ili9xxx_internal.h>
+#include <qp_ili9xxx_opcodes.h>
 
 #define BYTE_SWAP(x) (((((uint16_t)(x)) >> 8) & 0x00FF) | ((((uint16_t)(x)) << 8) & 0xFF00))
 
@@ -322,31 +322,7 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
     qp_ili9xxx_internal_lcd_viewport(lcd, x, y, x + image->width - 1, y + image->height - 1);
 
     uint32_t pixel_count = (((uint32_t)image->width) * image->height);
-    if (image->compression == IMAGE_COMPRESSED_LZF) {
-#ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
-        const painter_compressed_image_descriptor_t *comp_image_desc = (const painter_compressed_image_descriptor_t *)image;
-
-        void decode_cb(void *arg, uint16_t chunk_index, const uint8_t *const decoded_bytes, uint32_t byte_count) {
-            bool     last_chunk       = (chunk_index == (comp_image_desc->chunk_count - 1));
-            uint32_t pixels_this_loop = last_chunk ? pixel_count : (comp_image_desc->chunk_size * 8 / comp_image_desc->base.image_bpp);
-
-            if (comp_image_desc->base.image_format == IMAGE_FORMAT_RAW || comp_image_desc->base.image_format == IMAGE_FORMAT_RGB565) {
-                qp_ili9xxx_internal_lcd_sendbuf(lcd, decoded_bytes, byte_count);
-            } else if (comp_image_desc->base.image_format == IMAGE_FORMAT_GRAYSCALE) {
-                lcd_send_mono_pixdata_recolor(lcd, comp_image_desc->base.image_bpp, pixels_this_loop, decoded_bytes, byte_count, hue, sat, val, hue, sat, 0);
-            } else if (comp_image_desc->base.image_format == IMAGE_FORMAT_PALETTE) {
-                lcd_send_palette_pixdata(lcd, comp_image_desc->image_palette, comp_image_desc->base.image_bpp, pixels_this_loop, decoded_bytes, byte_count);
-            }
-
-            pixel_count -= pixels_this_loop;
-        }
-
-        qp_decode_chunks(comp_image_desc->compressed_data, comp_image_desc->compressed_size, comp_image_desc->chunk_offsets, comp_image_desc->chunk_count, NULL, decode_cb);
-#else
-        qp_ili9xxx_internal_lcd_stop();
-        return false;
-#endif  // QUANTUM_PAINTER_COMPRESSION_ENABLE
-    } else if (image->compression == IMAGE_UNCOMPRESSED) {
+    if (image->compression == IMAGE_UNCOMPRESSED) {
         const painter_raw_image_descriptor_t *raw_image_desc = (const painter_raw_image_descriptor_t *)image;
         // Stream data to the LCD
         if (image->image_format == IMAGE_FORMAT_RAW || image->image_format == IMAGE_FORMAT_RGB565) {

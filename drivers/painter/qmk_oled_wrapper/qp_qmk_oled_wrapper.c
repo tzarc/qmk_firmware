@@ -15,15 +15,12 @@
  */
 
 #include <string.h>
-
-#include "spi_master.h"
-
-#include "qp.h"
-#include "qp_qmk_oled_wrapper.h"
-#include "qp_internal.h"
-#include "qp_fallback.h"
-#include "qp_utils.h"
-#include "oled_driver.h"
+#include <oled_driver.h>
+#include <qp.h>
+#include <qp_qmk_oled_wrapper.h>
+#include <qp_internal.h>
+#include <qp_fallback.h>
+#include <qp_utils.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -171,22 +168,7 @@ bool qp_qmk_oled_wrapper_drawimage(painter_device_t device, uint16_t x, uint16_t
     qp_qmk_oled_wrapper_viewport(device, x, y, x + image->width - 1, y + image->height - 1);
     uint32_t pixel_count = (((uint32_t)image->width) * image->height);
 
-    if (image->compression == IMAGE_COMPRESSED_LZF) {
-#ifdef QUANTUM_PAINTER_COMPRESSION_ENABLE
-        const painter_compressed_image_descriptor_t *comp_image_desc = (const painter_compressed_image_descriptor_t *)image;
-
-        void decode_cb(void *arg, uint16_t chunk_index, const uint8_t *const decoded_bytes, uint32_t byte_count) {
-            bool     last_chunk       = (chunk_index == (comp_image_desc->chunk_count - 1));
-            uint32_t pixels_this_loop = last_chunk ? pixel_count : (comp_image_desc->chunk_size * 8 / comp_image_desc->base.image_bpp);
-            stream_pixdata(oled, decoded_bytes, pixels_this_loop);
-            pixel_count -= pixels_this_loop;
-        }
-
-        qp_decode_chunks(comp_image_desc->compressed_data, comp_image_desc->compressed_size, comp_image_desc->chunk_offsets, comp_image_desc->chunk_count, NULL, decode_cb);
-#else
-        return false;
-#endif  // QUANTUM_PAINTER_COMPRESSION_ENABLE
-    } else if (image->compression == IMAGE_UNCOMPRESSED) {
+    if (image->compression == IMAGE_UNCOMPRESSED) {
         const painter_raw_image_descriptor_t *raw_image_desc = (const painter_raw_image_descriptor_t *)image;
         stream_pixdata(oled, raw_image_desc->image_data, pixel_count);
     }
