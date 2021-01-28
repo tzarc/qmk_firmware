@@ -3,7 +3,7 @@
 import re
 import datetime
 import qmk.path
-from qmk.painter import valid_formats, palettize_image, image_to_rgb565
+import qmk.painter
 from string import Template
 from PIL import Image
 from milc import cli
@@ -139,7 +139,7 @@ def render_source(format, palette, image_data, width, height, subs):
 
 
 @cli.argument('-i', '--input', required=True, help='Specify input graphic file.')
-@cli.argument('-f', '--format', required=True, help='Output format, valid types: %s' % (', '.join(valid_formats.keys())))
+@cli.argument('-f', '--format', required=True, help='Output format, valid types: %s' % (', '.join(qmk.painter.valid_formats.keys())))
 @cli.subcommand('Converts an input image to something QMK understands')
 def painter_convert_graphics(cli):
     """Converts an image file to a format that Quantum Painter understands.
@@ -155,18 +155,18 @@ def painter_convert_graphics(cli):
             cli.print_usage()
             return False
 
-    if cli.args.format not in valid_formats.keys():
-        cli.log.error('Output format %s is invalid. Allowed values: %s' % (cli.args.format, ', '.join(valid_formats.keys())))
+    if cli.args.format not in qmk.painter.valid_formats.keys():
+        cli.log.error('Output format %s is invalid. Allowed values: %s' % (cli.args.format, ', '.join(qmk.painter.valid_formats.keys())))
         cli.print_usage()
         return False
 
     sane_name = re.sub(r"[^a-zA-Z0-9]", "_", cli.args.input.stem)
 
-    format = valid_formats[cli.args.format]
+    format = qmk.painter.valid_formats[cli.args.format]
 
     graphic_image = Image.open(cli.args.input)
     (width, height) = graphic_image.size
-    graphic_data = image_to_rgb565(graphic_image) if cli.args.format == 'rgb565' else palettize_image(graphic_image, ncolors=format['num_colors'], mono=(not format['has_palette']))
+    graphic_data = qmk.painter.image_to_rgb565(graphic_image) if cli.args.format == 'rgb565' else qmk.painter.palettize_image(graphic_image, ncolors=format['num_colors'], mono=(not format['has_palette']))
     palette = graphic_data[0]
     image_data = graphic_data[1]
 
