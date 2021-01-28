@@ -22,6 +22,13 @@
 #include <qp_fallback.h>
 #include <qp_utils.h>
 
+#ifdef PROTOCOL_CHIBIOS
+#    include <ch.h>
+#    if !defined(CH_CFG_USE_MEMCORE) || CH_CFG_USE_MEMCORE == FALSE
+#        error ChibiOS is configured without a memory allocator. Your keyboard may have set `#define CH_CFG_USE_MEMCORE FALSE`, which is incompatible with this debounce algorithm.
+#    endif
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
