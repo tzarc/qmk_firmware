@@ -3,7 +3,7 @@
 import re
 import datetime
 import qmk.path
-from qmk.painter import palettize_image, image_to_rgb565
+from qmk.painter import valid_formats, palettize_image, image_to_rgb565
 from string import Template
 from PIL import Image
 from milc import cli
@@ -84,61 +84,6 @@ painter_image_t gfx_${sane_name} PROGMEM = (painter_image_t)&gfx_${sane_name}_ra
 
 // clang-format on
 """
-
-valid_formats = {
-    'rgb565': {
-        'image_format': 'IMAGE_FORMAT_RGB565',
-        'bpp': 16,
-    },
-    'pal256': {
-        'image_format': 'IMAGE_FORMAT_PALETTE',
-        'bpp': 8,
-        'has_palette': True,
-        'num_colors': 256,
-    },
-    'pal16': {
-        'image_format': 'IMAGE_FORMAT_PALETTE',
-        'bpp': 4,
-        'has_palette': True,
-        'num_colors': 16,
-    },
-    'pal4': {
-        'image_format': 'IMAGE_FORMAT_PALETTE',
-        'bpp': 2,
-        'has_palette': True,
-        'num_colors': 4,
-    },
-    'pal2': {
-        'image_format': 'IMAGE_FORMAT_PALETTE',
-        'bpp': 1,
-        'has_palette': True,
-        'num_colors': 2,
-    },
-    'mono256': {
-        'image_format': 'IMAGE_FORMAT_GRAYSCALE',
-        'bpp': 8,
-        'has_palette': False,
-        'num_colors': 256,
-    },
-    'mono16': {
-        'image_format': 'IMAGE_FORMAT_GRAYSCALE',
-        'bpp': 4,
-        'has_palette': False,
-        'num_colors': 16,
-    },
-    'mono4': {
-        'image_format': 'IMAGE_FORMAT_GRAYSCALE',
-        'bpp': 2,
-        'has_palette': False,
-        'num_colors': 4,
-    },
-    'mono2': {
-        'image_format': 'IMAGE_FORMAT_GRAYSCALE',
-        'bpp': 1,
-        'has_palette': False,
-        'num_colors': 2,
-    }
-}
 
 
 def clean_output(str):

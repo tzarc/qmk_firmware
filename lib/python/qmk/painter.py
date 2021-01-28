@@ -3,6 +3,61 @@
 import math
 from PIL import Image, ImageOps
 
+valid_formats = {
+    'rgb565': {
+        'image_format': 'IMAGE_FORMAT_RGB565',
+        'bpp': 16,
+    },
+    'pal256': {
+        'image_format': 'IMAGE_FORMAT_PALETTE',
+        'bpp': 8,
+        'has_palette': True,
+        'num_colors': 256,
+    },
+    'pal16': {
+        'image_format': 'IMAGE_FORMAT_PALETTE',
+        'bpp': 4,
+        'has_palette': True,
+        'num_colors': 16,
+    },
+    'pal4': {
+        'image_format': 'IMAGE_FORMAT_PALETTE',
+        'bpp': 2,
+        'has_palette': True,
+        'num_colors': 4,
+    },
+    'pal2': {
+        'image_format': 'IMAGE_FORMAT_PALETTE',
+        'bpp': 1,
+        'has_palette': True,
+        'num_colors': 2,
+    },
+    'mono256': {
+        'image_format': 'IMAGE_FORMAT_GRAYSCALE',
+        'bpp': 8,
+        'has_palette': False,
+        'num_colors': 256,
+    },
+    'mono16': {
+        'image_format': 'IMAGE_FORMAT_GRAYSCALE',
+        'bpp': 4,
+        'has_palette': False,
+        'num_colors': 16,
+    },
+    'mono4': {
+        'image_format': 'IMAGE_FORMAT_GRAYSCALE',
+        'bpp': 2,
+        'has_palette': False,
+        'num_colors': 4,
+    },
+    'mono2': {
+        'image_format': 'IMAGE_FORMAT_GRAYSCALE',
+        'bpp': 1,
+        'has_palette': False,
+        'num_colors': 2,
+    }
+}
+
 
 def rescale_byte(val, maxval):
     """Rescales a byte value to the supplied range, i.e. [0,255] -> [0,maxval].
@@ -81,3 +136,25 @@ def image_to_rgb565(im):
         rgb565array.append(rgb565 & 0xFF)
 
     return ([], rgb565array)
+
+
+def generate_font_glyphs_list(no_ascii, ext_ascii, extra_glyphs):
+    # The set of glyphs that we want to generate images for
+    glyphs = {}
+
+    # Add ascii charset if we haven't explicitly been told to disable it
+    if not no_ascii:
+        for c in range(0x20, 0x7F):  # does not include 0x7F!
+            glyphs[chr(c)] = True
+
+    # Add extended ascii charset if we requested
+    if ext_ascii:
+        for c in range(0x80, 0xFF):  # does not include 0xFF!
+            glyphs[chr(c)] = True
+
+    # Append any extra glyphs
+    extra_glyphs = list(extra_glyphs)
+    for c in extra_glyphs:
+        glyphs[c] = True
+
+    return sorted(glyphs.keys())
