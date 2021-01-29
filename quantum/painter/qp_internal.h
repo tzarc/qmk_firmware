@@ -26,9 +26,32 @@
 typedef struct painter_raw_image_descriptor_t {
     const painter_image_descriptor_t base;
     const uint32_t                   byte_count;     // number of bytes in the image
-    const uint8_t *const             image_palette;  // pointer to the image data
+    const uint8_t *const             image_palette;  // pointer to the image palette
     const uint8_t *const             image_data;     // pointer to the image data
 } painter_raw_image_descriptor_t;
+
+// ASCII font glyph offset descriptor
+typedef struct painter_font_ascii_glyph_offset_t {
+    uint32_t offset : 24;  // The offset into the data block where it starts
+    uint8_t  width;        // The width of the glyph (in pixels)
+} painter_font_ascii_glyph_offset_t;
+
+// Extra font glyph offset descriptor
+typedef struct painter_font_unicode_glyph_offset_t {
+    uint32_t unicode_glyph;  // The unicode glyph
+    uint32_t offset : 24;    // The offset into the data block where it starts
+    uint8_t  width;          // The width of the glyph (in pixels)
+} painter_font_unicode_glyph_offset_t;
+
+// Uncompressed raw font descriptor
+typedef struct painter_raw_font_descriptor_t {
+    const painter_font_descriptor_t                  base;
+    const uint8_t *const                             image_palette;              // pointer to the image palette
+    const uint8_t *const                             image_data;                 // pointer to the image data
+    const painter_font_ascii_glyph_offset_t *const   ascii_glyph_definitions;    // list of offsets/widths for ASCII, range 0x20..0x7E
+    const painter_font_unicode_glyph_offset_t *const unicode_glyph_definitions;  // Unicode glyph descriptors for unicode rendering
+    const uint16_t                                   unicode_glyph_count;        // Number of unicode glyphs defined
+} painter_raw_font_descriptor_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter definitions
