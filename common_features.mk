@@ -136,6 +136,7 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
         $(QUANTUM_DIR)/painter \
         $(DRIVER_PATH)/painter/fallback
     SRC += \
+        $(QUANTUM_DIR)/utf8.c \
         $(QUANTUM_DIR)/painter/qp.c \
         $(QUANTUM_DIR)/painter/qp_utils.c \
         $(DRIVER_PATH)/painter/fallback/qp_fallback.c
@@ -687,7 +688,8 @@ ifeq ($(strip $(UNICODE_ENABLE)), yes)
 endif
 
 ifeq ($(strip $(UNICODE_COMMON)), yes)
-    SRC += $(QUANTUM_DIR)/process_keycode/process_unicode_common.c
+    SRC += $(QUANTUM_DIR)/process_keycode/process_unicode_common.c \
+           $(QUANTUM_DIR)/utf8.c
 endif
 
 SPACE_CADET_ENABLE ?= yes
