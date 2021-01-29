@@ -195,20 +195,24 @@ bool qp_qmk_oled_wrapper_drawtext(painter_device_t device, uint16_t x, uint16_t 
 
         if (code_point >= 0) {
             if (code_point >= 0x20 && code_point < 0x7F) {
-                // Search the font's ascii table
-                uint8_t                                  index      = code_point - 0x20;
-                const painter_font_ascii_glyph_offset_t *glyph_desc = &fdesc->ascii_glyph_definitions[index];
-                drawimage_impl(oled, x, y, glyph_desc->width, font->glyph_height, &fdesc->image_data[glyph_desc->offset], (val_fg == 0 && val_bg == 255));  // Assume black fg and white bg means invert
-                x += glyph_desc->width;
+                if(fdesc->ascii_glyph_definitions != NULL) {
+                    // Search the font's ascii table
+                    uint8_t                                  index      = code_point - 0x20;
+                    const painter_font_ascii_glyph_offset_t *glyph_desc = &fdesc->ascii_glyph_definitions[index];
+                    drawimage_impl(oled, x, y, glyph_desc->width, font->glyph_height, &fdesc->image_data[glyph_desc->offset], (val_fg == 0 && val_bg == 255));  // Assume black fg and white bg means invert
+                    x += glyph_desc->width;
+                }
             }
 #ifdef UNICODE_ENABLE
             else {
                 // Search the font's unicode table
-                for (uint16_t index = 0; index < fdesc->unicode_glyph_count; ++index) {
-                    const painter_font_unicode_glyph_offset_t *glyph_desc = &fdesc->unicode_glyph_definitions[index];
-                    if (glyph_desc->unicode_glyph == code_point) {
-                        drawimage_impl(oled, x, y, glyph_desc->width, font->glyph_height, &fdesc->image_data[glyph_desc->offset], (val_fg == 0 && val_bg == 255));  // Assume black fg and white bg means invert
-                        x += glyph_desc->width;
+                if(fdesc->unicode_glyph_definitions != NULL) {
+                    for (uint16_t index = 0; index < fdesc->unicode_glyph_count; ++index) {
+                        const painter_font_unicode_glyph_offset_t *glyph_desc = &fdesc->unicode_glyph_definitions[index];
+                        if (glyph_desc->unicode_glyph == code_point) {
+                            drawimage_impl(oled, x, y, glyph_desc->width, font->glyph_height, &fdesc->image_data[glyph_desc->offset], (val_fg == 0 && val_bg == 255));  // Assume black fg and white bg means invert
+                            x += glyph_desc->width;
+                        }
                     }
                 }
             }
