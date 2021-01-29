@@ -86,12 +86,6 @@ painter_image_t gfx_${sane_name} PROGMEM = (painter_image_t)&gfx_${sane_name}_ra
 """
 
 
-def clean_output(str):
-    str = re.sub(r'\r', '', str)
-    str = re.sub(r'[\n]{3,}', r'\n\n', str)
-    return str
-
-
 def render_license(subs):
     license_src = Template(license_template)
     return license_src.substitute(subs)
@@ -165,8 +159,9 @@ def painter_convert_graphics(cli):
     format = qmk.painter.valid_formats[cli.args.format]
 
     graphic_image = Image.open(cli.args.input)
+    graphic_image = qmk.painter.convert_requested_format(graphic_image, format)
     (width, height) = graphic_image.size
-    graphic_data = qmk.painter.image_to_rgb565(graphic_image) if cli.args.format == 'rgb565' else qmk.painter.palettize_image(graphic_image, ncolors=format['num_colors'], mono=(not format['has_palette']))
+    graphic_data = qmk.painter.convert_image_bytes(graphic_image, format)
     palette = graphic_data[0]
     image_data = graphic_data[1]
 
@@ -185,8 +180,8 @@ def painter_convert_graphics(cli):
         'license': render_license(subs),
     })
 
-    header_text = clean_output(render_header(format, subs))
-    source_text = clean_output(render_source(format, palette, image_data, width, height, subs))
+    header_text = qmk.painter.clean_output(render_header(format, subs))
+    source_text = qmk.painter.clean_output(render_source(format, palette, image_data, width, height, subs))
 
     header_file = cli.args.input.parent / (cli.args.input.stem + ".h")
     with open(header_file, 'w') as header:
