@@ -83,14 +83,18 @@ def palettize_image(im, ncolors, mono=False):
     # Work out where we're getting the bytes from
     if mono:
         # If mono, convert input to grayscale, then to RGB, then grab the raw bytes corresponding to the intensity of the red channel
-        image_bytes = ImageOps.grayscale(im).convert("RGB").tobytes("raw", "R")
+        im = ImageOps.grayscale(im)
+        im = im.convert("RGB")
+        image_bytes = im.tobytes("raw", "R")
     else:
         # If color, convert input to RGB, palettize based on the supplied number of colors, then get the raw palette bytes
-        image_bytes = im.convert("RGB").convert("P", palette=Image.ADAPTIVE, colors=ncolors).tobytes("raw", "P")
+        im = im.convert("RGB")
+        im = im.convert("P", palette=Image.ADAPTIVE, colors=ncolors)
+        image_bytes = im.tobytes("raw", "P")
 
     # Work out how much data we're actually processing
     image_bytes_len = len(image_bytes)
-    shifter = math.log2(ncolors)
+    shifter = int(math.log2(ncolors))
     pixels_per_byte = int(8 / shifter)
 
     # If in RGB mode, convert the palette to rgb triplet
