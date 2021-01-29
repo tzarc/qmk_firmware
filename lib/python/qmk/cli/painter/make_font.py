@@ -65,10 +65,11 @@ ascii_defs_line_template = """\
 """
 
 unicode_defs_template = """\
+#ifdef UNICODE_ENABLE
 static const painter_font_unicode_glyph_offset_t font_${sane_name}_unicode_defs[${glyph_count}] PROGMEM = {
 ${unicode_defs_lines}
 };
-
+#endif // UNICODE_ENABLE
 """
 
 unicode_defs_line_template = """\
@@ -105,11 +106,13 @@ static const painter_raw_font_descriptor_t font_${sane_name}_raw PROGMEM = {
     .image_palette             = ${palette_ptr},
     .image_data                = font_${sane_name}_data,
     .ascii_glyph_definitions   = ${ascii_glyph_definitions_ptr},
+#ifdef UNICODE_ENABLE
     .unicode_glyph_definitions = ${unicode_glyph_definitions_ptr},
     .unicode_glyph_count       = ${unicode_glyph_count},
+#endif // UNICODE_ENABLE
 };
 
-painter_font_t font_${sane_name} PROGMEM = (painter_image_t)&font_${sane_name}_raw;
+painter_font_t font_${sane_name} PROGMEM = (painter_font_t)&font_${sane_name}_raw;
 
 // clang-format on
 """
