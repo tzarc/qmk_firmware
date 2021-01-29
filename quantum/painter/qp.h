@@ -34,17 +34,28 @@ typedef const void *painter_device_t;
 // Rotation type
 typedef enum { QP_ROTATION_0, QP_ROTATION_90, QP_ROTATION_180, QP_ROTATION_270 } painter_rotation_t;
 
-// Image types -- handled by qmk convert-image
+// Image format internal flags
 typedef enum { IMAGE_FORMAT_RAW, IMAGE_FORMAT_RGB565, IMAGE_FORMAT_GRAYSCALE, IMAGE_FORMAT_PALETTE } painter_image_format_t;
 typedef enum { IMAGE_UNCOMPRESSED } painter_compression_t;
+
+// Image types -- handled by `qmk convert-image`
 typedef struct painter_image_descriptor_t {
     const painter_image_format_t image_format;
+    const uint8_t                image_bpp;
     const painter_compression_t  compression;
     const uint16_t               width;
     const uint16_t               height;
-    const uint8_t                image_bpp;
 } painter_image_descriptor_t;
 typedef const painter_image_descriptor_t *painter_image_t;
+
+// Font types -- handled by `qmk painter-convert-font-image`
+typedef struct painter_font_descriptor_t {
+    const painter_image_format_t image_format;
+    const uint8_t                image_bpp;
+    const painter_compression_t  compression;
+    const uint8_t                glyph_height;
+} painter_font_descriptor_t;
+typedef const painter_font_descriptor_t *painter_font_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter API
