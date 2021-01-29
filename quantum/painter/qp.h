@@ -94,3 +94,7 @@ bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex,
 // Draw an image on the device
 bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image);
 bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue, uint8_t sat, uint8_t val);
+
+// Draw text to the display
+bool qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str);
+bool qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
