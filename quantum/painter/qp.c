@@ -114,3 +114,13 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
     }
     return false;
 }
+
+bool qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str) { return qp_drawtext_recolor(device, x, y, font, str, 0, 0, 255, 0, 0, 0); }
+
+bool qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (driver->drawtext) {
+        return driver->drawtext(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+    }
+    return false;
+}

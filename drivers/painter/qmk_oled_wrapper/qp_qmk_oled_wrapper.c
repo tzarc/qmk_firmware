@@ -16,6 +16,7 @@
 
 #include <string.h>
 #include <oled_driver.h>
+#include <utf8.h>
 #include <qp.h>
 #include <qp_qmk_oled_wrapper.h>
 #include <qp_internal.h>
@@ -92,11 +93,12 @@ void setpixel(qmk_oled_painter_device_t *oled, uint16_t x, uint16_t y, bool on) 
     oled_write_pixel(x, y, on);
 }
 
-void stream_pixdata(qmk_oled_painter_device_t *oled, const uint8_t *data, uint32_t native_pixel_count) {
+void stream_pixdata(qmk_oled_painter_device_t *oled, const uint8_t *data, uint32_t native_pixel_count, bool invert) {
     for (uint32_t pixel_counter = 0; pixel_counter < native_pixel_count; ++pixel_counter) {
         uint16_t byte_offset = (uint16_t)(pixel_counter / 8);
         uint8_t  bit_offset  = (uint8_t)(pixel_counter % 8);
-        setpixel(oled, oled->pixdata_x, oled->pixdata_y, (data[byte_offset] & (1 << bit_offset) ? true : false));
+        bool     value       = (data[byte_offset] & (1 << bit_offset) ? true : false);
+        setpixel(oled, oled->pixdata_x, oled->pixdata_y, invert ? !value : value);
         increment_pixdata_location(oled);
     }
 }
@@ -132,7 +134,7 @@ bool qp_qmk_oled_wrapper_power(painter_device_t device, bool power_on) {
 bool qp_qmk_oled_wrapper_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
     qmk_oled_painter_device_t *oled = (qmk_oled_painter_device_t *)device;
     const uint8_t *            data = (const uint8_t *)pixel_data;
-    stream_pixdata(oled, data, native_pixel_count);
+    stream_pixdata(oled, data, native_pixel_count, false);
     return true;
 }
 
@@ -158,19 +160,60 @@ bool qp_qmk_oled_wrapper_setpixel(painter_device_t device, uint16_t x, uint16_t 
 }
 
 // Draw an image
+bool drawimage_impl(qmk_oled_painter_device_t *oled, uint16_t x, uint16_t y, int32_t width, int32_t height, const uint8_t *data, bool invert) {
+    // Configure where we're rendering to
+    qp_qmk_oled_wrapper_viewport(oled, x, y, x + width - 1, y + height - 1);
+    stream_pixdata(oled, data, width * height, invert);
+    return true;
+}
+
 bool qp_qmk_oled_wrapper_drawimage(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val) {
     qmk_oled_painter_device_t *oled = (qmk_oled_painter_device_t *)device;
 
     // Can only render grayscale images if they're 1bpp
     if (image->image_format != IMAGE_FORMAT_GRAYSCALE || image->image_bpp != 1) return false;
 
-    // Configure where we're rendering to
-    qp_qmk_oled_wrapper_viewport(device, x, y, x + image->width - 1, y + image->height - 1);
-    uint32_t pixel_count = (((uint32_t)image->width) * image->height);
-
     if (image->compression == IMAGE_UNCOMPRESSED) {
         const painter_raw_image_descriptor_t *raw_image_desc = (const painter_raw_image_descriptor_t *)image;
-        stream_pixdata(oled, raw_image_desc->image_data, pixel_count);
+        return drawimage_impl(oled, x, y, image->width, image->height, raw_image_desc->image_data, (val == 0));  // assume a black value means we want to invert
+    }
+
+    return false;
+}
+
+bool qp_qmk_oled_wrapper_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+    qmk_oled_painter_device_t *          oled  = (qmk_oled_painter_device_t *)device;
+    const painter_raw_font_descriptor_t *fdesc = (const painter_raw_font_descriptor_t *)font;
+
+    // Can only render grayscale images if they're 1bpp
+    if (font->image_format != IMAGE_FORMAT_GRAYSCALE || font->image_bpp != 1) return false;
+
+    const char *c = str;
+    while (*c) {
+        int32_t code_point = 0;
+        c                  = decode_utf8(c, &code_point);
+
+        if (code_point >= 0) {
+            if (code_point >= 0x20 && code_point < 0x7F) {
+                // Search the font's ascii table
+                uint8_t                                  index      = code_point - 0x20;
+                const painter_font_ascii_glyph_offset_t *glyph_desc = &fdesc->ascii_glyph_definitions[index];
+                drawimage_impl(oled, x, y, glyph_desc->width, font->glyph_height, &fdesc->image_data[glyph_desc->offset], (val_fg == 0 && val_bg == 255));  // Assume black fg and white bg means invert
+                x += glyph_desc->width;
+            }
+#ifdef UNICODE_ENABLE
+            else {
+                // Search the font's unicode table
+                for (uint16_t index = 0; index < fdesc->unicode_glyph_count; ++index) {
+                    const painter_font_unicode_glyph_offset_t *glyph_desc = &fdesc->unicode_glyph_definitions[index];
+                    if (glyph_desc->unicode_glyph == code_point) {
+                        drawimage_impl(oled, x, y, glyph_desc->width, font->glyph_height, &fdesc->image_data[glyph_desc->offset], (val_fg == 0 && val_bg == 255));  // Assume black fg and white bg means invert
+                        x += glyph_desc->width;
+                    }
+                }
+            }
+#endif  // UNICODE_ENABLE
+        }
     }
 
     return true;
@@ -197,5 +240,6 @@ painter_device_t qp_qmk_oled_wrapper_make_device(void) {
     driver.qp_driver.circle    = qp_fallback_circle;
     driver.qp_driver.ellipse   = qp_fallback_ellipse;
     driver.qp_driver.drawimage = qp_qmk_oled_wrapper_drawimage;
+    driver.qp_driver.drawtext  = qp_qmk_oled_wrapper_drawtext;
     return (painter_device_t)&driver;
 }
