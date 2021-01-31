@@ -65,6 +65,7 @@ typedef struct painter_raw_font_descriptor_t {
 typedef bool (*painter_driver_init_func)(painter_device_t driver, painter_rotation_t rotation);
 typedef bool (*painter_driver_clear_func)(painter_device_t driver);
 typedef bool (*painter_driver_power_func)(painter_device_t driver, bool power_on);
+typedef bool (*painter_driver_brightness_func)(painter_device_t driver, uint8_t val);
 typedef bool (*painter_driver_viewport_func)(painter_device_t driver, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
 typedef bool (*painter_driver_pixdata_func)(painter_device_t driver, const void *pixel_data, uint32_t native_pixel_count);
 typedef bool (*painter_driver_setpixel_func)(painter_device_t driver, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
@@ -77,16 +78,17 @@ typedef bool (*painter_driver_drawtext_func)(painter_device_t device, uint16_t x
 
 // Driver base definition
 struct painter_driver_t {
-    painter_driver_init_func      init;
-    painter_driver_clear_func     clear;
-    painter_driver_power_func     power;
-    painter_driver_viewport_func  viewport;
-    painter_driver_pixdata_func   pixdata;
-    painter_driver_setpixel_func  setpixel;
-    painter_driver_line_func      line;
-    painter_driver_rect_func      rect;
-    painter_driver_circle_func    circle;
-    painter_driver_ellipse_func   ellipse;
-    painter_driver_drawimage_func drawimage;
-    painter_driver_drawtext_func  drawtext;
+    painter_driver_init_func       init;
+    painter_driver_clear_func      clear;
+    painter_driver_power_func      power;
+    painter_driver_brightness_func brightness;
+    painter_driver_viewport_func   viewport;
+    painter_driver_pixdata_func    pixdata;
+    painter_driver_setpixel_func   setpixel;
+    painter_driver_line_func       line;
+    painter_driver_rect_func       rect;
+    painter_driver_circle_func     circle;
+    painter_driver_ellipse_func    ellipse;
+    painter_driver_drawimage_func  drawimage;
+    painter_driver_drawtext_func   drawtext;
 };
