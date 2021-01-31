@@ -42,6 +42,14 @@ bool qp_power(painter_device_t device, bool power_on) {
     return false;
 }
 
+bool qp_brightness(painter_device_t device, uint8_t val) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (driver->brightness) {
+        return driver->brightness(device, val);
+    }
+    return false;
+}
+
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (driver->viewport) {
