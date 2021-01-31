@@ -66,6 +66,7 @@ typedef bool (*painter_driver_init_func)(painter_device_t driver, painter_rotati
 typedef bool (*painter_driver_clear_func)(painter_device_t driver);
 typedef bool (*painter_driver_power_func)(painter_device_t driver, bool power_on);
 typedef bool (*painter_driver_brightness_func)(painter_device_t driver, uint8_t val);
+typedef bool (*painter_driver_render_func)(painter_device_t driver);
 typedef bool (*painter_driver_viewport_func)(painter_device_t driver, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
 typedef bool (*painter_driver_pixdata_func)(painter_device_t driver, const void *pixel_data, uint32_t native_pixel_count);
 typedef bool (*painter_driver_setpixel_func)(painter_device_t driver, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
@@ -82,9 +83,11 @@ struct painter_driver_t {
     painter_driver_clear_func      clear;
     painter_driver_power_func      power;
     painter_driver_brightness_func brightness;
+    painter_driver_render_func     render;
     painter_driver_viewport_func   viewport;
     painter_driver_pixdata_func    pixdata;
     painter_driver_setpixel_func   setpixel;
+    painter_driver_setpixel_func   setpixel_raw;
     painter_driver_line_func       line;
     painter_driver_rect_func       rect;
     painter_driver_circle_func     circle;

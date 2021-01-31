@@ -16,19 +16,28 @@
 
 #include <stdlib.h>
 #include <qp_fallback.h>
+#include <qp_internal.h>
 
 /* internal function declarations */
-bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
-bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t x, uint16_t y, uint16_t dx, uint16_t dy, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
+static bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
+static bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t x, uint16_t y, uint16_t dx, uint16_t dy, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
+static bool qp_fallback_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
+
+static uint8_t qp_fallback_render_delay_cnt = 0;
+static void qp_fallback_render_delay(void);
+static bool qp_fallback_render(painter_device_t device);
+
 
 // Fallback implementation for drawing lines
 bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val) {
+    qp_fallback_render_delay();
+
     if (x0 == x1) {
         // Vertical line
         uint16_t ys = y0 < y1 ? y0 : y1;
         uint16_t ye = y0 > y1 ? y0 : y1;
         for (uint16_t y = ys; y <= ye; ++y) {
-            if (!qp_setpixel(device, x0, y, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, x0, y, hue, sat, val)) {
                 return false;
             }
         }
@@ -37,7 +46,7 @@ bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_
         uint16_t xs = x0 < x1 ? x0 : x1;
         uint16_t xe = x0 > x1 ? x0 : x1;
         for (uint16_t x = xs; x <= xe; ++x) {
-            if (!qp_setpixel(device, x, y0, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, x, y0, hue, sat, val)) {
                 return false;
             }
         }
@@ -54,7 +63,7 @@ bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_
         int16_t e2 = 2 * e;
 
         while (x != x1 || y != y1) {
-            if (!qp_setpixel(device, x, y, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, x, y, hue, sat, val)) {
                 return false;
             }
             e2 = 2 * e;
@@ -68,12 +77,12 @@ bool qp_fallback_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_
             }
         }
         // draw the last pixel
-        if (!qp_setpixel(device, x, y, hue, sat, val)) {
+        if (!qp_fallback_setpixel(device, x, y, hue, sat, val)) {
             return false;
         }
     }
 
-    return true;
+    return qp_fallback_render(device);
 }
 
 // Fallback implementation for drawing rectangles
@@ -101,7 +110,7 @@ bool qp_fallback_rect(painter_device_t device, uint16_t left, uint16_t top, uint
         }
     }
 
-    return true;
+    return qp_fallback_render(device);
 }
 
 // Fallback implementation for drawing circles
@@ -123,11 +132,11 @@ bool qp_fallback_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_
         qp_fallback_circle_drawpixels(device, x, y, xcalc, ycalc, hue, sat, val, filled);
     }
 
-    return true;
+    return qp_fallback_render(device);
 }
 
 // Utilize 8-way symmetry to draw circle
-bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+static bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
     /*
     Circles have the property of 8-way symmetry, so eight pixels can be drawn
     for each computed [offsetx,offsety] given the center coordinates
@@ -146,10 +155,10 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
     */
 
     if (offsetx == 0) {
-        if (!qp_setpixel(device, centerx, centery + offsety, hue, sat, val)) {
+        if (!qp_fallback_setpixel(device, centerx, centery + offsety, hue, sat, val)) {
             return false;
         }
-        if (!qp_setpixel(device, centerx, centery - offsety, hue, sat, val)) {
+        if (!qp_fallback_setpixel(device, centerx, centery - offsety, hue, sat, val)) {
             return false;
         }
         if (filled) {
@@ -157,10 +166,10 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
                 return false;
             }
         } else {
-            if (!qp_setpixel(device, centerx + offsety, centery, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx + offsety, centery, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx - offsety, centery, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx - offsety, centery, hue, sat, val)) {
                 return false;
             }
         }
@@ -173,16 +182,16 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
                 return false;
             }
         } else {
-            if (!qp_setpixel(device, centerx + offsety, centery + offsety, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx + offsety, centery + offsety, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx - offsety, centery + offsety, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx - offsety, centery + offsety, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx + offsety, centery - offsety, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx + offsety, centery - offsety, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx - offsety, centery - offsety, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx - offsety, centery - offsety, hue, sat, val)) {
                 return false;
             }
         }
@@ -202,28 +211,28 @@ bool qp_fallback_circle_drawpixels(painter_device_t device, uint16_t centerx, ui
                 return false;
             }
         } else {
-            if (!qp_setpixel(device, centerx + offsetx, centery + offsety, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx + offsetx, centery + offsety, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx - offsetx, centery + offsety, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx - offsetx, centery + offsety, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx + offsetx, centery - offsety, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx + offsetx, centery - offsety, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx - offsetx, centery - offsety, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx - offsetx, centery - offsety, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx + offsety, centery + offsetx, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx + offsety, centery + offsetx, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx - offsety, centery + offsetx, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx - offsety, centery + offsetx, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx + offsety, centery - offsetx, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx + offsety, centery - offsetx, hue, sat, val)) {
                 return false;
             }
-            if (!qp_setpixel(device, centerx - offsety, centery - offsetx, hue, sat, val)) {
+            if (!qp_fallback_setpixel(device, centerx - offsety, centery - offsetx, hue, sat, val)) {
                 return false;
             }
         }
@@ -267,11 +276,11 @@ bool qp_fallback_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16
         delta += aa * (4 * dy + 6);
     }
 
-    return true;
+    return qp_fallback_render(device);
 }
 
 // Utilize 4-way symmetry to draw an ellipse
-bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+static bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
     /*
     Ellipses have the property of 4-way symmetry, so four pixels can be drawn
     for each computed [offsetx,offsety] given the center coordinates
@@ -289,10 +298,10 @@ bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t centerx, u
     int16_t yl = ((int16_t)centery) - ((int16_t)offsety);
 
     if (offsetx == 0) {
-        if (!qp_setpixel(device, xx, yy, hue, sat, val)) {
+        if (!qp_fallback_setpixel(device, xx, yy, hue, sat, val)) {
             return false;
         }
-        if (!qp_setpixel(device, xx, yl, hue, sat, val)) {
+        if (!qp_fallback_setpixel(device, xx, yl, hue, sat, val)) {
             return false;
         }
     } else if (filled) {
@@ -303,17 +312,44 @@ bool qp_fallback_ellipse_drawpixels(painter_device_t device, uint16_t centerx, u
             return false;
         }
     } else {
-        if (!qp_setpixel(device, xx, yy, hue, sat, val)) {
+        if (!qp_fallback_setpixel(device, xx, yy, hue, sat, val)) {
             return false;
         }
-        if (!qp_setpixel(device, xx, yl, hue, sat, val)) {
+        if (!qp_fallback_setpixel(device, xx, yl, hue, sat, val)) {
             return false;
         }
-        if (!qp_setpixel(device, xl, yy, hue, sat, val)) {
+        if (!qp_fallback_setpixel(device, xl, yy, hue, sat, val)) {
             return false;
         }
-        if (!qp_setpixel(device, xl, yl, hue, sat, val)) {
+        if (!qp_fallback_setpixel(device, xl, yl, hue, sat, val)) {
             return false;
+        }
+    }
+
+    return true;
+}
+
+static bool qp_fallback_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+
+    if (driver->setpixel_raw) {
+        return driver->setpixel_raw(device, x, y, hue, sat, val);
+    } else {
+        return qp_setpixel(device, x, y, hue, sat, val);
+    }
+}
+
+static void qp_fallback_render_delay(void) {
+    qp_fallback_render_delay_cnt++;
+}
+
+static bool qp_fallback_render(painter_device_t device) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+
+    qp_fallback_render_delay_cnt--;
+    if (!qp_fallback_render_delay_cnt) {
+        if (driver->render) {
+            return driver->render(device);
         }
     }
 
