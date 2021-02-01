@@ -70,6 +70,9 @@ bool qp_clear(painter_device_t device);
 // Handle turning a display on or off
 bool qp_power(painter_device_t device, bool power_on);
 
+// Handle configuring the lcd backlight brightness or contrast
+bool qp_brightness(painter_device_t device, uint8_t val);
+
 // Set the viewport that pixdata is to get streamed into
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
 
