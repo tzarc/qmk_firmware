@@ -66,11 +66,11 @@ typedef struct qmk_rgb565_surface_device_t {
 
 // Static buffer to contain a generated color palette
 #if QUANTUM_PAINTER_SUPPORTS_256_PALETTE
-HSV             surf_hsv_lookup_table[256];
-static uint16_t surf_rgb565_palette[256];
+static HSV      hsv_lookup_table[256];
+static uint16_t rgb565_palette[256];
 #else
-HSV             surf_hsv_lookup_table[16];
-static uint16_t surf_rgb565_palette[16];
+static HSV      hsv_lookup_table[16];
+static uint16_t rgb565_palette[16];
 #endif
 
 #define BYTE_SWAP(x) (((((uint16_t)(x)) >> 8) & 0x00FF) | ((((uint16_t)(x)) << 8) & 0xFF00))
@@ -146,24 +146,24 @@ static inline void stream_palette_pixdata(qmk_rgb565_surface_device_t *surf, con
     // Generate the color lookup table
     uint16_t items = 1 << bits_per_pixel;  // number of items we need to interpolate
     for (uint16_t i = 0; i < items; ++i) {
-        surf_rgb565_palette[i] = hsv_to_rgb565(rgb_palette[i * 3 + 0], rgb_palette[i * 3 + 1], rgb_palette[i * 3 + 2]);
+        rgb565_palette[i] = hsv_to_rgb565(rgb_palette[i * 3 + 0], rgb_palette[i * 3 + 1], rgb_palette[i * 3 + 2]);
     }
 
     // Transmit each block of pixels
-    stream_palette_pixdata_impl(surf, surf_rgb565_palette, bits_per_pixel, pixel_count, pixel_data, byte_count);
+    stream_palette_pixdata_impl(surf, rgb565_palette, bits_per_pixel, pixel_count, pixel_data, byte_count);
 }
 
 // Recolored renderer
 static inline void stream_mono_pixdata_recolor(qmk_rgb565_surface_device_t *surf, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data, uint32_t byte_count, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg) {
     // Generate the color lookup table
     uint16_t items = 1 << bits_per_pixel;  // number of items we need to interpolate
-    qp_generate_palette(surf_hsv_lookup_table, items, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+    qp_generate_palette(hsv_lookup_table, items, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
     for (uint16_t i = 0; i < items; ++i) {
-        surf_rgb565_palette[i] = hsv_to_rgb565(surf_hsv_lookup_table[i].h, surf_hsv_lookup_table[i].s, surf_hsv_lookup_table[i].v);
+        rgb565_palette[i] = hsv_to_rgb565(hsv_lookup_table[i].h, hsv_lookup_table[i].s, hsv_lookup_table[i].v);
     }
 
     // Transmit each block of pixels
-    stream_palette_pixdata_impl(surf, surf_rgb565_palette, bits_per_pixel, pixel_count, pixel_data, byte_count);
+    stream_palette_pixdata_impl(surf, rgb565_palette, bits_per_pixel, pixel_count, pixel_data, byte_count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,10 +171,19 @@ static inline void stream_mono_pixdata_recolor(qmk_rgb565_surface_device_t *surf
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool qp_rgb565_surface_init(painter_device_t device, painter_rotation_t rotation) {
-    qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
-    surf->buffer                      = (uint16_t *)malloc(surf->width * surf->height * sizeof(uint16_t));
-    memset(surf->buffer, 0, sizeof(surf->width * surf->height * sizeof(uint16_t)));
     (void)rotation;  // no rotation supported.
+    qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
+    if (surf->buffer) {
+        return true;
+    }
+
+    uint16_t *buffer = (uint16_t *)malloc(surf->width * surf->height * sizeof(uint16_t));
+    if (!buffer) {
+        return false;
+    }
+
+    surf->buffer = buffer;
+    memset(surf->buffer, 0, surf->width * surf->height * sizeof(uint16_t));
     return true;
 }
 
@@ -184,6 +193,10 @@ bool qp_rgb565_surface_init(painter_device_t device, painter_rotation_t rotation
 
 bool qp_rgb565_surface_clear(painter_device_t device) {
     qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
+    if (!surf->buffer) {
+        return false;
+    }
+
     memset(surf->buffer, 0, sizeof(surf->width * surf->height * sizeof(uint16_t)));
     return true;
 }
@@ -192,13 +205,20 @@ bool qp_rgb565_surface_power(painter_device_t device, bool power_on) { return tr
 
 bool qp_rgb565_surface_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
     qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
-    const uint16_t *             data = (const uint16_t *)pixel_data;
+    if (!surf->buffer) {
+        return false;
+    }
+
+    const uint16_t *data = (const uint16_t *)pixel_data;
     stream_pixdata(surf, data, native_pixel_count);
     return true;
 }
 
 bool qp_rgb565_surface_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
+    if (!surf->buffer) {
+        return false;
+    }
 
     // Set the viewport locations
     surf->viewport_l = left;
@@ -214,6 +234,10 @@ bool qp_rgb565_surface_viewport(painter_device_t device, uint16_t left, uint16_t
 
 bool qp_rgb565_surface_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
     qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
+    if (!surf->buffer) {
+        return false;
+    }
+
     setpixel(surf, x, y, hsv_to_rgb565(hue, sat, val));
     return true;
 }
@@ -221,6 +245,9 @@ bool qp_rgb565_surface_setpixel(painter_device_t device, uint16_t x, uint16_t y,
 // Draw an image
 bool qp_rgb565_surface_drawimage(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val) {
     qmk_rgb565_surface_device_t *surf = (qmk_rgb565_surface_device_t *)device;
+    if (!surf->buffer) {
+        return false;
+    }
 
     // Configure where we're rendering to
     qp_rgb565_surface_viewport(device, x, y, x + image->width - 1, y + image->height - 1);
