@@ -195,7 +195,7 @@ bool qp_qmk_oled_wrapper_drawtext(painter_device_t device, uint16_t x, uint16_t 
 
         if (code_point >= 0) {
             if (code_point >= 0x20 && code_point < 0x7F) {
-                if(fdesc->ascii_glyph_definitions != NULL) {
+                if (fdesc->ascii_glyph_definitions != NULL) {
                     // Search the font's ascii table
                     uint8_t                                  index      = code_point - 0x20;
                     const painter_font_ascii_glyph_offset_t *glyph_desc = &fdesc->ascii_glyph_definitions[index];
@@ -206,7 +206,7 @@ bool qp_qmk_oled_wrapper_drawtext(painter_device_t device, uint16_t x, uint16_t 
 #ifdef UNICODE_ENABLE
             else {
                 // Search the font's unicode table
-                if(fdesc->unicode_glyph_definitions != NULL) {
+                if (fdesc->unicode_glyph_definitions != NULL) {
                     for (uint16_t index = 0; index < fdesc->unicode_glyph_count; ++index) {
                         const painter_font_unicode_glyph_offset_t *glyph_desc = &fdesc->unicode_glyph_definitions[index];
                         if (glyph_desc->unicode_glyph == code_point) {
