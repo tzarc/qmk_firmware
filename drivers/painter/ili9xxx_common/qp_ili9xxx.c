@@ -98,10 +98,10 @@ void qp_ili9xxx_internal_lcd_viewport(ili9xxx_painter_device_t *lcd, uint16_t xb
 
 // Static buffer to contain a generated color palette
 #if QUANTUM_PAINTER_SUPPORTS_256_PALETTE
-HSV             hsv_lookup_table[256];
+static HSV      hsv_lookup_table[256];
 static rgb565_t rgb565_palette[256];
 #else
-HSV             hsv_lookup_table[16];
+static HSV      hsv_lookup_table[16];
 static rgb565_t rgb565_palette[16];
 #endif
 
