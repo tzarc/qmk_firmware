@@ -276,11 +276,20 @@ bool qp_rgb565_surface_drawimage(painter_device_t device, uint16_t x, uint16_t y
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Driver storage
-static qmk_rgb565_surface_device_t driver;
+static qmk_rgb565_surface_device_t driver = {0};
 
 // Factory function for creating a handle to the ILI9341 device
 painter_device_t qp_rgb565_surface_make_device(uint16_t width, uint16_t height) {
-    memset(&driver, 0, sizeof(qmk_rgb565_surface_device_t));
+    // Skip creation if we've got a zero-pixel width or height
+    if(width == 0 || height == 0) {
+        return NULL;
+    }
+
+    // Skip adding a new surface if we've already allocated it.
+    if(driver.width != 0 || driver.height != 0) {
+        return NULL;
+    }
+
     driver.qp_driver.init      = qp_rgb565_surface_init;
     driver.qp_driver.clear     = qp_rgb565_surface_clear;
     driver.qp_driver.power     = qp_rgb565_surface_power;
