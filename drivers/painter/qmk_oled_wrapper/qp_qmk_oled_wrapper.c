@@ -228,11 +228,10 @@ bool qp_qmk_oled_wrapper_drawtext(painter_device_t device, uint16_t x, uint16_t 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Driver storage
-static qmk_oled_painter_device_t driver;
+static qmk_oled_painter_device_t driver = {0};
 
-// Factory function for creating a handle to the ILI9341 device
+// Factory function for creating a handle to the OLED wrapper device
 painter_device_t qp_qmk_oled_wrapper_make_device(void) {
-    memset(&driver, 0, sizeof(qmk_oled_painter_device_t));
     driver.qp_driver.init      = qp_qmk_oled_wrapper_init;
     driver.qp_driver.clear     = qp_qmk_oled_wrapper_clear;
     driver.qp_driver.power     = qp_qmk_oled_wrapper_power;
