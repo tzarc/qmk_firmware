@@ -171,8 +171,8 @@ static ili9xxx_painter_device_t drivers[ILI9488_NUM_DEVICES] = {0};
 painter_device_t qp_ili9488_make_device(pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight) {
     for (uint32_t i = 0; i < ILI9488_NUM_DEVICES; ++i) {
         ili9xxx_painter_device_t *driver = &drivers[i];
-        memset(driver, 0, sizeof(ili9xxx_painter_device_t));
         if (!driver->allocated) {
+            memset(driver, 0, sizeof(ili9xxx_painter_device_t));
             driver->allocated           = true;
             driver->qp_driver.init      = qp_ili9488_init;
             driver->qp_driver.clear     = qp_ili9xxx_clear;
