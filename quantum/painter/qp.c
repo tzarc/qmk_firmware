@@ -27,6 +27,14 @@ bool qp_init(painter_device_t device, painter_rotation_t rotation) {
     return false;
 }
 
+bool qp_flush(painter_device_t device) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (driver->flush) {
+        return driver->flush(device);
+    }
+    return false;
+}
+
 bool qp_clear(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (driver->clear) {

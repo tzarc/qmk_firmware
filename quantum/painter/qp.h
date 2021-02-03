@@ -67,6 +67,9 @@ typedef const painter_font_descriptor_t *painter_font_t;
 // Initialize a device and set its rotation -- need to create the device using its corresponding factory method first
 bool qp_init(painter_device_t device, painter_rotation_t rotation);
 
+// Flush any outstanding operations to device
+bool qp_flush(painter_device_t device);
+
 // Clear's a device's screen
 bool qp_clear(painter_device_t device);
 
