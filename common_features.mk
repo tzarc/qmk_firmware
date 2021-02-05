@@ -112,7 +112,7 @@ ifeq ($(strip $(POINTING_DEVICE_ENABLE)), yes)
 endif
 
 QUANTUM_PAINTER_ENABLE ?= no
-VALID_QUANTUM_PAINTER_DRIVERS := mono2_surface qmk_oled_wrapper ili9341
+VALID_QUANTUM_PAINTER_DRIVERS := mono2_surface qmk_oled_wrapper ili9341 ssd
 QUANTUM_PAINTER_DRIVERS ?=
 ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
     OPT_DEFS += -DQUANTUM_PAINTER_ENABLE
@@ -138,18 +138,35 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
             SRC += $(DRIVER_PATH)/painter/qmk_oled_wrapper/qp_qmk_oled_wrapper.c
         else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341)
             OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE
-            QUANTUM_LIB_SRC += spi_master.c
             COMMON_VPATH += \
                 $(DRIVER_PATH)/painter/ili9xxx_common \
                 $(DRIVER_PATH)/painter/ili9341
             SRC += \
                 $(DRIVER_PATH)/painter/ili9xxx_common/qp_ili9xxx.c \
                 $(DRIVER_PATH)/painter/ili9341/qp_ili9341.c
+        else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ssd)
+            OPT_DEFS += -DQUANTUM_PAINTER_SSD_ENABLE
+            COMMON_VPATH += $(DRIVER_PATH)/painter/ssd
+            SRC += $(DRIVER_PATH)/painter/ssd/qp_ssd.c
         else
             $$(error "$$(CURRENT_PAINTER_DRIVER)" is not a valid quantum painter driver)
         endif
     endef
     $(foreach qp_driver,$(QUANTUM_PAINTER_DRIVERS),$(eval $(call handle_quantum_painter_driver,$(qp_driver))))
+
+    define handle_quantum_painter_bus
+        CURRENT_PAINTER_BUS := $1
+        ifeq ($$(strip $$(CURRENT_PAINTER_BUS)),i2c)
+            OPT_DEFS += -DQUANTUM_PAINTER_BUS_I2C
+            QUANTUM_LIB_SRC += i2c_master.c
+        else ifeq ($$(strip $$(CURRENT_PAINTER_BUS)),spi)
+            OPT_DEFS += -DQUANTUM_PAINTER_BUS_SPI
+            QUANTUM_LIB_SRC += spi_master.c
+        else
+            $$(error "$$(CURRENT_PAINTER_BUS)" is not a valid quantum painter communication bus)
+        endif
+    endef
+    $(foreach qp_bus,$(QUANTUM_PAINTER_BUSES),$(eval $(call handle_quantum_painter_bus,$(qp_bus))))
 endif
 
 VALID_EEPROM_DRIVER_TYPES := vendor custom transient i2c spi
