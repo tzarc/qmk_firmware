@@ -133,6 +133,7 @@ def render_source(format, palette, image_data, width, height, subs):
 
 
 @cli.argument('-i', '--input', required=True, help='Specify input graphic file.')
+@cli.argument('-o', '--output', default='', help='Specify output directory. Defaults to same directory as input.')
 @cli.argument('-f', '--format', required=True, help='Output format, valid types: %s' % (', '.join(qmk.painter.valid_formats.keys())))
 @cli.subcommand('Converts an input image to something QMK understands')
 def painter_convert_graphics(cli):
@@ -153,6 +154,11 @@ def painter_convert_graphics(cli):
         cli.log.error('Output format %s is invalid. Allowed values: %s' % (cli.args.format, ', '.join(qmk.painter.valid_formats.keys())))
         cli.print_usage()
         return False
+
+    # Work out the output directory
+    if len(cli.args.output) == 0:
+        cli.args.output = cli.args.input.parent
+    cli.args.output = qmk.path.normpath(cli.args.output)
 
     sane_name = re.sub(r"[^a-zA-Z0-9]", "_", cli.args.input.stem)
 
@@ -183,13 +189,13 @@ def painter_convert_graphics(cli):
     header_text = qmk.painter.clean_output(render_header(format, subs))
     source_text = qmk.painter.clean_output(render_source(format, palette, image_data, width, height, subs))
 
-    header_file = cli.args.input.parent / (cli.args.input.stem + ".h")
+    header_file = cli.args.output / (cli.args.input.stem + ".h")
     with open(header_file, 'w') as header:
         print(f"Writing {header_file}...")
         header.write(header_text)
         header.close()
 
-    source_file = cli.args.input.parent / (cli.args.input.stem + ".c")
+    source_file = cli.args.output / (cli.args.input.stem + ".c")
     with open(source_file, 'w') as source:
         print(f"Writing {source_file}...")
         source.write(source_text)

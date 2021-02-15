@@ -271,6 +271,7 @@ def painter_make_font_image(cli):
 
 
 @cli.argument('-i', '--input', help='Specify input graphic file.')
+@cli.argument('-o', '--output', default='', help='Specify output directory. Defaults to same directory as input.')
 @cli.argument('-n', '--no-ascii', arg_only=True, action='store_true', help='Disables output of the full ASCII character set (0x20..0x7F), exporting only the glyphs specified.')
 @cli.argument('-u', '--unicode-glyphs', default='', help='Also generate the specified unicode glyphs.')
 @cli.argument('-f', '--format', required=True, help='Output format, valid types: %s' % (', '.join(qmk.painter.valid_formats.keys())))
@@ -286,6 +287,11 @@ def painter_convert_font_image(cli):
     # Load the image
     cli.args.input = qmk.path.normpath(cli.args.input)
     img = Image.open(cli.args.input)
+
+    # Work out the output directory
+    if len(cli.args.output) == 0:
+        cli.args.output = cli.args.input.parent
+    cli.args.output = qmk.path.normpath(cli.args.output)
 
     # Work out the geometry
     (width, height) = img.size
@@ -347,13 +353,13 @@ def painter_convert_font_image(cli):
     source_text = qmk.painter.clean_output(render_source(format, palette, glyph_data, subs))
 
     # Render out the text files
-    header_file = cli.args.input.parent / (cli.args.input.stem + ".h")
+    header_file = cli.args.output / (cli.args.input.stem + ".h")
     with codecs.open(header_file, 'w', 'utf-8-sig') as header:
         print(f"Writing {header_file}...")
         header.write(header_text)
         header.close()
 
-    source_file = cli.args.input.parent / (cli.args.input.stem + ".c")
+    source_file = cli.args.output / (cli.args.input.stem + ".c")
     with codecs.open(source_file, 'w', 'utf-8-sig') as source:
         print(f"Writing {source_file}...")
         source.write(source_text)
