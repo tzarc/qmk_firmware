@@ -14,7 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <debug.h>
+#include <print.h>
 #include <color.h>
+#include <utf8.h>
 #include <spi_master.h>
 
 #ifdef BACKLIGHT_ENABLE
@@ -164,15 +167,52 @@ static inline void lcd_send_palette_pixdata(ili9xxx_painter_device_t *lcd, const
 
 // Recolored renderer
 static inline void lcd_send_mono_pixdata_recolor(ili9xxx_painter_device_t *lcd, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data, uint32_t byte_count, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg) {
-    // Generate the color lookup table
-    uint16_t items = 1 << bits_per_pixel;  // number of items we need to interpolate
-    qp_generate_palette(hsv_lookup_table, items, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
-    for (uint16_t i = 0; i < items; ++i) {
-        rgb565_palette[i] = hsv_to_ili9xxx(hsv_lookup_table[i].h, hsv_lookup_table[i].s, hsv_lookup_table[i].v);
+    // Memoize the last batch of colours so we're not regenerating the palette if we're not changing anything
+    static uint8_t last_bits_per_pixel = UINT8_MAX;
+    static int16_t last_hue_fg         = INT16_MIN;
+    static int16_t last_sat_fg         = INT16_MIN;
+    static int16_t last_val_fg         = INT16_MIN;
+    static int16_t last_hue_bg         = INT16_MIN;
+    static int16_t last_sat_bg         = INT16_MIN;
+    static int16_t last_val_bg         = INT16_MIN;
+
+    // Regenerate the palette only if the inputs have changed
+    if (last_bits_per_pixel != bits_per_pixel || last_hue_fg != hue_fg || last_sat_fg != sat_fg || last_val_fg != val_fg || last_hue_bg != hue_bg || last_sat_bg != sat_bg || last_val_bg != val_bg) {
+        last_bits_per_pixel = bits_per_pixel;
+        last_hue_fg         = hue_fg;
+        last_sat_fg         = sat_fg;
+        last_val_fg         = val_fg;
+        last_hue_bg         = hue_bg;
+        last_sat_bg         = sat_bg;
+        last_val_bg         = val_bg;
+
+        // Generate the color lookup table
+        uint16_t items = 1 << bits_per_pixel;  // number of items we need to interpolate
+        qp_generate_palette(hsv_lookup_table, items, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+        for (uint16_t i = 0; i < items; ++i) {
+            rgb565_palette[i] = hsv_to_ili9xxx(hsv_lookup_table[i].h, hsv_lookup_table[i].s, hsv_lookup_table[i].v);
+        }
     }
 
     // Transmit each block of pixels
     lcd_send_palette_pixdata_impl(lcd, rgb565_palette, bits_per_pixel, pixel_count, pixel_data, byte_count);
+}
+
+// Uncompressed image drawing helper
+static bool drawimage_uncompressed_impl(ili9xxx_painter_device_t *lcd, painter_image_format_t image_format, uint8_t image_bpp, const uint8_t *pixel_data, uint32_t byte_count, int32_t width, int32_t height, const uint8_t *palette_data, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+    // Stream data to the LCD
+    if (image_format == IMAGE_FORMAT_RAW || image_format == IMAGE_FORMAT_RGB565) {
+        // The pixel data is in the correct format already -- send it directly to the device
+        qp_ili9xxx_internal_lcd_sendbuf(lcd, pixel_data, width * height);
+    } else if (image_format == IMAGE_FORMAT_GRAYSCALE) {
+        // Supplied pixel data is in 4bpp monochrome -- decode it to the equivalent pixel data
+        lcd_send_mono_pixdata_recolor(lcd, image_bpp, width * height, pixel_data, byte_count, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+    } else if (image_format == IMAGE_FORMAT_PALETTE) {
+        // Supplied pixel data is in 1bpp monochrome -- decode it to the equivalent pixel data
+        lcd_send_palette_pixdata(lcd, palette_data, image_bpp, width * height, pixel_data, byte_count);
+    }
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -321,19 +361,71 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
     // Configure where we're going to be rendering to
     qp_ili9xxx_internal_lcd_viewport(lcd, x, y, x + image->width - 1, y + image->height - 1);
 
-    uint32_t pixel_count = (((uint32_t)image->width) * image->height);
+    bool ret = false;
     if (image->compression == IMAGE_UNCOMPRESSED) {
         const painter_raw_image_descriptor_t *raw_image_desc = (const painter_raw_image_descriptor_t *)image;
-        // Stream data to the LCD
-        if (image->image_format == IMAGE_FORMAT_RAW || image->image_format == IMAGE_FORMAT_RGB565) {
-            // The pixel data is in the correct format already -- send it directly to the device
-            qp_ili9xxx_internal_lcd_sendbuf(lcd, raw_image_desc->image_data, pixel_count);
-        } else if (image->image_format == IMAGE_FORMAT_GRAYSCALE) {
-            // Supplied pixel data is in 4bpp monochrome -- decode it to the equivalent pixel data
-            lcd_send_mono_pixdata_recolor(lcd, raw_image_desc->base.image_bpp, pixel_count, raw_image_desc->image_data, raw_image_desc->byte_count, hue, sat, val, hue, sat, 0);
-        } else if (image->image_format == IMAGE_FORMAT_PALETTE) {
-            // Supplied pixel data is in 1bpp monochrome -- decode it to the equivalent pixel data
-            lcd_send_palette_pixdata(lcd, raw_image_desc->image_palette, raw_image_desc->base.image_bpp, pixel_count, raw_image_desc->image_data, raw_image_desc->byte_count);
+        ret                                                  = drawimage_uncompressed_impl(lcd, image->image_format, image->image_bpp, raw_image_desc->image_data, raw_image_desc->byte_count, image->width, image->height, raw_image_desc->image_palette, hue, sat, val, hue, sat, 0);
+    }
+
+    qp_ili9xxx_internal_lcd_stop();
+
+    return ret;
+}
+
+bool qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+    ili9xxx_painter_device_t *           lcd   = (ili9xxx_painter_device_t *)device;
+    const painter_raw_font_descriptor_t *fdesc = (const painter_raw_font_descriptor_t *)font;
+
+    qp_ili9xxx_internal_lcd_start(lcd);
+
+    const char *c = str;
+    while (*c) {
+        int32_t code_point = 0;
+        c                  = decode_utf8(c, &code_point);
+
+        if (code_point >= 0) {
+            if (code_point >= 0x20 && code_point < 0x7F) {
+                if (fdesc->ascii_glyph_definitions != NULL) {
+                    // Search the font's ascii table
+                    uint8_t                                  index      = code_point - 0x20;
+                    const painter_font_ascii_glyph_offset_t *glyph_desc = &fdesc->ascii_glyph_definitions[index];
+                    uint16_t                                 byte_count;
+                    if (code_point < 0x7E) {
+                        byte_count = (glyph_desc + 1)->offset - glyph_desc->offset;
+                    } else if (code_point == 0x7E) {
+#ifdef UNICODE_ENABLE
+                        // Unicode glyphs directly follow ascii glyphs, so we take the first's offset
+                        if (fdesc->unicode_glyph_count > 0) {
+                            byte_count = fdesc->unicode_glyph_definitions[0].offset - glyph_desc->offset;
+                        } else {
+                            byte_count = fdesc->byte_count - glyph_desc->offset;
+                        }
+#else   // UNICODE_ENABLE
+                        byte_count = fdesc->byte_count - glyph_desc->offset;
+#endif  // UNICODE_ENABLE
+                    }
+
+                    qp_ili9xxx_internal_lcd_viewport(lcd, x, y, x + glyph_desc->width - 1, y + font->glyph_height - 1);
+                    drawimage_uncompressed_impl(lcd, font->image_format, font->image_bpp, &fdesc->image_data[glyph_desc->offset], byte_count, glyph_desc->width, font->glyph_height, fdesc->image_palette, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+                    x += glyph_desc->width;
+                }
+            }
+#ifdef UNICODE_ENABLE
+            else {
+                // Search the font's unicode table
+                if (fdesc->unicode_glyph_definitions != NULL) {
+                    for (uint16_t index = 0; index < fdesc->unicode_glyph_count; ++index) {
+                        const painter_font_unicode_glyph_offset_t *glyph_desc = &fdesc->unicode_glyph_definitions[index];
+                        if (glyph_desc->unicode_glyph == code_point) {
+                            uint16_t byte_count = (index == fdesc->unicode_glyph_count - 1) ? (fdesc->byte_count - glyph_desc->offset) : ((glyph_desc + 1)->offset - glyph_desc->offset);
+                            qp_ili9xxx_internal_lcd_viewport(lcd, x, y, x + glyph_desc->width - 1, y + font->glyph_height - 1);
+                            drawimage_uncompressed_impl(lcd, font->image_format, font->image_bpp, &fdesc->image_data[glyph_desc->offset], byte_count, glyph_desc->width, font->glyph_height, fdesc->image_palette, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+                            x += glyph_desc->width;
+                        }
+                    }
+                }
+            }
+#endif  // UNICODE_ENABLE
         }
     }
 

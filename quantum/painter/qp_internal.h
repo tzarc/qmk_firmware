@@ -50,6 +50,7 @@ typedef struct painter_raw_font_descriptor_t {
     const painter_font_descriptor_t                base;
     const uint8_t *const                           image_palette;            // pointer to the image palette
     const uint8_t *const                           image_data;               // pointer to the image data
+    const uint32_t                                 byte_count;               // number of bytes in the image
     const painter_font_ascii_glyph_offset_t *const ascii_glyph_definitions;  // list of offsets/widths for ASCII, range 0x20..0x7E
 #ifdef UNICODE_ENABLE
     const painter_font_unicode_glyph_offset_t *const unicode_glyph_definitions;  // Unicode glyph descriptors for unicode rendering
