@@ -184,6 +184,7 @@ painter_device_t qp_ili9341_make_device(pin_t chip_select_pin, pin_t data_pin, p
             driver->qp_driver.circle    = qp_fallback_circle;
             driver->qp_driver.ellipse   = qp_fallback_ellipse;
             driver->qp_driver.drawimage = qp_ili9xxx_drawimage;
+            driver->qp_driver.drawtext  = qp_ili9xxx_drawtext;
             driver->chip_select_pin     = chip_select_pin;
             driver->data_pin            = data_pin;
             driver->reset_pin           = reset_pin;
