@@ -31,6 +31,9 @@
 // Device type
 typedef const void *painter_device_t;
 
+// RGB565 Color definition
+typedef uint16_t rgb565_t;
+
 // Rotation type
 typedef enum { QP_ROTATION_0, QP_ROTATION_90, QP_ROTATION_180, QP_ROTATION_270 } painter_rotation_t;
 

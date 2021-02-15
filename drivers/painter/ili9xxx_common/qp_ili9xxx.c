@@ -167,7 +167,7 @@ static inline void lcd_send_palette_pixdata(ili9xxx_painter_device_t *lcd, const
 
 // Recolored renderer
 static inline void lcd_send_mono_pixdata_recolor(ili9xxx_painter_device_t *lcd, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data, uint32_t byte_count, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg) {
-    // Memoize the last batch of colours so we're not regenerating the palette if we're not changing anything
+    // Memoize the last batch of colors so we're not regenerating the palette if we're not changing anything
     static uint8_t last_bits_per_pixel = UINT8_MAX;
     static int16_t last_hue_fg         = INT16_MIN;
     static int16_t last_sat_fg         = INT16_MIN;
