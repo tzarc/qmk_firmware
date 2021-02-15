@@ -281,12 +281,12 @@ static qmk_rgb565_surface_device_t driver = {0};
 // Factory function for creating a handle to the ILI9341 device
 painter_device_t qp_rgb565_surface_make_device(uint16_t width, uint16_t height) {
     // Skip creation if we've got a zero-pixel width or height
-    if(width == 0 || height == 0) {
+    if (width == 0 || height == 0) {
         return NULL;
     }
 
     // Skip adding a new surface if we've already allocated it.
-    if(driver.width != 0 || driver.height != 0) {
+    if (driver.width != 0 || driver.height != 0) {
         return NULL;
     }
 

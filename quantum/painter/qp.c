@@ -15,6 +15,7 @@
  */
 
 #include <quantum.h>
+#include <utf8.h>
 #include <qp_internal.h>
 #include <qp_utils.h>
 
@@ -121,6 +122,42 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
         return driver->drawimage(device, x, y, image, hue, sat, val);
     }
     return false;
+}
+
+int16_t qp_textwidth(painter_font_t font, const char *str) {
+    const painter_raw_font_descriptor_t *fdesc = (const painter_raw_font_descriptor_t *)font;
+    const char *                         c     = str;
+    int16_t                              width = 0;
+    while (*c) {
+        int32_t code_point = 0;
+        c                  = decode_utf8(c, &code_point);
+
+        if (code_point >= 0) {
+            if (code_point >= 0x20 && code_point < 0x7F) {
+                if (fdesc->ascii_glyph_definitions != NULL) {
+                    // Search the font's ascii table
+                    uint8_t                                  index      = code_point - 0x20;
+                    const painter_font_ascii_glyph_offset_t *glyph_desc = &fdesc->ascii_glyph_definitions[index];
+                    width += glyph_desc->width;
+                }
+            }
+#ifdef UNICODE_ENABLE
+            else {
+                // Search the font's unicode table
+                if (fdesc->unicode_glyph_definitions != NULL) {
+                    for (uint16_t index = 0; index < fdesc->unicode_glyph_count; ++index) {
+                        const painter_font_unicode_glyph_offset_t *glyph_desc = &fdesc->unicode_glyph_definitions[index];
+                        if (glyph_desc->unicode_glyph == code_point) {
+                            width += glyph_desc->width;
+                        }
+                    }
+                }
+            }
+#endif  // UNICODE_ENABLE
+        }
+    }
+
+    return width;
 }
 
 bool qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str) { return qp_drawtext_recolor(device, x, y, font, str, 0, 0, 255, 0, 0, 0); }
