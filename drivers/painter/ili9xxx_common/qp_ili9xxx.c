@@ -372,7 +372,7 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
     return ret;
 }
 
-bool qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
     ili9xxx_painter_device_t *           lcd   = (ili9xxx_painter_device_t *)device;
     const painter_raw_font_descriptor_t *fdesc = (const painter_raw_font_descriptor_t *)font;
 
@@ -431,5 +431,5 @@ bool qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, painte
 
     qp_ili9xxx_internal_lcd_stop();
 
-    return true;
+    return (int16_t)x;
 }

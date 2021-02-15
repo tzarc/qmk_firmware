@@ -128,7 +128,7 @@ ifeq ($(strip $(POINTING_DEVICE_ENABLE)), yes)
 endif
 
 QUANTUM_PAINTER_ENABLE ?= no
-VALID_QUANTUM_PAINTER_DRIVERS := rgb565_surface qmk_oled_wrapper ili9341
+VALID_QUANTUM_PAINTER_DRIVERS := qmk_oled_wrapper ili9341
 QUANTUM_PAINTER_DRIVERS ?=
 ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
     OPT_DEFS += -DQUANTUM_PAINTER_ENABLE
@@ -143,11 +143,7 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
 
     define handle_quantum_painter_driver
         CURRENT_PAINTER_DRIVER := $1
-        ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),rgb565_surface)
-            OPT_DEFS += -DQUANTUM_PAINTER_RGB565_SURFACE_ENABLE
-            COMMON_VPATH += $(DRIVER_PATH)/painter/rgb565_surface
-            SRC += $(DRIVER_PATH)/painter/rgb565_surface/qp_rgb565_surface.c
-        else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),qmk_oled_wrapper)
+        ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),qmk_oled_wrapper)
             OPT_DEFS += -DQUANTUM_PAINTER_QMK_OLED_WRAPPER_ENABLE
             OLED_DRIVER_ENABLE = yes
             COMMON_VPATH += $(DRIVER_PATH)/painter/qmk_oled_wrapper
