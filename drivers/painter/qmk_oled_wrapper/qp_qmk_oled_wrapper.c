@@ -181,7 +181,7 @@ bool qp_qmk_oled_wrapper_drawimage(painter_device_t device, uint16_t x, uint16_t
     return false;
 }
 
-bool qp_qmk_oled_wrapper_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+int16_t qp_qmk_oled_wrapper_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
     qmk_oled_painter_device_t *          oled  = (qmk_oled_painter_device_t *)device;
     const painter_raw_font_descriptor_t *fdesc = (const painter_raw_font_descriptor_t *)font;
 
@@ -220,7 +220,7 @@ bool qp_qmk_oled_wrapper_drawtext(painter_device_t device, uint16_t x, uint16_t 
         }
     }
 
-    return true;
+    return (int16_t)x;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
