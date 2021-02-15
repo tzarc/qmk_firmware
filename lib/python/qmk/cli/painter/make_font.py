@@ -105,6 +105,7 @@ static const painter_raw_font_descriptor_t font_${sane_name}_raw PROGMEM = {
     },
     .image_palette             = ${palette_ptr},
     .image_data                = font_${sane_name}_data,
+    .byte_count                = ${byte_count},
     .ascii_glyph_definitions   = ${ascii_glyph_definitions_ptr},
 #ifdef UNICODE_ENABLE
     .unicode_glyph_definitions = ${unicode_glyph_definitions_ptr},
