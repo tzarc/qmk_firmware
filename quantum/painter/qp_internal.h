@@ -64,6 +64,7 @@ typedef struct painter_raw_font_descriptor_t {
 
 // Callback function types
 typedef bool (*painter_driver_init_func)(painter_device_t driver, painter_rotation_t rotation);
+typedef bool (*painter_driver_flush_func)(painter_device_t driver);
 typedef bool (*painter_driver_clear_func)(painter_device_t driver);
 typedef bool (*painter_driver_power_func)(painter_device_t driver, bool power_on);
 typedef bool (*painter_driver_brightness_func)(painter_device_t driver, uint8_t val);
@@ -80,6 +81,7 @@ typedef int16_t (*painter_driver_drawtext_func)(painter_device_t device, uint16_
 // Driver base definition
 struct painter_driver_t {
     painter_driver_init_func       init;
+    painter_driver_flush_func      flush;
     painter_driver_clear_func      clear;
     painter_driver_power_func      power;
     painter_driver_brightness_func brightness;
