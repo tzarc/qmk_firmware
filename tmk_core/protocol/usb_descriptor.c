@@ -45,6 +45,10 @@
 #    include "joystick.h"
 #endif
 
+#if defined(SERIAL_NUMBER) && defined(SERIAL_NUMBER_STM32_UNIQUE_ID)
+#    include "printf.h"
+#endif  // defined(SERIAL_NUMBER) && defined(SERIAL_NUMBER_STM32_UNIQUE_ID)
+
 // clang-format off
 
 /*
@@ -1039,6 +1043,36 @@ const USB_Descriptor_String_t PROGMEM ProductString = {
 };
 
 #if defined(SERIAL_NUMBER)
+#if defined(SERIAL_NUMBER_STM32_UNIQUE_ID)
+#ifndef STM32_SERIAL_NUMBER_LENGTH
+#define STM32_SERIAL_NUMBER_LENGTH 25
+#endif
+uint8_t SerialNumberString[sizeof(USB_Descriptor_String_t)+((STM32_SERIAL_NUMBER_LENGTH)*sizeof(wchar_t))];
+void set_stm32_serial_number(void) {
+    const char hex_str[] = "0123456789ABCDEF";
+    static bool is_set = false;
+    if(is_set)
+    return;
+    is_set = true;
+
+    uint32_t uid[3] = {
+        *(((uint32_t*)(UID_BASE))+0),
+        *(((uint32_t*)(UID_BASE))+1),
+        *(((uint32_t*)(UID_BASE))+2)
+    };
+
+    USB_Descriptor_String_t* desc = (USB_Descriptor_String_t*)SerialNumberString;
+
+    uint8_t *p = (uint8_t*)uid;
+    for(int i = 0; i < STM32_SERIAL_NUMBER_LENGTH; i += 2) {
+        desc->UnicodeString[i+0] = hex_str[p[i/2] >> 4];
+        desc->UnicodeString[i+1] = hex_str[p[i/2] & 0xF];
+    }
+
+    desc->Header.Type = DTYPE_String;
+    desc->Header.Size = STM32_SERIAL_NUMBER_LENGTH - 1;
+}
+#else // defined(SERIAL_NUMBER_STM32_UNIQUE_ID)
 const USB_Descriptor_String_t PROGMEM SerialNumberString = {
     .Header = {
         .Size                   = USB_STRING_LEN(sizeof(SERIAL_NUMBER) - 1), // Subtract 1 for null terminator
@@ -1046,7 +1080,8 @@ const USB_Descriptor_String_t PROGMEM SerialNumberString = {
     },
     .UnicodeString              = USBSTR(SERIAL_NUMBER)
 };
-#endif
+#endif // defined(SERIAL_NUMBER_STM32_UNIQUE_ID)
+#endif // defined(SERIAL_NUMBER)
 
 // clang-format on
 
@@ -1062,6 +1097,10 @@ uint16_t get_usb_descriptor(const uint16_t wValue, const uint16_t wIndex, const 
     const uint8_t DescriptorIndex = (wValue & 0xFF);
     const void*   Address         = NULL;
     uint16_t      Size            = NO_DESCRIPTOR;
+
+#if defined(SERIAL_NUMBER) && defined(SERIAL_NUMBER_STM32_UNIQUE_ID)
+    set_stm32_serial_number();
+#endif  // defined(SERIAL_NUMBER) && defined(SERIAL_NUMBER_STM32_UNIQUE_ID)
 
     switch (DescriptorType) {
         case DTYPE_Device:
@@ -1093,8 +1132,8 @@ uint16_t get_usb_descriptor(const uint16_t wValue, const uint16_t wIndex, const 
                     break;
 #if defined(SERIAL_NUMBER)
                 case 0x03:
-                    Address = &SerialNumberString;
-                    Size    = pgm_read_byte(&SerialNumberString.Header.Size);
+                    Address = (const USB_Descriptor_String_t*)&SerialNumberString;
+                    Size    = pgm_read_byte(&((const USB_Descriptor_String_t*)&SerialNumberString)->Header.Size);
 
                     break;
 #endif
