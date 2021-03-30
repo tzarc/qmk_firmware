@@ -1,0 +1,14 @@
+* @qmk/collaborators
+
+*chibios* @tzarc
+/drivers/chibios/ @tzarc
+/platforms/chibios/ @tzarc
+/tmk_core/common/chibios/ @tzarc
+/tmk_core/protocol/chibios/ @tzarc
+
+chconf.h @tzarc
+halconf.h @tzarc
+mcuconf.h @tzarc
+chconf_community.h @tzarc
+halconf_community.h @tzarc
+mcuconf_community.h @tzarc
