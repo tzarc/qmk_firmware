@@ -145,8 +145,10 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
         else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),st7735r)
             OPT_DEFS += -DQUANTUM_PAINTER_ST7735R_ENABLE
             QUANTUM_LIB_SRC += spi_master.c
-            COMMON_VPATH += $(DRIVER_PATH)/painter/st7735r
-            SRC += $(DRIVER_PATH)/painter/st7735r/qp_st7735r.c
+            COMMON_VPATH += \
+                $(DRIVER_PATH)/painter/st7735r
+            SRC += \
+                $(DRIVER_PATH)/painter/st7735r/qp_st7735r.c
         else
             $$(error "$$(CURRENT_PAINTER_DRIVER)" is not a valid quantum painter driver)
         endif

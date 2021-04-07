@@ -1,4 +1,4 @@
-/* Copyright 2020 Nick Brassel (@tzarc), Paul Cotter (@Gr1mR3aver)
+/* Copyright 2020 Nick Brassel (@tzarc)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,6 +92,9 @@ bool qp_st7735r_init(painter_device_t device, painter_rotation_t rotation) {
     // Configure inversion
     // frame for all modes
     qp_st7735r_internal_lcd_reg(lcd, ST7735R_SET_INVERSION_CTL, 0x07);
+    // line for all modes
+    // qp_st7735r_internal_lcd_reg(lcd, ST7735R_SET_INVERSION_CTL, 0x00);
+
 
     // Configure power control
     qp_st7735r_internal_lcd_cmd(lcd, ST7735R_SET_POWER_CTL_1);
@@ -136,7 +139,7 @@ bool qp_st7735r_init(painter_device_t device, painter_rotation_t rotation) {
     wait_ms(20);
 
     // Set the default viewport to be fullscreen
-    qp_st7735r_internal_lcd_viewport(lcd, 0, 0, 132, 162);
+    qp_st7735r_internal_lcd_viewport(lcd, 0, 0, 239, 319);
 
    // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
     switch (rotation) {

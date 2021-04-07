@@ -1,4 +1,4 @@
-/* Copyright 2020 Nick Brassel (@tzarc), Paul Cotter (@Gr1mR3aver)
+/* Copyright 2020 Nick Brassel (@tzarc)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
