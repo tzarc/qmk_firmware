@@ -54,6 +54,8 @@ def _find_broken_requirements(requirements):
                 module_import = "pep8ext_naming"
             elif module_name == 'pyusb':
                 module_import = 'usb.core'
+            elif module_name == 'pillow':
+                module_import = 'PIL'
 
             if not find_spec(module_import):
                 broken_modules.append(module_name)
@@ -158,5 +160,6 @@ from . import list  # noqa
 from . import kle2json  # noqa
 from . import multibuild  # noqa
 from . import new  # noqa
+from . import painter  # noqa
 from . import pyformat  # noqa
 from . import pytest  # noqa
