@@ -19,6 +19,7 @@
 #include <color.h>
 #include <utf8.h>
 #include <spi_master.h>
+#include <wait.h>
 
 #ifdef BACKLIGHT_ENABLE
 #    include <backlight/backlight.h>
