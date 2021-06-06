@@ -16,6 +16,7 @@
 
 #include <string.h>
 #include <spi_master.h>
+#include <wait.h>
 #include <qp.h>
 #include <qp_ili9341.h>
 #include <qp_internal.h>
