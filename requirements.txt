@@ -9,5 +9,4 @@ jsonschema>=3
 milc>=1.4.2
 pygments
 pyusb
-python-lzf
 pillow
