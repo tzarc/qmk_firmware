@@ -18,9 +18,6 @@
 #include <xap.h>
 #include <usb_descriptor.h>
 
-typedef uint8_t  xap_identifier_t;
-typedef uint16_t xap_token_t;
-
 typedef enum xap_route_type_t {
     XAP_UNKNOWN = 0,
     XAP_ROUTE,
@@ -34,7 +31,7 @@ typedef struct xap_route_flags_t {
 
 _Static_assert(sizeof(xap_route_flags_t) == 1, "xap_route_flags_t is not length of 1");
 
-extern void xap_send(uint8_t *data, uint8_t length);
+extern void xap_send_base(uint8_t *data, uint8_t length);
 
 #define XAP_SUBSYSTEM_XAP 0x00
 #define XAP_SUBSYSTEM_XAP_ROUTE_VERSION 0x00
@@ -60,13 +57,13 @@ struct xap_route_t {
 };
 
 #ifdef CONSOLE_ENABLE
-#    define DUMP_XAP_DATA(name, token, data, len)                             \
-        do {                                                                  \
-            dprintf("%s(%04X, ..., %d):", (#name), (int)(token), (int)(len)); \
-            for (int i = 0; i < (len); ++i) {                                 \
-                dprintf(" %02X", (int)((data)[i]));                           \
-            }                                                                 \
-            dprint("\n");                                                     \
+#    define DUMP_XAP_DATA(name, token, data, len)                                                    \
+        do {                                                                                         \
+            dprintf("%s(%04X, ..., %d)%s", (#name), (int)(token), (int)(len), (len > 0) ? ":" : ""); \
+            for (int i = 0; i < (len); ++i) {                                                        \
+                dprintf(" %02X", (int)((data)[i]));                                                  \
+            }                                                                                        \
+            dprint("\n");                                                                            \
         } while (0)
 #else
 #    define DUMP_XAP_DATA(name, token, data, len) \
@@ -74,14 +71,13 @@ struct xap_route_t {
         } while (0)
 #endif
 
+void xap_respond_failure(xap_token_t token) { xap_send(token, 0, NULL, 0); }
+
 void xap_route_version(xap_token_t token, const uint8_t *data, size_t data_len) {}
 void qmk_route_version(xap_token_t token, const uint8_t *data, size_t data_len) {
-    // DUMP_XAP_DATA(qmk_route_version, token, data, data_len);
-    uint8_t rdata[XAP_EPSIZE] = {0};
-    *(uint16_t *)rdata        = token;
-    rdata[2]                  = 0x01;
-    *(uint32_t *)&rdata[3]    = 0x12345678;
-    xap_send(rdata, sizeof(rdata));
+    DUMP_XAP_DATA(qmk_route_version, token, data, data_len);
+    uint32_t version = 0x12345678;
+    xap_send(token, XAP_RESPONSE_FLAG_SUCCESS, &version, sizeof(version));
 }
 void qmk_caps_query(xap_token_t token, const uint8_t *data, size_t data_len) {}
 
@@ -99,15 +95,10 @@ static const xap_route_t root_routes[] = {
     [XAP_SUBSYSTEM_QMK] = {.flags = {.type = XAP_ROUTE, .is_secure = 0}, .child_routes = qmk_routes, .child_routes_len = sizeof(qmk_routes) / sizeof(qmk_routes[0])},
 };
 
-void xap_respond_failure(xap_token_t token) {
-    uint8_t data[XAP_EPSIZE] = {0};
-    *(uint16_t *)data        = token;
-    data[2]                  = 0;
-    xap_send(data, sizeof(data));
-}
-
 void xap_execute_route(xap_token_t token, const xap_route_t *routes, size_t max_routes, const uint8_t *data, size_t data_len) {
-    // DUMP_XAP_DATA(xap_execute_route, token, data, data_len);
+    if (data_len == 0) return;
+
+    DUMP_XAP_DATA(xap_execute_route, token, data, data_len);
     xap_identifier_t id = data[0];
     if (id < max_routes) {
         const xap_route_t *route = &routes[id];
@@ -129,9 +120,7 @@ void xap_execute_route(xap_token_t token, const xap_route_t *routes, size_t max_
     }
 }
 
-void xap_receive(const void *data, size_t length) {
-    const uint8_t *u8data = (const uint8_t *)data;
-    xap_token_t    token  = *(const xap_token_t *)data;
-    // DUMP_XAP_DATA(xap_receive, token, u8data, length);
-    xap_execute_route(token, root_routes, sizeof(root_routes) / sizeof(root_routes[0]), &u8data[2], length - 2);
+void xap_receive(xap_token_t token, const uint8_t *data, size_t length) {
+    DUMP_XAP_DATA(xap_receive, token, data, length);
+    xap_execute_route(token, root_routes, sizeof(root_routes) / sizeof(root_routes[0]), data, length);
 }

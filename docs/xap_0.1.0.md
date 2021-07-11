@@ -39,13 +39,15 @@ Communication generally follows a request/response pattern.
 
 Each request needs to include a _token_ -- this `u16` value prefixes each outbound request from the host application and its corresponding response, allowing repsonse messages to be correlated with their request, even if multiple host applications are communicating with the firmware simultaneously. Host applications should randomly generate a token ID for **every** outbound request, unless using a reserved token defined below.
 
+This token is followed by a `u8` signifying the length of data in the request.
+
 Two token values are reserved: `0x0000` and `0xFFFF`:
 * `0x0000`: A message sent by a host application may use this token if no response is to be sent -- a "fire and forget" message.
 * `0xFFFF`: Signifies a "broadcast" message sent by the firmware without prompting from the host application. Broadcast messages are defined later in this document.
 
 Any request will generate at least one corresponding response, with the exception of messages using reserved tokens. Maximum total message length is 128 bytes due to RAM constraints.
 
-Response messages will always be prefixed by the originating request _token_, directly followed by that request's _response flags_:
+Response messages will always be prefixed by the originating request _token_, directly followed by that request's _response flags_, then the response payload length:
 
 | Bit 7 | Bit 6 | Bit 5 | Bit 4 | Bit 3 | Bit 2 | Bit 1 | Bit 0 |
 |--|--|--|--|--|--|--|--|
@@ -59,16 +61,16 @@ Response messages will always be prefixed by the originating request _token_, di
 ### Example "conversation":
 
 **Request** -- version query:
-| Byte | 0 | 1 | 2 | 3 |
-| --- | --- | --- | --- | --- |
-| **Purpose** | Token | Token | Route | Route |
-| **Value** | `0x43` | `0x2B` | `0x00` | `0x00` |
+| Byte | 0 | 1 | 2 | 3 | 4 |
+| --- | --- | --- | --- | --- | --- |
+| **Purpose** | Token | Token | Payload Length | Route | Route |
+| **Value** | `0x43` | `0x2B` | `0x02` | `0x00` | `0x00` |
 
 **Response** -- matching token, successful flag, payload of `0x03170192` = 3.17.192:
-| Byte | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| **Purpose** | Token | Token | Response Flags | Payload | Payload | Payload | Payload |
-| **Value** | `0x43` | `0x2B` | `0x01` | `0x92` | `0x01` | `0x17` | `0x03` |
+| Byte | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **Purpose** | Token | Token | Response Flags | Payload Length | Payload | Payload | Payload | Payload |
+| **Value** | `0x43` | `0x2B` | `0x01` | `0x04` | `0x92` | `0x01` | `0x17` | `0x03` |
 
 ## Broadcast messages
 

@@ -16,4 +16,12 @@
 
 #pragma once
 
-void xap_receive(const void* data, size_t length);
+#include <stdlib.h>
+#include <stdint.h>
+
+typedef uint8_t  xap_identifier_t;
+typedef uint16_t xap_token_t;
+
+#define XAP_RESPONSE_FLAG_SUCCESS (1 << 0)
+
+void xap_send(xap_token_t token, uint8_t response_flags, const void *data, size_t length);
