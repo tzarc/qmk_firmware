@@ -740,5 +740,5 @@ ifeq ($(strip $(XAP_ENABLE)), yes)
     DYNAMIC_KEYMAP_ENABLE := yes
     EMBED_INFO_JSON := yes
     VPATH += $(QUANTUM_DIR)/xap
-    SRC += $(QUANTUM_DIR)/xap/xap.c
+    SRC += $(QUANTUM_DIR)/xap/xap.c $(QUANTUM_DIR)/xap/xap_handlers.c
 endif

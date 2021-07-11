@@ -1,4 +1,6 @@
 {
+    version: 0.1.0
+
     documentation: {
         order: [
             broadcast_messages
@@ -98,15 +100,43 @@
         }
     }
 
-    subsystems: {
+    routes: {
         0x00: {
             routes: {
                 0x01: {
+                    type: command
                     name: Enabled subsystem query
                     define: SUBSYSTEM_QUERY
                     description:
                         '''
                         XAP protocol subsystem query.
+                        '''
+                    always_present: true
+                }
+            }
+        },
+
+        0x01: {
+            type: router
+            name: QMK
+            define: QMK
+            description:
+                '''
+                This subsystem is always present, and provides the ability to address QMK-specific functionality.
+                '''
+            routes: {
+                0x00: {
+                    type: command
+                    name: Version Query
+                    define: VERSION_QUERY
+                    description:
+                        '''
+                        QMK protocol version query.
+
+                        * Returns the BCD-encoded version in the format of XX.YY.ZZZZ => `0xXXYYZZZZ`
+                            * e.g. 1.1.15 will match `0x01010015`.
+                        * Response:
+                            * `u32` value.
                         '''
                     always_present: true
                 }

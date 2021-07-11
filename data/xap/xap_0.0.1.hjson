@@ -1,4 +1,9 @@
 {
+    version: 0.0.1
+
+    // Needed for table generation
+    define: SUBSYSTEM
+
     // Documentation section is used purely for `qmk xap-generate-docs`.
     documentation: {
         order: [
@@ -140,16 +145,18 @@
         }
     }
 
-    subsystems: {
+    routes: {
         0x00: {
+            type: router
             name: XAP
-            define: XAP_SUBSYSTEM
+            define: XAP
             description:
                 '''
                 This subsystem is always present, and provides the ability to query information about the XAP protocol of the connected device.
                 '''
             routes: {
                 0x00: {
+                    type: command
                     name: Version Query
                     define: VERSION_QUERY
                     description:

@@ -14,20 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <quantum.h>
+#include <xap.h>
 
-#include <stdlib.h>
-#include <stdint.h>
+void xap_respond_failure(xap_token_t token, xap_response_flags_t response_flags) { xap_send(token, response_flags, NULL, 0); }
 
-typedef uint8_t  xap_identifier_t;
-typedef uint8_t  xap_response_flags_t;
-typedef uint16_t xap_token_t;
+bool subsystem_xap_version_query_handler(xap_token_t token, const uint8_t *data, size_t data_len) { return false; }
 
-#define XAP_RESPONSE_FLAG_FAILED 0
-#define XAP_RESPONSE_FLAG_SUCCESS (1 << 0)
+bool subsystem_xap_subsystem_query_handler(xap_token_t token, const uint8_t *data, size_t data_len) { return false; }
 
-void xap_respond_failure(xap_token_t token, xap_response_flags_t response_flags);
-
-void xap_send(xap_token_t token, xap_response_flags_t response_flags, const void *data, size_t length);
-
-#include <xap_generated.h>
+bool subsystem_qmk_version_query_handler(xap_token_t token, const uint8_t *data, size_t data_len) {
+    uint32_t version = 0x12345678;
+    xap_send(token, XAP_RESPONSE_FLAG_SUCCESS, &version, sizeof(version));
+    return true;
+}

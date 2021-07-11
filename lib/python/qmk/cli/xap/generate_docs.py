@@ -1,42 +1,9 @@
 """This script generates the XAP protocol documentation.
 """
-from typing import OrderedDict
 import hjson
-from qmk.constants import QMK_FIRMWARE
 from milc import cli
+from qmk.constants import QMK_FIRMWARE
 from qmk.xap import get_xap_definition_files, update_xap_definitions, latest_xap_defs
-
-def _merge_ordered_dicts(dicts):
-    """Merges nested OrderedDict objects resulting from reading a hjson file.
-
-    Later input dicts overrides earlier dicts for plain values.
-    Arrays will be appended. If the first entry of an array is "!reset!", the contents of the array will be cleared and replaced with RHS.
-    Dictionaries will be recursively merged. If any entry is "!reset!", the contents of the dictionary will be cleared and replaced with RHS.
-    """
-
-    result = OrderedDict()
-
-    def add_entry(target, k, v):
-        if k in target and isinstance(v, OrderedDict):
-            if "!reset!" in v:
-                target[k] = v
-            else:
-                target[k] = _merge_ordered_dicts([target[k], v])
-            if "!reset!" in target[k]:
-                del target[k]["!reset!"]
-        elif k in target and isinstance(v, list):
-            if v[0] == '!reset!':
-                target[k] = v[1:]
-            else:
-                target[k] = target[k] + v
-        else:
-            target[k] = v
-
-    for d in dicts:
-        for (k,v) in d.items():
-            add_entry(result, k, v)
-
-    return result
 
 
 def _update_type_docs(overall):

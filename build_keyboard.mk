@@ -354,14 +354,26 @@ VPATH += $(COMMON_VPATH)
 include common_features.mk
 
 # XAP embedded info.json
-ifeq ($(strip $(EMBED_INFO_JSON)), yes)
+ifeq ($(strip $(XAP_ENABLE)), yes)
+
 $(KEYMAP_OUTPUT)/src/info_json_xz.h: $(INFO_JSON_FILES)
 	mkdir -p $(KEYMAP_OUTPUT)/src
 	cat $(INFO_JSON_FILES) | xz -cz9e - > $(KEYMAP_OUTPUT)/src/info.json.xz
 	cd $(KEYMAP_OUTPUT)/src \
 		&& xxd -i info.json.xz info_json_xz.h \
 		&& cd -
-generated-files: $(KEYMAP_OUTPUT)/src/info_json_xz.h
+
+XAP_FILES = $(shell ls -1 data/xap/* | sort | xargs echo)
+$(info $(XAP_FILES))
+
+$(KEYMAP_OUTPUT)/src/xap_generated.inl: $(XAP_FILES)
+	$(QMK_BIN) xap-generate-qmk-inc -o "$(KEYMAP_OUTPUT)/src/xap_generated.inl"
+
+$(KEYMAP_OUTPUT)/src/xap_generated.h: $(XAP_FILES)
+	$(QMK_BIN) xap-generate-qmk-h -o "$(KEYMAP_OUTPUT)/src/xap_generated.h"
+
+generated-files: $(KEYMAP_OUTPUT)/src/info_json_xz.h $(KEYMAP_OUTPUT)/src/xap_generated.inl $(KEYMAP_OUTPUT)/src/xap_generated.h
+
 VPATH += $(KEYMAP_OUTPUT)/src
 endif
 
