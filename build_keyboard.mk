@@ -352,6 +352,19 @@ VPATH += $(KEYBOARD_PATHS)
 VPATH += $(COMMON_VPATH)
 
 include common_features.mk
+
+# XAP embedded info.json
+ifeq ($(strip $(EMBED_INFO_JSON)), yes)
+$(KEYMAP_OUTPUT)/src/info_json_xz.h: $(INFO_JSON_FILES)
+	mkdir -p $(KEYMAP_OUTPUT)/src
+	cat $(INFO_JSON_FILES) | xz -cz9e - > $(KEYMAP_OUTPUT)/src/info.json.xz
+	cd $(KEYMAP_OUTPUT)/src \
+		&& xxd -i info.json.xz info_json_xz.h \
+		&& cd -
+generated-files: $(KEYMAP_OUTPUT)/src/info_json_xz.h
+VPATH += $(KEYMAP_OUTPUT)/src
+endif
+
 include $(TMK_PATH)/protocol.mk
 include $(TMK_PATH)/common.mk
 include bootloader.mk

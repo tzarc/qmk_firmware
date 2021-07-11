@@ -85,6 +85,10 @@ extern keymap_config_t keymap_config;
 #    include "raw_hid.h"
 #endif
 
+#ifdef XAP_ENABLE
+#    include "xap.h"
+#endif
+
 #ifdef JOYSTICK_ENABLE
 #    include "joystick.h"
 #endif
@@ -248,6 +252,63 @@ static void raw_hid_task(void) {
     }
 }
 #endif
+
+#ifdef XAP_ENABLE
+void xap_send(uint8_t *data, uint8_t length) {
+    // TODO: implement variable size packet
+    if (length != XAP_EPSIZE) {
+        return;
+    }
+
+    if (USB_DeviceState != DEVICE_STATE_Configured) {
+        return;
+    }
+
+    // TODO: decide if we allow calls to raw_hid_send() in the middle
+    // of other endpoint usage.
+    uint8_t ep = Endpoint_GetCurrentEndpoint();
+
+    Endpoint_SelectEndpoint(XAP_IN_EPNUM);
+
+    // Check to see if the host is ready to accept another packet
+    if (Endpoint_IsINReady()) {
+        // Write data
+        Endpoint_Write_Stream_LE(data, XAP_EPSIZE, NULL);
+        // Finalize the stream transfer to send the last packet
+        Endpoint_ClearIN();
+    }
+
+    Endpoint_SelectEndpoint(ep);
+}
+
+static void xap_task(void) {
+    // Create a temporary buffer to hold the read in data from the host
+    uint8_t data[XAP_EPSIZE];
+    bool    data_read = false;
+
+    // Device must be connected and configured for the task to run
+    if (USB_DeviceState != DEVICE_STATE_Configured) return;
+
+    Endpoint_SelectEndpoint(XAP_OUT_EPNUM);
+
+    // Check to see if a packet has been sent from the host
+    if (Endpoint_IsOUTReceived()) {
+        // Check to see if the packet contains data
+        if (Endpoint_IsReadWriteAllowed()) {
+            /* Read data */
+            Endpoint_Read_Stream_LE(data, sizeof(data), NULL);
+            data_read = true;
+        }
+
+        // Finalize the stream transfer to receive the last packet
+        Endpoint_ClearOUT();
+
+        if (data_read) {
+            xap_receive(data, sizeof(data));
+        }
+    }
+}
+#endif  // XAP_ENABLE
 
 /*******************************************************************************
  * Console
@@ -499,6 +560,12 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     ConfigSuccess &= Endpoint_ConfigureEndpoint((RAW_IN_EPNUM | ENDPOINT_DIR_IN), EP_TYPE_INTERRUPT, RAW_EPSIZE, 1);
     ConfigSuccess &= Endpoint_ConfigureEndpoint((RAW_OUT_EPNUM | ENDPOINT_DIR_OUT), EP_TYPE_INTERRUPT, RAW_EPSIZE, 1);
 #endif
+
+#ifdef XAP_ENABLE
+    /* Setup XAP endpoints */
+    ConfigSuccess &= Endpoint_ConfigureEndpoint((XAP_IN_EPNUM | ENDPOINT_DIR_IN), EP_TYPE_INTERRUPT, XAP_EPSIZE, 1);
+    ConfigSuccess &= Endpoint_ConfigureEndpoint((XAP_OUT_EPNUM | ENDPOINT_DIR_OUT), EP_TYPE_INTERRUPT, XAP_EPSIZE, 1);
+#endif  // XAP_ENABLE
 
 #ifdef CONSOLE_ENABLE
     /* Setup console endpoint */
@@ -1100,6 +1167,10 @@ int main(void) {
 
 #ifdef RAW_ENABLE
         raw_hid_task();
+#endif
+
+#ifdef XAP_ENABLE
+        xap_task();
 #endif
 
 #if !defined(INTERRUPT_CONTROL_ENDPOINT)
