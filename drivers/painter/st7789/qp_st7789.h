@@ -32,20 +32,9 @@
 
 #define LCD_SPI_MODE 3
 
-#ifdef LCD_HEIGHT
-#   undef LCD_HEIGHT
-#endif
-
-#ifdef LCD_WIDTH
-#   undef LCD_WIDTH
-#endif
-
-#define LCD_HEIGHT 320
-#define LCD_WIDTH 240
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter ST7789 device factory
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Factory method for an ST7789 device
-painter_device_t qp_st7789_make_device(pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight);
+painter_device_t qp_st7789_make_device(pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight, uint16_t lcd_width, uint16_t lcd_height);

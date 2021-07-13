@@ -106,7 +106,7 @@ bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
 
 
 // Factory function for creating a handle to the ST7789 device
-painter_device_t qp_st7789_make_device(pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight) {
+painter_device_t qp_st7789_make_device(pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight, uint16_t lcd_width, uint16_t lcd_height) {
 
     for (uint32_t i = 0; i < ST7789_NUM_DEVICES; ++i) {
         st77xx_painter_device_t *driver = &drivers[i];
@@ -128,8 +128,8 @@ painter_device_t qp_st7789_make_device(pin_t chip_select_pin, pin_t data_pin, pi
             driver->reset_pin           = reset_pin;
             driver->spi_divisor         = spi_divisor;
             driver->spi_mode            = LCD_SPI_MODE;
-            driver->lcd_height          = LCD_HEIGHT;
-            driver->lcd_width           = LCD_WIDTH;
+            driver->lcd_width           = lcd_width;
+            driver->lcd_height          = lcd_height;
 #ifdef BACKLIGHT_ENABLE
             driver->uses_backlight = uses_backlight;
 #endif

@@ -20,14 +20,6 @@
 // Quantum Painter ST77XX configurables
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef LCD_WIDTH
-#   define LCD_WIDTH  120
-#endif
-
-#ifndef LCD_HEIGHT
-#   define LCD_HEIGHT  160
-#endif
-
 // The buffer size to use when rendering chunks of data, allows limiting of RAM allocation when rendering images
 #ifndef ST77XX_PIXDATA_BUFSIZE
 #    define ST77XX_PIXDATA_BUFSIZE 512
