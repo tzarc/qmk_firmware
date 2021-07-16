@@ -22,7 +22,7 @@
 
 // The buffer size to use when rendering chunks of data, allows limiting of RAM allocation when rendering images
 #ifndef ST77XX_PIXDATA_BUFSIZE
-#    define ST77XX_PIXDATA_BUFSIZE 512
+#    define ST77XX_PIXDATA_BUFSIZE 32
 #endif
 
 // Check for minimum buffer size
