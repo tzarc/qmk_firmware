@@ -24,7 +24,6 @@ int16_t mem_get(rle_stream_t *in) {
     return c;
 }
 
-#ifdef RLE_ENCODER
 bool mem_put(rle_stream_t *out, int16_t c) {
     memory_rle_stream_t *s = (memory_rle_stream_t *)out;
     if (c == RLE_EOF || s->position == s->length) {
@@ -33,16 +32,13 @@ bool mem_put(rle_stream_t *out, int16_t c) {
     s->buffer[s->position++] = (uint16_t)c;
     return true;
 }
-#endif  // RLE_ENCODER
 
 memory_rle_stream_t make_memory_rle_stream_t(void *buffer, size_t length) {
     memory_rle_stream_t stream = {
         .base =
             {
                 .get = mem_get,
-#ifdef RLE_ENCODER
                 .put = mem_put,
-#endif  // RLE_ENCODER
             },
         .buffer   = (uint8_t *)buffer,
         .length   = length,
@@ -59,22 +55,18 @@ int16_t file_get(rle_stream_t *in_stream) {
     return (uint16_t)c;
 }
 
-#    ifdef RLE_ENCODER
 bool file_put(rle_stream_t *out_stream, int16_t c) {
     file_rle_stream_t *s = (file_rle_stream_t *)out_stream;
-    if(c == RLE_EOF) return false;
+    if (c == RLE_EOF) return false;
     return fputc(c, s->file) == c;
 }
-#    endif  // RLE_ENCODER
 
 file_rle_stream_t make_file_rle_stream_t(FILE *f) {
     file_rle_stream_t stream = {
         .base =
             {
                 .get = file_get,
-#    ifdef RLE_ENCODER
                 .put = file_put,
-#    endif  // RLE_ENCODER
             },
         .file = f,
     };
@@ -82,27 +74,31 @@ file_rle_stream_t make_file_rle_stream_t(FILE *f) {
 }
 #endif  // RLE_HAS_FILE_IO
 
-void rle_decode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
+bool rle_decode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
     int16_t (*get)(rle_stream_t *)       = in_stream->get;
     bool (*put)(rle_stream_t *, int16_t) = out_stream->put;
     int16_t c;
     size_t  i, cnt;
     while (1) {
         c = get(in_stream);
-        if (c == RLE_EOF) return;
+        if (c == RLE_EOF) break;
         if (c >= 128) {
             cnt = c - 128;
             for (i = 0; i < cnt; i++) {
-                if (!put(out_stream, get(in_stream))) return;
+                c = get(in_stream);
+                if (c == RLE_EOF) return false;
+                if (!put(out_stream, c)) return false;
             }
         } else {
             cnt = c;
             c   = get(in_stream);
+            if (c == RLE_EOF) return false;
             for (i = 0; i < cnt; i++) {
-                if (!put(out_stream, c)) return;
+                if (!put(out_stream, c)) return false;
             }
         }
     }
+    return true;
 }
 
 #ifdef RLE_ENCODER

@@ -25,14 +25,12 @@
 typedef struct rle_stream_t rle_stream_t;
 struct rle_stream_t {
     int16_t (*get)(rle_stream_t *in_stream);
-#ifdef RLE_ENCODER
     bool (*put)(rle_stream_t *out_stream, int16_t c);
-#endif  // RLE_ENCODER
 };
 
 typedef struct memory_rle_stream_t {
     rle_stream_t base;
-    uint8_t     *buffer;
+    uint8_t *    buffer;
     size_t       length;
     size_t       position;
 } memory_rle_stream_t;
@@ -40,7 +38,7 @@ typedef struct memory_rle_stream_t {
 #ifdef RLE_HAS_FILE_IO
 typedef struct file_rle_stream_t {
     rle_stream_t base;
-    FILE        *file;
+    FILE *       file;
 } file_rle_stream_t;
 #endif  // RLE_HAS_FILE_IO
 
@@ -50,7 +48,7 @@ memory_rle_stream_t make_memory_rle_stream_t(void *buffer, size_t length);
 file_rle_stream_t make_file_rle_stream_t(FILE *f);
 #endif  // RLE_HAS_FILE_IO
 
-void rle_decode(rle_stream_t *in_stream, rle_stream_t *out_stream);
+bool rle_decode(rle_stream_t *in_stream, rle_stream_t *out_stream);
 
 #ifdef RLE_ENCODER
 bool rle_encode(rle_stream_t *in_stream, rle_stream_t *out_stream);
