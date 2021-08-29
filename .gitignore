@@ -65,6 +65,7 @@ CMakeLists.txt
 .vscode/launch.json
 .vscode/tasks.json
 .vscode/temp.sql
+.vscode
 tags
 
 # Ignore image files
@@ -86,3 +87,5 @@ __pycache__
 
 # Allow to exist but don't include it in the repo
 user_song_list.h
+.vscode/settings.json
+.vscode/settings.json

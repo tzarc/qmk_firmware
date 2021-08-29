@@ -19,8 +19,108 @@
 #include <qp_internal.h>
 #include <qp_utils.h>
 
+#   include <spi_master.h>
+#   include "parallel_common/parallel.h"
+
+#ifdef QP_ENABLE_SPI
+#endif
+#ifdef QP_ENABLE_PARALLEL
+#endif
+
+bool qp_comms_init(painter_device_t device, painter_rotation_t rotation) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    switch(driver->comms_interface) {
+#ifdef QP_ENABLE_SPI
+        case SPI:
+            spi_init();
+            break;
+#endif
+#ifdef QP_ENABLE_PARALLEL
+        case PARALLEL:
+            parallel_init(driver->parallel.write_pin, driver->parallel.read_pin, driver->parallel.data_pin_map, driver->parallel.data_pin_count);
+            break;
+#endif
+#ifdef QP_ENABLE_I2C
+        case I2C:
+#   ifdef CONSOLE_ENABLE
+            dprint("I2C interface is not implemented");
+#   endif
+            break;
+#endif
+}
+    return true;
+}
+
+bool qp_start(painter_device_t device) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    switch(driver->comms_interface) {
+        case SPI:
+            return spi_start(driver->spi.chip_select_pin, driver->spi.is_little_endian, driver->spi.mode, driver->spi.spi_divisor);
+        case PARALLEL:
+            return parallel_start(driver->parallel.chip_select_pin);
+        case I2C:
+#ifdef CONSOLE_ENABLE
+            dprint("I2C interface is not implemented");
+#endif
+            break;
+    }
+    return false;
+}
+
+bool qp_stop(painter_device_t device) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    switch(driver->comms_interface) {
+        case SPI:
+            spi_stop();
+            return true;
+        case PARALLEL:
+            parallel_stop()
+            return true;
+        case I2C:
+#ifdef CONSOLE_ENABLE
+            dprint("I2C interface is not implemented");
+#endif
+            break;
+    }
+    return false;
+}
+
+bool qp_send_command(painter_device_t device, uint8_t command) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    switch(driver->comms_interface) {
+        case SPI:
+            writePinLow(driver->spi.dc_pin);
+            spi_write(command);
+            writePinHigh(driver->spi.dc_pin);
+            return true;
+        case PARALLEL:
+            writePinLow(driver->parallel.dc_pin);
+            parallel_write(command);
+            writePinHigh(driver->parallel.dc_pin);
+            return true;
+        case I2C:
+#ifdef CONSOLE_ENABLE
+            dprint("I2C interface is not implemented");
+#endif
+    }
+}
+
+bool qp_send_data(painter_device_t device, const uint8_t *data, uint16_t data_length) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    switch(driver->comms_interface) {
+        case SPI:
+            return spi_transmit(data, data_length);
+        case PARALLEL:
+            return parallel_transmit(data, data_length);
+        case I2C:
+#ifdef CONSOLE_ENABLE
+            dprint("I2C interface is not implemented");
+#endif    return false;
+}
+
 bool qp_init(painter_device_t device, painter_rotation_t rotation) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    qp_comms_init(device, rotation);
     if (driver->init) {
         return driver->init(device, rotation);
     }

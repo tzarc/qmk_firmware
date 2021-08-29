@@ -37,6 +37,9 @@ typedef uint16_t rgb565_t;
 // Rotation type
 typedef enum { QP_ROTATION_0, QP_ROTATION_90, QP_ROTATION_180, QP_ROTATION_270 } painter_rotation_t;
 
+// Display communication interface types
+typedef enum { SPI, PARALLEL, I2C } painter_driver_interface_t
+
 // Image format internal flags
 typedef enum { IMAGE_FORMAT_RAW, IMAGE_FORMAT_RGB565, IMAGE_FORMAT_GRAYSCALE, IMAGE_FORMAT_PALETTE } painter_image_format_t;
 typedef enum { IMAGE_UNCOMPRESSED } painter_compression_t;
@@ -70,7 +73,7 @@ bool qp_init(painter_device_t device, painter_rotation_t rotation);
 // Clear's a device's screen
 bool qp_clear(painter_device_t device);
 
-// Handle turning a display on or off
+// Handle turning a device on or off
 bool qp_power(painter_device_t device, bool power_on);
 
 // Handle configuring the lcd backlight brightness or contrast

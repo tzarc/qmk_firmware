@@ -17,6 +17,8 @@
 #pragma once
 
 #include <qp.h>
+#include <quantum.h>
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum painter image types
@@ -59,6 +61,28 @@ typedef struct painter_raw_font_descriptor_t {
 } painter_raw_font_descriptor_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter supported interface types
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+typedef struct {
+    pin_t    chip_select_pin;
+    pin_t    dc_pin;
+    uint16_t spi_divisor;
+} painter_interface_spi_t;
+
+typedef struct {
+    /* TODO */
+} painter_interface_i2c_t;
+
+typedef struct {
+    pin_t    chip_select_pin;
+    pin_t    dc_pin;
+    pin_t    write_pin;
+    pin_t    read_pin;
+    uint8_t* data_pin_map;
+    uint8_t  data_pin_count;
+} painter_interface_parallel_t;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter definitions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -92,4 +116,14 @@ struct painter_driver_t {
     painter_driver_ellipse_func    ellipse;
     painter_driver_drawimage_func  drawimage;
     painter_driver_drawtext_func   drawtext;
+    painter_driver_interface_t     comms_interface;
+    pin_t    reset_pin;
+#ifdef BACKLIGHT_ENABLE
+    bool uses_backlight;
+#endif
+    union {
+        painter_interface_spi_t spi;
+        painter_interface_i2c_t i2c;
+        painter_interface_parallel_t parallel;
+     };
 };

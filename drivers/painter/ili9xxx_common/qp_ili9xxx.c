@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include <debug.h>
 #include <print.h>
 #include <color.h>
 #include <utf8.h>
-#include <spi_master.h>
 #include <wait.h>
 
 #ifdef BACKLIGHT_ENABLE
@@ -38,27 +38,107 @@
 // Low-level LCD control functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Enable SPI comms
-void qp_ili9xxx_internal_lcd_start(ili9xxx_painter_device_t *lcd) { spi_start(lcd->chip_select_pin, false, 0, lcd->spi_divisor); }
+// Initialize the lcd
+void qp_ili9xxx_internal_lcd_init(ili9xxx_painter_device_t *lcd) {
+    switch(lcd->qp_driver.comms_interface) {
+#ifdef QP_ENABLE_SPI
+        case SPI:
+            spi_init();
+            break;
+#endif
+#ifdef QP_ENABLE_PARALLEL
+        case PARALLEL:
+            parallel_init(lcd->write_pin, lcd->read_pin, lcd->data_pin_map, lcd->data_pin_count);
+            break;
+#endif
+        default:
+#ifdef CONSOLE_ENABLE
+            printf("ERROR: comms interface $1 is not enabled", lcd->qp_driver.comms_interface);
+#endif
+    }
+}
+// Enable comms
+void qp_ili9xxx_internal_lcd_start(ili9xxx_painter_device_t *lcd) {
+    switch(lcd->qp_driver.comms_interface) {
+#ifdef QP_ENABLE_SPI
+        case SPI:
+            spi_start(lcd->chip_select_pin, false, 0, lcd->spi_divisor);
+            break;
+#endif
+#ifdef QP_ENABLE_PARALLEL
+        case PARALLEL:
+            parallel_start(lcd->chip_select_pin);
+            break;
+#endif
+    }
+}
 
-// Disable SPI comms
-void qp_ili9xxx_internal_lcd_stop(void) { spi_stop(); }
+void
+
+// Disable comms
+void qp_ili9xxx_internal_lcd_stop(void) {
+    switch(lcd->qp_driver.comms_interface) {
+#ifdef QP_ENABLE_SPI
+        case SPI:
+            spi_stop();
+            break;
+#endif
+#ifdef QP_ENABLE_PARALLEL
+       case PARALLEL:
+            parallel_stop();
+            break;
+#endif
+    }
+}
 
 // Send a command
 void qp_ili9xxx_internal_lcd_cmd(ili9xxx_painter_device_t *lcd, uint8_t b) {
-    writePinLow(lcd->data_pin);
-    spi_write(b);
+    switch(lcd->qp_driver.comms_interface) {
+#ifdef QP_ENABLE_SPI
+        case SPI:
+        writePinLow(lcd->qp_driver.spi.dc_pin);
+            break;
+#endif
+#ifdef QP_ENABLE_PARALLEL
+       case PARALLEL:
+       writePinLow(lcd->qp_driver.parallel.dc_pin);
+       break;
+#endif
+    }
+     qp_write(lcd, &b, 1);
 }
 
 // Send data
 void qp_ili9xxx_internal_lcd_sendbuf(ili9xxx_painter_device_t *lcd, const void *data, uint16_t len) {
-    writePinHigh(lcd->data_pin);
+    switch(lcd->qp_driver.comms_interface) {
+#ifdef QP_ENABLE_SPI
+        case SPI:
+            writePinHigh(lcd->qp_driver.spi.dc_pin);
+            break;
+#endif
+#ifdef QP_ENABLE_PARALLEL
+       case PARALLEL:
+           writePinHigh(lcd->qp_driver.parallel.dc_pin);
+           break;
+#endif
+    }
 
     uint32_t       bytes_remaining = len;
     const uint8_t *p               = (const uint8_t *)data;
     while (bytes_remaining > 0) {
         uint32_t bytes_this_loop = bytes_remaining < 1024 ? bytes_remaining : 1024;
-        spi_transmit(p, bytes_this_loop);
+        switch(lcd->qp_driver.comms_interface) {
+#ifdef QP_ENABLE_SPI
+            case SPI:
+                spi_transmit(p, bytes_this_loop);
+                break;
+#endif
+#ifdef QP_ENABLE_PARALLEL
+            case PARALLEL:
+                parallel_transmit(p, bytes_this_loop)
+                break;
+#endif
+        }
         p += bytes_this_loop;
         bytes_remaining -= bytes_this_loop;
     }

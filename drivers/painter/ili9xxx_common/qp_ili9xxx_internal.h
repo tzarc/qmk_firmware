@@ -27,9 +27,16 @@ typedef struct ili9xxx_painter_device_t {
     struct painter_driver_t qp_driver;  // must be first, so it can be cast from the painter_device_t* type
     bool                    allocated;
     pin_t                   chip_select_pin;
-    pin_t                   data_pin;
+    pin_t                   dc_pin;
     pin_t                   reset_pin;
+#ifdef QP_ENABLE_SPI
     uint16_t                spi_divisor;
+#endif
+#ifdef QP_ENABLE_PARALLEL
+    pin_t                   write_pin;
+    pin_t                   read_pin;
+    uint8_t[8]              data_pin_map;
+#endif
     painter_rotation_t      rotation;
 #ifdef BACKLIGHT_ENABLE
     bool uses_backlight;
@@ -55,7 +62,8 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void qp_ili9xxx_internal_lcd_start(ili9xxx_painter_device_t *lcd);
-void qp_ili9xxx_internal_lcd_stop(void);
+void qp_ili9xxx_internal_lcd_init(ili9xxx_painter_device_t *lcd);
+void qp_ili9xxx_internal_lcd_stop(ili9xxx_painter_device_t *lcd);
 void qp_ili9xxx_internal_lcd_cmd(ili9xxx_painter_device_t *lcd, uint8_t b);
 void qp_ili9xxx_internal_lcd_sendbuf(ili9xxx_painter_device_t *lcd, const void *data, uint16_t len);
 void qp_ili9xxx_internal_lcd_data(ili9xxx_painter_device_t *lcd, uint8_t b);
