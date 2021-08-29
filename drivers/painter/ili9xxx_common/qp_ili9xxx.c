@@ -390,7 +390,7 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
                     // Search the font's ascii table
                     uint8_t                                  index      = code_point - 0x20;
                     const painter_font_ascii_glyph_offset_t *glyph_desc = &fdesc->ascii_glyph_definitions[index];
-                    uint16_t                                 byte_count;
+                    uint16_t                                 byte_count = 0;
                     if (code_point < 0x7E) {
                         byte_count = (glyph_desc + 1)->offset - glyph_desc->offset;
                     } else if (code_point == 0x7E) {
