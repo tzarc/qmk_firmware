@@ -36,14 +36,8 @@
 #   define PARALLEL_POST_READ_DELAY_NS PARALLEL_READ_DELAY_NS
 #endif
 
-#ifndef PARALLEL_CLOCK_DIVISOR
-#   define PARALLEL_CLOCK_DIVISOR 16
-#endif
-
-
 bool parallel_init(void);
 bool parallel_start(pin_t write_pin, pin_t read_pin, pin_t chip_select_pin);
 bool parallel_write(uint8_t data);
-uint16_t parallel_read(void);
-bool parallel_transmit(const uint8_t *data, uint16_t length)
+bool parallel_transmit(const uint8_t *data, uint16_t length);
 void parallel_stop(void);

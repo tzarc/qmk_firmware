@@ -46,15 +46,6 @@ static uint16_t bitmask = SHIFT8(0xFFFF, CONVERT8(PARALLEL_PORT_PINS));
 static bool read_initialized = false;
 static bool write_initialized = false;
 static const pin_t pins[PARALLEL_PORT_WIDTH] = {PARALLEL_PORT_PINS};
-static const uint8_t port_width = sizeof(pins)/sizeof(pin_t);
-uint8_t pingroup_count = 0;
-int8_t pin_shifts[8];
-int8_t pin_masks[8];
-
-#define xstr(s) str(s)
-#define str(s) #s
-
-#pragma message( xstr(port_width) )
 
 ioportid_t port_group;
 pin_t w_pin;
@@ -66,9 +57,6 @@ bool parallel_init() {
     static bool is_initialised = false;
     port_group = PAL_PORT(pins[0]);
     if (!is_initialised) {
-    #ifdef CONSOLE_ENABLE
-        dprint("---starting init\n");
-    #endif // CONSOLE_ENABLE
 
 #ifdef CONSOLE_ENABLE
         dprintf("bitmask: "BYTE_TO_BINARY_PATTERN" "BYTE_TO_BINARY_PATTERN"\n", BYTE_TO_BINARY((bitmask & 0xFF00) >>8), BYTE_TO_BINARY(bitmask & 0xFF));
@@ -95,7 +83,7 @@ uint16_t internal_write(const uint8_t *data, uint16_t offset, uint16_t data_leng
     static uint8_t *d;
     d = (uint8_t *)data + offset;
     static uint16_t bits;
-    uint16_t remaining_bytes= data_length - offset;
+    uint16_t remaining_bytes = data_length - offset;
 
     for(uint16_t i = 0 ; i < remaining_bytes ; i++) {
         bits = SHIFT8(*d, CONVERT8(PARALLEL_PORT_PINS));
@@ -109,11 +97,9 @@ uint16_t internal_write(const uint8_t *data, uint16_t offset, uint16_t data_leng
 #endif // DEBUG_BYTE_CONVERSION
 #endif // CONSOLE_ENABLE
 
-        d++;
-
         palWriteGroup(port_group, bitmask, 0, bits);
         writePinHigh(w_pin); // Commit the write
-
+        d++;
     }
     return data_length;
 }
@@ -141,21 +127,20 @@ void internal_read_init(void) {
     read_initialized = false;
 }
 
-uint16_t parallel_read() {
-    internal_read_init();
+// TODO: write optimized read method with buffered reads
+// uint16_t parallel_read() {
+//     internal_read_init();
 
-    uint16_t bits = 0;
-    //wait_ns(PARALLEL_READ_DELAY_NS);
-    wait_ms(1);
-    uint16_t portbits = palReadGroup(port_group, bitmask, 0);
-    for (uint8_t i = 0; i < port_width ; i++) {
-        bits |= ((portbits >> pin_shifts[i]) & 0x1 ) << i;
-    }
-    writePinHigh(r_pin);
-    //wait_ns(PARALLEL_POST_READ_DELAY_NS);
-    wait_ms(1);
-    return bits;
-}
+//     uint16_t bits = 0;
+//     wait_ms(1);
+//     uint16_t portbits = palReadGroup(port_group, bitmask, 0);
+//     for (uint8_t i = 0; i < port_width ; i++) {
+//         bits |= ((portbits >> pin_shifts[i]) & 0x1 ) << i;
+//     }
+//     writePinHigh(r_pin);
+//     wait_ms(1);
+//     return bits;
+// }
 
 void parallel_stop() {
     writePinHigh(cs_pin);
