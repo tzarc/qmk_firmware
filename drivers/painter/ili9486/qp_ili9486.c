@@ -18,6 +18,7 @@
 #include <wait.h>
 #include <qp.h>
 #include "qp_ili9486.h"
+#include "qp_ili9486_extra_opcodes.h"
 #include <qp_internal.h>
 #include <qp_fallback.h>
 #include <qp_ili9xxx_internal.h>
@@ -27,83 +28,69 @@
 // Initialization
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
-    static const uint8_t pgamma[15] = {0x0F, 0x29, 0x24, 0x0C, 0x0E, 0x09, 0x4E, 0x78, 0x3C, 0x09, 0x13, 0x05, 0x17, 0x11, 0x00};
-    static const uint8_t ngamma[15] = {0x00, 0x16, 0x1B, 0x04, 0x11, 0x07, 0x31, 0x33, 0x42, 0x05, 0x0C, 0x0A, 0x28, 0x2F, 0x0F};
+    static const uint8_t pgamma[15] = {0x1F, 0x25, 0x22, 0x0B, 0x06, 0x0A, 0x4E, 0xC6, 0x39, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    static const uint8_t ngamma[15] = {0x1F, 0x3F, 0x3F, 0x0F, 0x1F, 0x0F, 0x46, 0x49, 0x31, 0x05, 0x09, 0x03, 0x1C, 0x1A, 0x00 };
 
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     lcd->rotation                 = rotation;
 
-    qp_ili9xxx_internal_lcd_init(lcd);
+    //qp_ili9xxx_internal_lcd_init(lcd);
     // Set up pin directions and initial values
     setPinOutput(lcd->reset_pin);
 
     // Perform a reset
     writePinLow(lcd->reset_pin);
-    wait_ms(20);
+    wait_ms(50);
     writePinHigh(lcd->reset_pin);
-    wait_ms(20);
+    wait_ms(100);
 
     // Enable the comms to the LCD
     qp_ili9xxx_internal_lcd_start(lcd);
+    wait_ms(20);
+
+   // turn display off before we start doing anything
+    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_CMD_DISPLAY_OFF);
+    wait_ms(20);
+
+    // set 50% brightness
+    qp_ili9xxx_internal_lcd_reg(lcd, ILI9XXX_SET_BRIGHTNESS, 0xFF);
 
     // Configure power control
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_POWER_CTL_A);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x39);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x2C);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x00);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x34);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x02);
-
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_POWER_CTL_B);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x00);
-    qp_ili9xxx_internal_lcd_data(lcd, 0xD9);
-    qp_ili9xxx_internal_lcd_data(lcd, 0X30);
-
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_POWER_ON_SEQ_CTL);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x64);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x03);
-    qp_ili9xxx_internal_lcd_data(lcd, 0X12);
-    qp_ili9xxx_internal_lcd_data(lcd, 0X81);
-
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_PUMP_RATIO_CTL);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x20);
-
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_POWER_CTL_1);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x26);
+    qp_ili9xxx_internal_lcd_data(lcd, 0x19);
+    qp_ili9xxx_internal_lcd_data(lcd, 0x1A);
 
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_POWER_CTL_2);
+    qp_ili9xxx_internal_lcd_data(lcd, 0x45);
+    qp_ili9xxx_internal_lcd_data(lcd, 0x00);
+
+    // Power on default
+    qp_ili9xxx_internal_lcd_reg(lcd, ILI9486_SET_POWER_CTL_NORMAL, 0x33);
+
+    // Configure VCOM control
+    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_VCOM_CTL_1);
+    qp_ili9xxx_internal_lcd_data(lcd, 0x00);
+    qp_ili9xxx_internal_lcd_data(lcd, 0x28);
+
+    // Configure frame rate control
+    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_FRAME_CTL_NORMAL);
+    qp_ili9xxx_internal_lcd_data(lcd, 0xA0);
     qp_ili9xxx_internal_lcd_data(lcd, 0x11);
 
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_VCOM_CTL_1);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x35);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x3E);
+    // Configure inversion
+    qp_ili9xxx_internal_lcd_reg(lcd, ILI9XXX_SET_INVERSION_CTL, 0x02);
 
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_VCOM_CTL_2);
-    qp_ili9xxx_internal_lcd_data(lcd, 0xBE);
-
-    // Configure timing control
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_DRV_TIMING_CTL_A);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x85);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x10);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x7A);
-
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_DRV_TIMING_CTL_B);
+    // Control function
+    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_FUNCTION_CTL);
     qp_ili9xxx_internal_lcd_data(lcd, 0x00);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x00);
+    qp_ili9xxx_internal_lcd_data(lcd, 0x42);
+    qp_ili9xxx_internal_lcd_data(lcd, 0x3B);
 
-    // Configure brightness / gamma
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_BRIGHTNESS);
-    qp_ili9xxx_internal_lcd_data(lcd, 0xFF);
-
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_ENABLE_3_GAMMA);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x00);
-
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_GAMMA);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x01);
-
+    // Set positive gamma
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_PGAMMA);
     qp_ili9xxx_internal_lcd_sendbuf(lcd, pgamma, sizeof(pgamma));
 
+    // Set negative gamma
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_NGAMMA);
     qp_ili9xxx_internal_lcd_sendbuf(lcd, ngamma, sizeof(ngamma));
 
@@ -111,16 +98,42 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_PIX_FMT);
     qp_ili9xxx_internal_lcd_data(lcd, 0x55);
 
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_FRAME_CTL_NORMAL);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x00);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x1B);
 
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_FUNCTION_CTL);
-    qp_ili9xxx_internal_lcd_data(lcd, 0x0A);
-    qp_ili9xxx_internal_lcd_data(lcd, 0xA2);
+    //  From original driver, but register numbers don't make any sense.
+    if (0)
+    {
+        qp_ili9xxx_internal_lcd_cmd(lcd, 0XF1);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x36);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x04);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x00);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x3C);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x0F);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x0F);
+        qp_ili9xxx_internal_lcd_data(lcd, 0xA4);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x02);
 
-    // Set the default viewport to be fullscreen
-    qp_ili9xxx_internal_lcd_viewport(lcd, 0, 0, 239, 319);
+        qp_ili9xxx_internal_lcd_cmd(lcd, 0XF2);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x18);
+        qp_ili9xxx_internal_lcd_data(lcd, 0xA3);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x12);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x02);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x32);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x12);
+        qp_ili9xxx_internal_lcd_data(lcd, 0xFF);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x32);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x00);
+
+        qp_ili9xxx_internal_lcd_cmd(lcd, 0XF4);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x40);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x00);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x08);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x91);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x04);
+
+        qp_ili9xxx_internal_lcd_cmd(lcd, 0XF8);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x21);
+        qp_ili9xxx_internal_lcd_data(lcd, 0x04);
+    }
 
     // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
     switch (rotation) {
@@ -142,9 +155,27 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
             break;
     }
 
+    // Set the default viewport to be fullscreen
+    qp_ili9xxx_internal_lcd_viewport(lcd, 0, 0, lcd->qp_driver.screen_width - 1 , lcd->qp_driver.screen_height - 1);
+
     // Disable sleep mode
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_CMD_SLEEP_OFF);
     wait_ms(20);
+
+    // turn off inversion
+    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9486_CMD_INVERT_OFF);
+    wait_ms(20);
+
+
+    // Control function
+    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_FUNCTION_CTL);
+    qp_ili9xxx_internal_lcd_data(lcd, 0x00);
+    qp_ili9xxx_internal_lcd_data(lcd, 0x22);
+
+     // turn display on
+    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_CMD_DISPLAY_ON);
+    wait_ms(20);
+
 
     // Disable the comms to the LCD
     qp_ili9xxx_internal_lcd_stop();
@@ -177,14 +208,17 @@ painter_device_t qp_ili9486_make_device_spi(pin_t chip_select_pin, pin_t dc_pin,
             driver->qp_driver.ellipse   = qp_fallback_ellipse;
             driver->qp_driver.drawimage = qp_ili9xxx_drawimage;
             driver->qp_driver.drawtext  = qp_ili9xxx_drawtext;
-            driver->qp_driver.comms_interface = SPI;
-            driver->qp_driver.spi.chip_select_pin     = chip_select_pin;
-            driver->qp_driver.spi.dc_pin            = data_pin;
-            driver->qp_driver.spi.reset_pin           = reset_pin;
-            driver->qp_driver.spi.spi_divisor         = spi_divisor;
+            driver->qp_driver.brightness    = qp_ili9xxx_brightness;
+            driver->reset_pin               = reset_pin;
 #ifdef BACKLIGHT_ENABLE
-            driver->uses_backlight = uses_backlight;
+            driver->uses_backlight          = uses_backlight;
 #endif
+            driver->qp_driver.comms_interface       = SPI;
+            driver->qp_driver.screen_height         = height;
+            driver->qp_driver.screen_width          = width;
+            driver->qp_driver.spi.chip_select_pin   = chip_select_pin;
+            driver->qp_driver.spi.dc_pin            = dc_pin;
+            driver->qp_driver.spi.clock_divisor     = spi_divisor;
             return (painter_device_t)driver;
         }
     }
@@ -208,17 +242,20 @@ painter_device_t qp_ili9486_make_device_parallel(pin_t chip_select_pin, pin_t dc
             driver->qp_driver.ellipse   = qp_fallback_ellipse;
             driver->qp_driver.drawimage = qp_ili9xxx_drawimage;
             driver->qp_driver.drawtext  = qp_ili9xxx_drawtext;
-            driver->qp_driver.reset_pin = reset_pin;
-            driver->qp_driver.comms_interface = PARALLEL;
-            driver->qp_driver.parallel.chip_select_pin     = chip_select_pin;
-            driver->qp_driver.parallel.write_pin           = write_pin;
-            driver->qp_driver.parallel.read_pin            = read_pin;
-            driver->qp_driver.parallel.dc_pin              = dc_pin;
-            driver->qp_driver.parallel.data_pin_map        = data_pin_map;
-            driver->qp_driver.parallel.data_pin_count      = data_pin_count;
+            driver->qp_driver.brightness    = qp_ili9xxx_brightness;
+            driver->reset_pin               = reset_pin;
 #ifdef BACKLIGHT_ENABLE
-            driver->uses_backlight = uses_backlight;
+            driver->uses_backlight          = uses_backlight;
 #endif
+            driver->qp_driver.comms_interface           = PARALLEL;
+            driver->qp_driver.screen_height             = height;
+            driver->qp_driver.screen_width              = width;
+            driver->qp_driver.parallel.chip_select_pin  = chip_select_pin;
+            driver->qp_driver.parallel.write_pin        = write_pin;
+            driver->qp_driver.parallel.read_pin         = read_pin;
+            driver->qp_driver.parallel.dc_pin           = dc_pin;
+            driver->qp_driver.parallel.data_pin_map     = data_pin_map;
+            driver->qp_driver.parallel.data_pin_count   = data_pin_count;
             return (painter_device_t)driver;
         }
     }

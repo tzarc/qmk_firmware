@@ -21,7 +21,7 @@
 #include <stdint.h>
 
 #ifndef PARALLEL_WRITE_DELAY_NS
-#   define PARALLEL_WRITE_DELAY_NS 50
+#   define PARALLEL_WRITE_DELAY_NS 0
 #endif
 
 #ifndef PARALLEL_POST_WRITE_DELAY_NS
@@ -41,8 +41,8 @@
 #endif
 
 
-bool parallel_init(pin_t write_pin, pin_t read_pin, const pin_t* data_pin_map, uint8_t data_pin_count);
-bool parallel_start(pin_t chip_select_pin);
+bool parallel_init(void);
+bool parallel_start(pin_t write_pin, pin_t read_pin, pin_t chip_select_pin);
 bool parallel_write(uint8_t data);
 uint16_t parallel_read(void);
 bool parallel_transmit(const uint8_t *data, uint16_t length)

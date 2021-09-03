@@ -40,23 +40,9 @@
 
 // Initialize the lcd
 void qp_ili9xxx_internal_lcd_init(ili9xxx_painter_device_t *lcd) {
-    switch(lcd->qp_driver.comms_interface) {
-#ifdef QP_ENABLE_SPI
-        case SPI:
-            spi_init();
-            break;
-#endif
-#ifdef QP_ENABLE_PARALLEL
-        case PARALLEL:
-            parallel_init(lcd->write_pin, lcd->read_pin, lcd->data_pin_map, lcd->data_pin_count);
-            break;
-#endif
-        default:
-#ifdef CONSOLE_ENABLE
-            printf("ERROR: comms interface $1 is not enabled", lcd->qp_driver.comms_interface);
-#endif
-    }
+
 }
+
 // Enable comms
 void qp_ili9xxx_internal_lcd_start(ili9xxx_painter_device_t *lcd) {
     switch(lcd->qp_driver.comms_interface) {
@@ -67,7 +53,7 @@ void qp_ili9xxx_internal_lcd_start(ili9xxx_painter_device_t *lcd) {
 #endif
 #ifdef QP_ENABLE_PARALLEL
         case PARALLEL:
-            parallel_start(lcd->chip_select_pin);
+            parallel_start(lcd->qp_driver.parallel.write_pin, lcd->qp_driver.parallel.read_pin, lcd->qp_driver.parallel.chip_select_pin);
             break;
 #endif
     }
@@ -310,6 +296,12 @@ bool qp_ili9xxx_clear(painter_device_t device) {
     return true;
 }
 
+bool qp_ili9xxx_brightness(painter_device_t device, uint8_t val) {
+    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
+    qp_ili9xxx_internal_lcd_reg(lcd, ILI9XXX_SET_BRIGHTNESS, val);
+    return true;
+}
+
 // Power control -- on/off (will also handle backlight if set to use the normal QMK backlight driver)
 bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
@@ -331,9 +323,13 @@ bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
         } else {
             backlight_set(0);
         }
+    } else {
+#else
+    qp_ili9xxx_brightness(device, 0x7F);
+#endif
+#ifdef BACKLIGHT_ENABLE
     }
 #endif
-
     return true;
 }
 
@@ -511,6 +507,5 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
     }
 
     qp_ili9xxx_internal_lcd_stop();
-
     return (int16_t)x;
 }
