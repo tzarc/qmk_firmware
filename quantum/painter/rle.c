@@ -83,7 +83,7 @@ bool rle_decode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
         c = get(in_stream);
         if (c == RLE_EOF) break;
         if (c >= 128) {
-            cnt = c - 128;
+            cnt = c - 127;
             for (i = 0; i < cnt; i++) {
                 c = get(in_stream);
                 if (c == RLE_EOF) return false;
@@ -105,7 +105,7 @@ bool rle_decode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
 static bool append(rle_stream_t *out_stream, uint8_t *buf, size_t len) {
     bool (*put)(rle_stream_t *, int16_t) = out_stream->put;
     int i;
-    if (!put(out_stream, (int16_t)(128 + len))) return false;
+    if (!put(out_stream, (int16_t)(127 + len))) return false;
     for (i = 0; i < len; i++) {
         if (!put(out_stream, buf[i])) return false;
     }
@@ -135,6 +135,7 @@ bool rle_encode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
                 if (!put(out_stream, buf[0])) return false;
                 buf[0] = buf[len - 1];
                 len    = 1;
+                repeat = false;
             }
         } else {
             if (buf[len - 1] == buf[len - 2]) {
@@ -146,7 +147,7 @@ bool rle_encode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
                 }
                 continue;
             }
-            if (len == 127 || end) {
+            if (len == 128 || end) {
                 if (end) {
                     int fg = 0;
                 }
