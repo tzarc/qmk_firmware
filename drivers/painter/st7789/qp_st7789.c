@@ -35,21 +35,10 @@ static st77xx_painter_device_t drivers[ST7789_NUM_DEVICES] = {0};
 // Initialization
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
-
     st77xx_painter_device_t *lcd = (st77xx_painter_device_t *)device;
     lcd->rotation                 = rotation;
 
-    // Initialize the SPI peripheral
-    spi_init();
-
-    // Set up pin directions and initial values
-    setPinOutput(lcd->chip_select_pin);
-    writePinHigh(lcd->chip_select_pin);
-
-    setPinOutput(lcd->data_pin);
-    writePinLow(lcd->data_pin);
-
-    setPinOutput(lcd->reset_pin);
+    qp_st77xx_internal_lcd_init(lcd);
 
     // Perform a HW reset
     writePinLow(lcd->reset_pin);
@@ -95,7 +84,7 @@ bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
     wait_ms(20);
 
     // Disable the SPI comms to the LCD
-    qp_st77xx_internal_lcd_stop();
+    qp_st77xx_internal_lcd_stop(lcd);
 
     return true;
 }
@@ -105,8 +94,8 @@ bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Factory function for creating a handle to the ST7789 device
-painter_device_t qp_st7789_make_device(pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight, uint16_t lcd_width, uint16_t lcd_height) {
+// Factory function for creating a handle to the ST7789 device using SPI interface
+painter_device_t qp_st7789_make_device_spi(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, uint8_t spi_mode, bool uses_backlight, uint16_t lcd_width, uint16_t lcd_height) {
 
     for (uint32_t i = 0; i < ST7789_NUM_DEVICES; ++i) {
         st77xx_painter_device_t *driver = &drivers[i];
@@ -123,13 +112,14 @@ painter_device_t qp_st7789_make_device(pin_t chip_select_pin, pin_t data_pin, pi
             driver->qp_driver.circle    = qp_st77xx_circle;
             driver->qp_driver.ellipse   = qp_fallback_ellipse;
             driver->qp_driver.drawimage = qp_st77xx_drawimage;
-            driver->chip_select_pin     = chip_select_pin;
-            driver->data_pin            = data_pin;
+            driver->dc_pin              = data_pin;
             driver->reset_pin           = reset_pin;
-            driver->spi_divisor         = spi_divisor;
-            driver->spi_mode            = LCD_SPI_MODE;
-            driver->lcd_width           = lcd_width;
-            driver->lcd_height          = lcd_height;
+            driver->qp_driver.comms_interface     = SPI;
+            driver->qp_driver.spi.chip_select_pin = chip_select_pin;
+            driver->qp_driver.spi.clock_divisor   = spi_divisor;
+            driver->qp_driver.spi.spi_mode        = spi_mode;
+            driver->qp_driver.screen_height       = screen_height;
+            driver->qp_driver.screen_width        = screen_width;
 #ifdef BACKLIGHT_ENABLE
             driver->uses_backlight = uses_backlight;
 #endif

@@ -40,38 +40,37 @@
 // Low-level LCD control functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Enable SPI comms
-void qp_st77xx_internal_lcd_start(st77xx_painter_device_t *lcd) {
-    spi_start(lcd->chip_select_pin, false, lcd->spi_mode, lcd->spi_divisor);
+void qp_st77xx_internal_lcd_init(st77xx_painter_device_t *lcd) {
+    setPinOutput(lcd->dc_pin);
+    setPinOutput(lcd->reset_pin);
 }
 
-// Disable SPI comms
-void qp_st77xx_internal_lcd_stop(void) {
-        spi_stop();
+// Enable comms
+void qp_st77xx_internal_lcd_start(st77xx_painter_device_t *lcd) {
+    qp_start(lcd);
+}
+
+// Disable comms
+void qp_st77xx_internal_lcd_stop(st77xx_painter_device_t *lcd) {
+    qp_stop(lcd);
 }
 
 // Send a command
 void qp_st77xx_internal_lcd_cmd(st77xx_painter_device_t *lcd, uint8_t b) {
-    writePinLow(lcd->data_pin);
-    spi_write(b);
+    writePinLow(lcd->dc_pin);
+    qp_send(lcd, &b, sizeof(b));
 }
 
 // Send data
 void qp_st77xx_internal_lcd_sendbuf(st77xx_painter_device_t *lcd, const void *data, uint16_t len) {
-    writePinHigh(lcd->data_pin);
-
-    uint32_t       bytes_remaining = len;
-    const uint8_t *p               = (const uint8_t *)data;
-    while (bytes_remaining > 0) {
-        uint32_t bytes_this_loop = bytes_remaining < 1024 ? bytes_remaining : 1024;
-        spi_transmit(p, bytes_this_loop);
-        p += bytes_this_loop;
-        bytes_remaining -= bytes_this_loop;
-    }
+    writePinHigh(lcd->dc_pin);
+    qp_send(lcd, data, len);
 }
 
 // Send data (single byte)
-void qp_st77xx_internal_lcd_data(st77xx_painter_device_t *lcd, uint8_t b) { qp_st77xx_internal_lcd_sendbuf(lcd, &b, sizeof(b)); }
+void qp_st77xx_internal_lcd_data(st77xx_painter_device_t *lcd, uint8_t b) {
+    qp_st77xx_internal_lcd_sendbuf(lcd, &b, sizeof(b));
+}
 
 // Set a register value
 void qp_st77xx_internal_lcd_reg(st77xx_painter_device_t *lcd, uint8_t reg, uint8_t val) {
@@ -299,17 +298,17 @@ bool qp_st77xx_circle_drawpixels(painter_device_t device, uint16_t centerx, uint
     if (filled) {
         for (uint32_t i = 0; i < bufsize; ++i) buf[i] = clr;
     }
-    uint16_t yplusy = LIMIT(centery + offsety, 0, lcd->lcd_height);
-    uint16_t yminusy = LIMIT(centery - offsety, 0, lcd->lcd_height);
-    uint16_t yplusx = LIMIT(centery + offsetx, 0, lcd->lcd_height);
-    uint16_t yminusx = LIMIT(centery - offsetx, 0, lcd->lcd_height);
-    uint16_t xplusx = LIMIT(centerx + offsetx, 0, lcd->lcd_width);
-    uint16_t xminusx = LIMIT(centerx - offsetx, 0, lcd->lcd_width);
-    uint16_t xplusy = LIMIT(centerx + offsety, 0, lcd->lcd_width);
-    uint16_t xminusy = LIMIT(centerx - offsety, 0, lcd->lcd_width);
+    uint16_t yplusy = LIMIT(centery + offsety, 0, lcd->qp_driver.screen_height);
+    uint16_t yminusy = LIMIT(centery - offsety, 0, lcd->qp_driver.screen_height);
+    uint16_t yplusx = LIMIT(centery + offsetx, 0, lcd->qp_driver.screen_height);
+    uint16_t yminusx = LIMIT(centery - offsetx, 0, lcd->qp_driver.screen_height);
+    uint16_t xplusx = LIMIT(centerx + offsetx, 0, lcd->qp_driver.screen_width);
+    uint16_t xminusx = LIMIT(centerx - offsetx, 0, lcd->qp_driver.screen_width);
+    uint16_t xplusy = LIMIT(centerx + offsety, 0, lcd->qp_driver.screen_width);
+    uint16_t xminusy = LIMIT(centerx - offsety, 0, lcd->qp_driver.screen_width);
 
-    centerx = LIMIT(centerx, 0, lcd->lcd_width);
-    centery = LIMIT(centery, 0, lcd->lcd_height);
+    centerx = LIMIT(centerx, 0, lcd->qp_driver.screen_width);
+    centery = LIMIT(centery, 0, lcd->qp_driver.screen_height);
 
     bool retval = true;
     if (offsetx == 0) {
@@ -427,7 +426,7 @@ bool qp_st77xx_power(painter_device_t device, bool power_on) {
     // Turn on/off the display
     qp_st77xx_internal_lcd_cmd(lcd, power_on ? ST77XX_CMD_DISPLAY_ON : ST77XX_CMD_DISPLAY_OFF);
 
-    qp_st77xx_internal_lcd_stop();
+    qp_st77xx_internal_lcd_stop(lcd);
 
 #ifdef BACKLIGHT_ENABLE
     // If we're using the backlight to control the display as well, toggle that too.
@@ -454,7 +453,7 @@ bool qp_st77xx_viewport(painter_device_t device, uint16_t left, uint16_t top, ui
     // Configure where we're going to be rendering to
     qp_st77xx_internal_lcd_viewport(lcd, left, top, right, bottom);
 
-    qp_st77xx_internal_lcd_stop();
+    qp_st77xx_internal_lcd_stop(lcd);
 
     return true;
 }
@@ -467,7 +466,7 @@ bool qp_st77xx_pixdata(painter_device_t device, const void *pixel_data, uint32_t
     // Stream data to the LCD
     qp_st77xx_internal_lcd_sendbuf(lcd, pixel_data, byte_count);
 
-    qp_st77xx_internal_lcd_stop();
+    qp_st77xx_internal_lcd_stop(lcd);
 
     return true;
 }
@@ -480,7 +479,7 @@ bool qp_st77xx_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t
 
     retval = qp_st77xx_internal_setpixel_impl(lcd, x, y, hue, sat, val);
 
-    qp_st77xx_internal_lcd_stop();
+    qp_st77xx_internal_lcd_stop(lcd);
 
     return retval;
 }
@@ -507,7 +506,7 @@ bool qp_st77xx_rect(painter_device_t device, uint16_t left, uint16_t top, uint16
 
         qp_st77xx_internal_lcd_start(lcd);
         retval = qp_st77xx_internal_filled_rect_impl(lcd, left, top, right, bottom, hue, sat, val, buf, totalpixels);
-        qp_st77xx_internal_lcd_stop();
+        qp_st77xx_internal_lcd_stop(lcd);
 
     } else {
         if (!qp_st77xx_rect(device, left, top, right, top, hue, sat, val, true)) {
@@ -542,7 +541,7 @@ bool qp_st77xx_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t 
 
     retval = qp_st77xx_internal_filled_rect_impl(lcd, x0, y0, x1, y1, hue, sat, val, clr, 1);
 
-    qp_st77xx_internal_lcd_stop();
+    qp_st77xx_internal_lcd_stop(lcd);
     return retval;
 
 }
@@ -562,7 +561,7 @@ bool qp_st77xx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const 
         st77xx_drawimage_uncompressed_impl(lcd, image->image_format, image->image_bpp, raw_image_desc->image_data, raw_image_desc->byte_count, image->width , image->height, NULL , hue, sat, val, hue, sat, 0);
     }
 
-    qp_st77xx_internal_lcd_stop();
+    qp_st77xx_internal_lcd_stop(lcd);
 
     return true;
 }
@@ -589,7 +588,7 @@ bool qp_st77xx_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t 
         qp_st77xx_circle_drawpixels(lcd, x, y, xcalc, ycalc, hue, sat, val, filled);
     }
 
-    qp_st77xx_internal_lcd_stop();
+    qp_st77xx_internal_lcd_stop(lcd);
 
     return true;
 }
@@ -652,7 +651,7 @@ int16_t qp_st77xx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pain
         }
     }
 
-    qp_st77xx_internal_lcd_stop();
+    qp_st77xx_internal_lcd_stop(lcd);
 
     return (int16_t)x;
 }

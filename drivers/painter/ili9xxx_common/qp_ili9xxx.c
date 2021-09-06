@@ -15,7 +15,6 @@
  */
 
 
-#include <debug.h>
 #include <print.h>
 #include <color.h>
 #include <utf8.h>
@@ -40,98 +39,36 @@
 
 // Initialize the lcd
 void qp_ili9xxx_internal_lcd_init(ili9xxx_painter_device_t *lcd) {
-
+    setPinOutput(lcd->dc_pin);
+    setPinOutput(lcd->reset_pin);
 }
 
 // Enable comms
 void qp_ili9xxx_internal_lcd_start(ili9xxx_painter_device_t *lcd) {
-    switch(lcd->qp_driver.comms_interface) {
-#ifdef QP_ENABLE_SPI
-        case SPI:
-            spi_start(lcd->chip_select_pin, false, 0, lcd->spi_divisor);
-            break;
-#endif
-#ifdef QP_ENABLE_PARALLEL
-        case PARALLEL:
-            parallel_start(lcd->qp_driver.parallel.write_pin, lcd->qp_driver.parallel.read_pin, lcd->qp_driver.parallel.chip_select_pin);
-            break;
-#endif
-    }
+    qp_start(lcd);
 }
 
-void
-
 // Disable comms
-void qp_ili9xxx_internal_lcd_stop(void) {
-    switch(lcd->qp_driver.comms_interface) {
-#ifdef QP_ENABLE_SPI
-        case SPI:
-            spi_stop();
-            break;
-#endif
-#ifdef QP_ENABLE_PARALLEL
-       case PARALLEL:
-            parallel_stop();
-            break;
-#endif
-    }
+void qp_ili9xxx_internal_lcd_stop(ili9xxx_painter_device_t *lcd) {
+    qp_stop(lcd);
 }
 
 // Send a command
-void qp_ili9xxx_internal_lcd_cmd(ili9xxx_painter_device_t *lcd, uint8_t b) {
-    switch(lcd->qp_driver.comms_interface) {
-#ifdef QP_ENABLE_SPI
-        case SPI:
-        writePinLow(lcd->qp_driver.spi.dc_pin);
-            break;
-#endif
-#ifdef QP_ENABLE_PARALLEL
-       case PARALLEL:
-       writePinLow(lcd->qp_driver.parallel.dc_pin);
-       break;
-#endif
-    }
-     qp_write(lcd, &b, 1);
+void qp_ili9xxx_internal_lcd_cmd(ili9xxx_painter_device_t *lcd, uint8_t command) {
+    writePinLow(lcd->dc_pin);
+    qp_send(lcd, &command, sizeof(command));
 }
 
 // Send data
 void qp_ili9xxx_internal_lcd_sendbuf(ili9xxx_painter_device_t *lcd, const void *data, uint16_t len) {
-    switch(lcd->qp_driver.comms_interface) {
-#ifdef QP_ENABLE_SPI
-        case SPI:
-            writePinHigh(lcd->qp_driver.spi.dc_pin);
-            break;
-#endif
-#ifdef QP_ENABLE_PARALLEL
-       case PARALLEL:
-           writePinHigh(lcd->qp_driver.parallel.dc_pin);
-           break;
-#endif
-    }
-
-    uint32_t       bytes_remaining = len;
-    const uint8_t *p               = (const uint8_t *)data;
-    while (bytes_remaining > 0) {
-        uint32_t bytes_this_loop = bytes_remaining < 1024 ? bytes_remaining : 1024;
-        switch(lcd->qp_driver.comms_interface) {
-#ifdef QP_ENABLE_SPI
-            case SPI:
-                spi_transmit(p, bytes_this_loop);
-                break;
-#endif
-#ifdef QP_ENABLE_PARALLEL
-            case PARALLEL:
-                parallel_transmit(p, bytes_this_loop)
-                break;
-#endif
-        }
-        p += bytes_this_loop;
-        bytes_remaining -= bytes_this_loop;
-    }
+    writePinHigh(lcd->dc_pin);
+    qp_send(lcd, data, len);
 }
 
 // Send data (single byte)
-void qp_ili9xxx_internal_lcd_data(ili9xxx_painter_device_t *lcd, uint8_t b) { qp_ili9xxx_internal_lcd_sendbuf(lcd, &b, sizeof(b)); }
+void qp_ili9xxx_internal_lcd_data(ili9xxx_painter_device_t *lcd, uint8_t b) {
+    qp_ili9xxx_internal_lcd_sendbuf(lcd, &b, sizeof(b));
+}
 
 // Set a register value
 void qp_ili9xxx_internal_lcd_reg(ili9xxx_painter_device_t *lcd, uint8_t reg, uint8_t val) {
@@ -310,7 +247,7 @@ bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
     // Turn on/off the display
     qp_ili9xxx_internal_lcd_cmd(lcd, power_on ? ILI9XXX_CMD_DISPLAY_ON : ILI9XXX_CMD_DISPLAY_OFF);
 
-    qp_ili9xxx_internal_lcd_stop();
+    qp_ili9xxx_internal_lcd_stop(lcd);
 
 #ifdef BACKLIGHT_ENABLE
     // If we're using the backlight to control the display as well, toggle that too.
@@ -341,7 +278,7 @@ bool qp_ili9xxx_viewport(painter_device_t device, uint16_t left, uint16_t top, u
     // Configure where we're going to be rendering to
     qp_ili9xxx_internal_lcd_viewport(lcd, left, top, right, bottom);
 
-    qp_ili9xxx_internal_lcd_stop();
+    qp_ili9xxx_internal_lcd_stop(lcd);
 
     return true;
 }
@@ -354,7 +291,7 @@ bool qp_ili9xxx_pixdata(painter_device_t device, const void *pixel_data, uint32_
     // Stream data to the LCD
     qp_ili9xxx_internal_lcd_sendbuf(lcd, pixel_data, native_pixel_count * sizeof(uint16_t));
 
-    qp_ili9xxx_internal_lcd_stop();
+    qp_ili9xxx_internal_lcd_stop(lcd);
 
     return true;
 }
@@ -371,7 +308,7 @@ bool qp_ili9xxx_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_
     rgb565_t buf = hsv_to_ili9xxx(hue, sat, val);
     qp_ili9xxx_internal_lcd_sendbuf(lcd, &buf, sizeof(buf));
 
-    qp_ili9xxx_internal_lcd_stop();
+    qp_ili9xxx_internal_lcd_stop(lcd);
 
     return true;
 }
@@ -419,7 +356,7 @@ bool qp_ili9xxx_rect(painter_device_t device, uint16_t left, uint16_t top, uint1
             remaining -= transmit;
         }
 
-        qp_ili9xxx_internal_lcd_stop();
+        qp_ili9xxx_internal_lcd_stop(lcd);
     } else {
         if (!qp_ili9xxx_rect(device, l, t, r, t, hue, sat, val, true)) return false;
         if (!qp_ili9xxx_rect(device, l, b, r, b, hue, sat, val, true)) return false;
@@ -444,7 +381,7 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
         ret                                                  = drawimage_uncompressed_impl(lcd, image->image_format, image->image_bpp, raw_image_desc->image_data, raw_image_desc->byte_count, image->width, image->height, raw_image_desc->image_palette, hue, sat, val, hue, sat, 0);
     }
 
-    qp_ili9xxx_internal_lcd_stop();
+    qp_ili9xxx_internal_lcd_stop(lcd);
 
     return ret;
 }
@@ -506,6 +443,6 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
         }
     }
 
-    qp_ili9xxx_internal_lcd_stop();
+    qp_ili9xxx_internal_lcd_stop(lcd);
     return (int16_t)x;
 }

@@ -139,7 +139,9 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
         $(QUANTUM_DIR)/utf8.c \
         $(QUANTUM_DIR)/painter/qp.c \
         $(QUANTUM_DIR)/painter/qp_utils.c \
-        $(DRIVER_PATH)/painter/fallback/qp_fallback.c
+        $(DRIVER_PATH)/painter/fallback/qp_fallback.c \
+		$(QUANTUM_DIR)/painter/parallel_common/parallel.c \
+        spi_master.c
 
     define handle_quantum_painter_driver
         CURRENT_PAINTER_DRIVER := $1
@@ -150,7 +152,6 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
             SRC += $(DRIVER_PATH)/painter/qmk_oled_wrapper/qp_qmk_oled_wrapper.c
         else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341)
             OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE
-            QUANTUM_LIB_SRC += spi_master.c
             COMMON_VPATH += \
                 $(DRIVER_PATH)/painter/ili9xxx_common \
                 $(DRIVER_PATH)/painter/ili9341
@@ -159,7 +160,6 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
                 $(DRIVER_PATH)/painter/ili9341/qp_ili9341.c
         else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),st7789)
             OPT_DEFS += -DQUANTUM_PAINTER_ST7789_ENABLE
-            QUANTUM_LIB_SRC += spi_master.c
             COMMON_VPATH += \
                 $(DRIVER_PATH)/painter/st77xx_common \
                 $(DRIVER_PATH)/painter/st7789
@@ -168,13 +168,13 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
                 $(DRIVER_PATH)/painter/st7789/qp_st7789.c
         else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9486)
             OPT_DEFS += -DQUANTUM_PAINTER_ILI9486_ENABLE
-            QUANTUM_LIB_SRC += spi_master.c
             COMMON_VPATH += \
                 $(DRIVER_PATH)/painter/ili9xxx_common \
                 $(DRIVER_PATH)/painter/ili9486
             SRC += \
                 $(DRIVER_PATH)/painter/ili9xxx_common/qp_ili9xxx.c \
-                $(DRIVER_PATH)/painter/ili9486/qp_ili9486.c
+                $(DRIVER_PATH)/painter/ili9486/qp_ili9486.c \
+				color.c
         else
             $$(error "$$(CURRENT_PAINTER_DRIVER)" is not a valid quantum painter driver)
         endif

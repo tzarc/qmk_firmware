@@ -17,6 +17,7 @@
 #pragma once
 
 #include <qp.h>
+#include <quantum.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter ILI9486 configurables
@@ -32,5 +33,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Factory method for an ILI9486 device
-painter_device_t qp_ili9486_make_device_spi(pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight);
-painter_device_t qp_ili9486_make_device_parallel(pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, pin_t write_pin, pin_t read_pin, const pin_t* data_pin_map, uint8_t data_pin_count, bool uses_backlight);
+painter_device_t qp_ili9486_make_device_spi(uint16_t screen_height, uint16_t screen_width, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight);
+painter_device_t qp_ili9486_make_device_parallel(uint16_t screen_height, uint16_t screen_width, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, pin_t write_pin, pin_t read_pin, bool uses_backlight);

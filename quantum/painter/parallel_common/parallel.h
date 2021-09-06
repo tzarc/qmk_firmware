@@ -36,7 +36,7 @@
 #   define PARALLEL_POST_READ_DELAY_NS PARALLEL_READ_DELAY_NS
 #endif
 
-bool parallel_init(void);
+void parallel_init(void);
 bool parallel_start(pin_t write_pin, pin_t read_pin, pin_t chip_select_pin);
 bool parallel_write(uint8_t data);
 bool parallel_transmit(const uint8_t *data, uint16_t length);

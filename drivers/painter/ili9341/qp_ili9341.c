@@ -34,17 +34,7 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     lcd->rotation                 = rotation;
 
-    // Initialize the SPI peripheral
-    spi_init();
-
-    // Set up pin directions and initial values
-    setPinOutput(lcd->chip_select_pin);
-    writePinHigh(lcd->chip_select_pin);
-
-    setPinOutput(lcd->data_pin);
-    writePinLow(lcd->data_pin);
-
-    setPinOutput(lcd->reset_pin);
+    qp_ili9xxx_internal_lcd_init(lcd);
 
     // Perform a reset
     writePinLow(lcd->reset_pin);
@@ -156,7 +146,7 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     wait_ms(20);
 
     // Disable the SPI comms to the LCD
-    qp_ili9xxx_internal_lcd_stop();
+    qp_ili9xxx_internal_lcd_stop(lcd);
 
     return true;
 }
@@ -168,8 +158,8 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
 // Driver storage
 static ili9xxx_painter_device_t drivers[ILI9341_NUM_DEVICES] = {0};
 
-// Factory function for creating a handle to the ILI9341 device
-painter_device_t qp_ili9341_make_device(pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight) {
+// Factory function for creating a handle to the ILI9341 device with an spi interface
+painter_device_t qp_ili9341_make_device_spi(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight) {
     for (uint32_t i = 0; i < ILI9341_NUM_DEVICES; ++i) {
         ili9xxx_painter_device_t *driver = &drivers[i];
         if (!driver->allocated) {
@@ -186,10 +176,12 @@ painter_device_t qp_ili9341_make_device(pin_t chip_select_pin, pin_t data_pin, p
             driver->qp_driver.ellipse   = qp_fallback_ellipse;
             driver->qp_driver.drawimage = qp_ili9xxx_drawimage;
             driver->qp_driver.drawtext  = qp_ili9xxx_drawtext;
-            driver->chip_select_pin     = chip_select_pin;
-            driver->data_pin            = data_pin;
+            driver->dc_pin              = data_pin;
             driver->reset_pin           = reset_pin;
-            driver->spi_divisor         = spi_divisor;
+            driver->qp_driver.spi.chip_select_pin = chip_select_pin;
+            driver->qp_driver.spi.clock_divisor   = spi_divisor;
+            driver->qp_driver.screen_width        = screen_width;
+            driver->qp_driver.screen_height       = screen_height;
 #ifdef BACKLIGHT_ENABLE
             driver->uses_backlight = uses_backlight;
 #endif

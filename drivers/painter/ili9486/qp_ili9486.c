@@ -19,10 +19,10 @@
 #include <qp.h>
 #include "qp_ili9486.h"
 #include "qp_ili9486_extra_opcodes.h"
+#include "qp_ili9xxx_internal.h"
+#include "qp_ili9xxx_opcodes.h"
 #include <qp_internal.h>
 #include <qp_fallback.h>
-#include <qp_ili9xxx_internal.h>
-#include <qp_ili9xxx_opcodes.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialization
@@ -34,9 +34,7 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     lcd->rotation                 = rotation;
 
-    //qp_ili9xxx_internal_lcd_init(lcd);
-    // Set up pin directions and initial values
-    setPinOutput(lcd->reset_pin);
+    qp_ili9xxx_internal_lcd_init(lcd);
 
     // Perform a reset
     writePinLow(lcd->reset_pin);
@@ -52,8 +50,9 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_CMD_DISPLAY_OFF);
     wait_ms(20);
 
+
     // set 50% brightness
-    qp_ili9xxx_internal_lcd_reg(lcd, ILI9XXX_SET_BRIGHTNESS, 0xFF);
+    qp_ili9xxx_internal_lcd_reg(lcd, ILI9XXX_SET_BRIGHTNESS, 0x7F);
 
     // Configure power control
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_SET_POWER_CTL_1);
@@ -156,7 +155,7 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
     }
 
     // Set the default viewport to be fullscreen
-    qp_ili9xxx_internal_lcd_viewport(lcd, 0, 0, lcd->qp_driver.screen_width - 1 , lcd->qp_driver.screen_height - 1);
+    qp_ili9xxx_internal_lcd_viewport(lcd, 0, 0, lcd->qp_driver.screen_width- 1 , lcd->qp_driver.screen_height - 1);
 
     // Disable sleep mode
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_CMD_SLEEP_OFF);
@@ -178,7 +177,7 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
 
 
     // Disable the comms to the LCD
-    qp_ili9xxx_internal_lcd_stop();
+    qp_ili9xxx_internal_lcd_stop(lcd);
 
     return true;
 }
@@ -191,7 +190,7 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
 static ili9xxx_painter_device_t drivers[ILI9486_NUM_DEVICES] = {0};
 
 // Factory function for creating a handle to the ILI9486 device
-painter_device_t qp_ili9486_make_device_spi(pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight) {
+painter_device_t qp_ili9486_make_device_spi(uint16_t screen_height, uint16_t screen_width, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight) {
     for (uint32_t i = 0; i < ILI9486_NUM_DEVICES; ++i) {
         ili9xxx_painter_device_t *driver = &drivers[i];
         if (!driver->allocated) {
@@ -210,14 +209,14 @@ painter_device_t qp_ili9486_make_device_spi(pin_t chip_select_pin, pin_t dc_pin,
             driver->qp_driver.drawtext  = qp_ili9xxx_drawtext;
             driver->qp_driver.brightness    = qp_ili9xxx_brightness;
             driver->reset_pin               = reset_pin;
+            driver->dc_pin                  = dc_pin;
 #ifdef BACKLIGHT_ENABLE
             driver->uses_backlight          = uses_backlight;
 #endif
             driver->qp_driver.comms_interface       = SPI;
-            driver->qp_driver.screen_height         = height;
-            driver->qp_driver.screen_width          = width;
+            driver->qp_driver.screen_height         = screen_height;
+            driver->qp_driver.screen_width          = screen_width;
             driver->qp_driver.spi.chip_select_pin   = chip_select_pin;
-            driver->qp_driver.spi.dc_pin            = dc_pin;
             driver->qp_driver.spi.clock_divisor     = spi_divisor;
             return (painter_device_t)driver;
         }
@@ -225,7 +224,7 @@ painter_device_t qp_ili9486_make_device_spi(pin_t chip_select_pin, pin_t dc_pin,
     return NULL;
 }
 
-painter_device_t qp_ili9486_make_device_parallel(pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, pin_t write_pin, pin_t read_pin, const pin_t* data_pin_map, uint8_t data_pin_count, bool uses_backlight) {
+painter_device_t qp_ili9486_make_device_parallel(uint16_t screen_height, uint16_t screen_width, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, pin_t write_pin, pin_t read_pin, bool uses_backlight) {
     for (uint32_t i = 0; i < ILI9486_NUM_DEVICES; ++i) {
         ili9xxx_painter_device_t *driver = &drivers[i];
         if (!driver->allocated) {
@@ -244,18 +243,16 @@ painter_device_t qp_ili9486_make_device_parallel(pin_t chip_select_pin, pin_t dc
             driver->qp_driver.drawtext  = qp_ili9xxx_drawtext;
             driver->qp_driver.brightness    = qp_ili9xxx_brightness;
             driver->reset_pin               = reset_pin;
-#ifdef BACKLIGHT_ENABLE
-            driver->uses_backlight          = uses_backlight;
-#endif
+            driver->dc_pin                  = dc_pin;
             driver->qp_driver.comms_interface           = PARALLEL;
-            driver->qp_driver.screen_height             = height;
-            driver->qp_driver.screen_width              = width;
+            driver->qp_driver.screen_height             = screen_height;
+            driver->qp_driver.screen_width              = screen_width;
             driver->qp_driver.parallel.chip_select_pin  = chip_select_pin;
             driver->qp_driver.parallel.write_pin        = write_pin;
             driver->qp_driver.parallel.read_pin         = read_pin;
-            driver->qp_driver.parallel.dc_pin           = dc_pin;
-            driver->qp_driver.parallel.data_pin_map     = data_pin_map;
-            driver->qp_driver.parallel.data_pin_count   = data_pin_count;
+#ifdef BACKLIGHT_ENABLE
+            driver->uses_backlight          = uses_backlight;
+#endif
             return (painter_device_t)driver;
         }
     }

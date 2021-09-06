@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <qp.h>
+#include <qp_internal.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter ILI9xxx internals
@@ -26,21 +26,9 @@
 typedef struct ili9xxx_painter_device_t {
     struct painter_driver_t qp_driver;  // must be first, so it can be cast from the painter_device_t* type
     bool                    allocated;
-    pin_t                   chip_select_pin;
-    pin_t                   dc_pin;
     pin_t                   reset_pin;
-#ifdef QP_ENABLE_SPI
-    uint16_t                spi_divisor;
-#endif
-#ifdef QP_ENABLE_PARALLEL
-    pin_t                   write_pin;
-    pin_t                   read_pin;
-    uint8_t[8]              data_pin_map;
-#endif
+    pin_t                   dc_pin;
     painter_rotation_t      rotation;
-#ifdef BACKLIGHT_ENABLE
-    bool uses_backlight;
-#endif
 } ili9xxx_painter_device_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,6 +50,7 @@ bool    qp_ili9xxx_brightness(painter_device_t device, uint8_t val);
 // Low-level LCD Forward declarations
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void qp_ili9xxx_internal_lcd_init(ili9xxx_painter_device_t *lcd);
 void qp_ili9xxx_internal_lcd_start(ili9xxx_painter_device_t *lcd);
 void qp_ili9xxx_internal_lcd_stop(ili9xxx_painter_device_t *lcd);
 void qp_ili9xxx_internal_lcd_cmd(ili9xxx_painter_device_t *lcd, uint8_t b);

@@ -19,7 +19,6 @@
 #include <qp.h>
 #include <quantum.h>
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum painter image types
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,8 +64,8 @@ typedef struct painter_raw_font_descriptor_t {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 typedef struct {
     pin_t    chip_select_pin;
-    pin_t    dc_pin;
-    uint16_t spi_divisor;
+    uint8_t  spi_mode;
+    uint16_t clock_divisor;
 } painter_interface_spi_t;
 
 typedef struct {
@@ -75,11 +74,8 @@ typedef struct {
 
 typedef struct {
     pin_t    chip_select_pin;
-    pin_t    dc_pin;
     pin_t    write_pin;
     pin_t    read_pin;
-    uint8_t* data_pin_map;
-    uint8_t  data_pin_count;
 } painter_interface_parallel_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +96,7 @@ typedef bool (*painter_driver_circle_func)(painter_device_t device, uint16_t x, 
 typedef bool (*painter_driver_ellipse_func)(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
 typedef bool (*painter_driver_drawimage_func)(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val);
 typedef int16_t (*painter_driver_drawtext_func)(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
+typedef bool (*painter_driver_send_data_func)(painter_device_t device, const void *data, uint16_t data_length);
 
 // Driver base definition
 struct painter_driver_t {
@@ -117,7 +114,9 @@ struct painter_driver_t {
     painter_driver_drawimage_func  drawimage;
     painter_driver_drawtext_func   drawtext;
     painter_driver_interface_t     comms_interface;
-    pin_t    reset_pin;
+    painter_driver_send_data_func  comms_write;
+    uint16_t                       screen_width;
+    uint16_t                       screen_height;
 #ifdef BACKLIGHT_ENABLE
     bool uses_backlight;
 #endif
@@ -125,5 +124,9 @@ struct painter_driver_t {
         painter_interface_spi_t spi;
         painter_interface_i2c_t i2c;
         painter_interface_parallel_t parallel;
-     };
+    };
 };
+
+bool qp_start(painter_device_t device);
+bool qp_stop(painter_device_t device);
+bool qp_send(painter_device_t device, const uint8_t *data, uint16_t length);

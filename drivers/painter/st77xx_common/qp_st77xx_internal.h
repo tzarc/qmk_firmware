@@ -26,14 +26,9 @@
 typedef struct st77xx_painter_device_t {
     struct painter_driver_t qp_driver;  // must be first, so it can be cast from the painter_device_t* type
     bool                    allocated;
-    pin_t                   chip_select_pin;
-    pin_t                   data_pin;
-    pin_t                   reset_pin;
-    uint16_t                spi_divisor;
-    uint8_t                 spi_mode;
     painter_rotation_t      rotation;
-    uint16_t                lcd_width;
-    uint16_t                lcd_height;
+    pin_t                   reset_pin;
+    pin_t                   dc_pin;
 #ifdef BACKLIGHT_ENABLE
     bool uses_backlight;
 #endif
@@ -61,8 +56,9 @@ int16_t qp_st77xx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pain
 // Low-level LCD Forward declarations
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void qp_st77xx_internal_lcd_init(st77xx_painter_device_t *lcd);
 void qp_st77xx_internal_lcd_start(st77xx_painter_device_t *lcd);
-void qp_st77xx_internal_lcd_stop(void);
+void qp_st77xx_internal_lcd_stop(st77xx_painter_device_t *lcd);
 void qp_st77xx_internal_lcd_cmd(st77xx_painter_device_t *lcd, uint8_t b);
 void qp_st77xx_internal_lcd_sendbuf(st77xx_painter_device_t *lcd, const void *data, uint16_t len);
 void qp_st77xx_internal_lcd_data(st77xx_painter_device_t *lcd, uint8_t b);
