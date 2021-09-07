@@ -229,6 +229,7 @@ bool qp_ili9xxx_clear(painter_device_t device) {
 
     // Re-init the LCD
     lcd->qp_driver.init(device, lcd->rotation);
+    qp_rect(lcd, 0,0,lcd->qp_driver.screen_width -1, lcd->qp_driver.screen_height -1, HSV_BLACK, true);
 
     return true;
 }

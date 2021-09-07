@@ -19,6 +19,7 @@
 #include <qp.h>
 #include <quantum.h>
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum painter image types
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,6 +63,9 @@ typedef struct painter_raw_font_descriptor_t {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter supported interface types
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Display communication interface types
+typedef enum { NONE, SPI, PARALLEL, I2C } painter_driver_interface_t;
+
 typedef struct {
     pin_t    chip_select_pin;
     uint8_t  spi_mode;
@@ -98,6 +102,17 @@ typedef bool (*painter_driver_drawimage_func)(painter_device_t device, uint16_t 
 typedef int16_t (*painter_driver_drawtext_func)(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
 typedef bool (*painter_driver_send_data_func)(painter_device_t device, const void *data, uint16_t data_length);
 
+typedef struct painter_driver_funcs_vtable {
+    painter_driver_line_func       line;
+    painter_driver_rect_func       rect;
+    painter_driver_circle_func     circle;
+    painter_driver_ellipse_func    ellipse;
+    painter_driver_pixdata_func    pixdata;
+    painter_driver_setpixel_func   setpixel;
+    painter_driver_drawimage_func  drawimage;
+    painter_driver_drawtext_func   drawtext;
+} painter_driver_funcs_vtable;
+
 // Driver base definition
 struct painter_driver_t {
     painter_driver_init_func       init;
@@ -105,14 +120,7 @@ struct painter_driver_t {
     painter_driver_power_func      power;
     painter_driver_brightness_func brightness;
     painter_driver_viewport_func   viewport;
-    painter_driver_pixdata_func    pixdata;
-    painter_driver_setpixel_func   setpixel;
-    painter_driver_line_func       line;
-    painter_driver_rect_func       rect;
-    painter_driver_circle_func     circle;
-    painter_driver_ellipse_func    ellipse;
-    painter_driver_drawimage_func  drawimage;
-    painter_driver_drawtext_func   drawtext;
+    painter_driver_funcs_vtable*   table;
     painter_driver_interface_t     comms_interface;
     painter_driver_send_data_func  comms_write;
     uint16_t                       screen_width;
