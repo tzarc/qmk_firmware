@@ -2,13 +2,6 @@
 MCU = atmega32u4
 
 # Bootloader selection
-#   Teensy       halfkay
-#   Pro Micro    caterina
-#   Atmel DFU    atmel-dfu
-#   LUFA DFU     lufa-dfu
-#   QMK DFU      qmk-dfu
-#   ATmega32A    bootloadHID
-#   ATmega328P   USBasp
 BOOTLOADER = caterina
 
 # Build Options
@@ -32,12 +25,5 @@ SLEEP_LED_ENABLE = no       # Breathing sleep LED during USB suspend
 CUSTOM_MATRIX = yes
 
 SRC += matrix.c
-ifdef HARDWARE_SERIAL
-  # Untested with palm_usb
-  SRC += protocol/serial_uart.c
-  OPT_DEFS += -DHARDWARE_SERIAL
-else
-  SRC += protocol/serial_soft.c
-endif
 
 DEFAULT_FOLDER = converter/palm_usb/stowaway

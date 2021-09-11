@@ -1,11 +1,4 @@
 # Bootloader selection
-#   Teensy       halfkay
-#   Pro Micro    caterina
-#   Atmel DFU    atmel-dfu
-#   LUFA DFU     lufa-dfu
-#   QMK DFU      qmk-dfu
-#   ATmega32A    bootloadHID
-#   ATmega328P   USBasp
 BOOTLOADER = atmel-dfu
 
 # Build Options
@@ -30,20 +23,5 @@ TAP_DANCE_ENABLE = no
 ISSI_ENABLE = yes               # If the I2C pullup resistors aren't install this must be disabled
 WATCHDOG_ENABLE = no            # Resets keyboard if matrix_scan isn't run every 250ms
 CAPSLOCK_LED = no              # Toggle back light LED of Caps Lock
-
-# Extra source files for IS3731 lighting
-SRC = TWIlib.c issi.c lighting.c
-
-ifeq ($(strip $(ISSI_ENABLE)), yes)
-    TMK_COMMON_DEFS += -DISSI_ENABLE
-endif
-
-ifeq ($(strip $(WATCHDOG_ENABLE)), yes)
-    TMK_COMMON_DEFS += -DWATCHDOG_ENABLE
-endif
-
-ifeq ($(strip $(CAPSLOCK_LED)), yes)
-    TMK_COMMON_DEFS += -DCAPSLOCK_LED
-endif
 
 DEFAULT_FOLDER = lfkeyboards/lfk78/revj

@@ -2,13 +2,6 @@
 MCU = atmega32u4
 
 # Bootloader selection
-#   Teensy       halfkay
-#   Pro Micro    caterina
-#   Atmel DFU    atmel-dfu
-#   LUFA DFU     lufa-dfu
-#   QMK DFU      qmk-dfu
-#   ATmega32A    bootloadHID
-#   ATmega328P   USBasp
 BOOTLOADER = lufa-dfu
 
 # Build Options
@@ -32,11 +25,5 @@ SLEEP_LED_ENABLE = no       # Breathing sleep LED during USB suspend
 CUSTOM_MATRIX = yes
 
 SRC += matrix.c led.c
-ifdef HARDWARE_SERIAL
-  SRC += protocol/serial_uart.c
-  OPT_DEFS += -DHARDWARE_SERIAL
-else
-  SRC += protocol/serial_soft.c
-endif
 
 DEFAULT_FOLDER = converter/sun_usb/type5

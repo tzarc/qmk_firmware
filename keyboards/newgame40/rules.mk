@@ -2,13 +2,6 @@
 MCU = atmega32u4
 
 # Bootloader selection
-#   Teensy       halfkay
-#   Pro Micro    caterina
-#   Atmel DFU    atmel-dfu
-#   LUFA DFU     lufa-dfu
-#   QMK DFU      qmk-dfu
-#   ATmega32A    bootloadHID
-#   ATmega328P   USBasp
 BOOTLOADER = caterina
 
 # Build Options
@@ -27,10 +20,6 @@ UNICODE_ENABLE = yes        # Unicode
 BLUETOOTH_ENABLE = no       # Enable Bluetooth with the Adafruit EZ-Key HID
 RGBLIGHT_ENABLE = yes       # Enable WS2812 RGB underlight.
 IOS_DEVICE_ENABLE = no     # connect to IOS Device
-
-  ifeq ($(strip $(IOS_DEVICE_ENABLE )), yes)
-    OPT_DEFS += -DIOS_DEVICE_ENABLE 
-  endif
 
 # Do not enable SLEEP_LED_ENABLE. it uses the same timer as BACKLIGHT_ENABLE
 SLEEP_LED_ENABLE = no    # Breathing sleep LED during USB suspend

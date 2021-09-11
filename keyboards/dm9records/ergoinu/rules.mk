@@ -2,13 +2,6 @@
 MCU = atmega32u4
 
 # Bootloader selection
-#   Teensy       halfkay
-#   Pro Micro    caterina
-#   Atmel DFU    atmel-dfu
-#   LUFA DFU     lufa-dfu
-#   QMK DFU      qmk-dfu
-#   ATmega32A    bootloadHID
-#   ATmega328P   USBasp
 BOOTLOADER = caterina
 
 # Build Options
@@ -36,13 +29,3 @@ SRC += matrix.c serial.c split_util.c
 
 # ergoinu configs
 DISABLE_PROMICRO_LEDs = yes
-
-ifneq ($(strip $(ERGOINU)),)
-  ifeq ($(findstring promicroled, $(ERGOINU)), promicroled)
-    DISABLE_PROMICRO_LEDs = no
-  endif
-endif
-
-ifeq ($(strip $(DISABLE_PROMICRO_LEDs)), yes)
-  OPT_DEFS += -DDISABLE_PROMICRO_LEDs
-endif

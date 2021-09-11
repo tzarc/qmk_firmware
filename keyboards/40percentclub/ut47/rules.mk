@@ -2,13 +2,6 @@
 MCU = atmega32u4
 
 # Bootloader selection
-#   Teensy       halfkay
-#   Pro Micro    caterina
-#   Atmel DFU    atmel-dfu
-#   LUFA DFU     lufa-dfu
-#   QMK DFU      qmk-dfu
-#   ATmega32A    bootloadHID
-#   ATmega328P   USBasp
 BOOTLOADER = caterina
 
 # Build Options
@@ -31,8 +24,3 @@ AUDIO_ENABLE = no           # Audio output on port C6
 # custom matrix setup
 CUSTOM_MATRIX = yes
 SRC += matrix.c protocol/serial_uart.c
-
-ifeq ($(strip $(LED_ENABLE)), yes)
-  OPT_DEFS += -DLED_ENABLE
-  SRC += led.c
-endif
