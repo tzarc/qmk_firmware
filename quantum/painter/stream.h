@@ -37,6 +37,7 @@ struct stream_t {
     bool (*put)(stream_t *stream, int16_t c);
     int (*seek)(stream_t *stream, int offset, int origin);
     int (*tell)(stream_t *stream);
+    bool (*is_eof)(stream_t *stream);
 };
 
 typedef struct memory_stream_t {
@@ -63,5 +64,6 @@ file_stream_t make_file_stream(FILE *f);
 #define stream_put(stream, c) (((stream_t *)(&(stream)))->put((stream_t *)(&(stream)), (c)))
 #define stream_seek(stream, offset, origin) (((stream_t *)(&(stream)))->seek((stream_t *)(&(stream)), (offset), (origin)))
 #define stream_tell(stream) (((stream_t *)(&(stream)))->tell((stream_t *)(&(stream))))
+#define stream_eof(stream) (((stream_t *)(&(stream)))->is_eof((stream_t *)(&(stream))))
 #define stream_setpos(stream, offset) stream_seek((stream), (offset), SEEK_SET)
 #define stream_getpos(stream) stream_tell((stream))

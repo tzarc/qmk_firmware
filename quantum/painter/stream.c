@@ -52,14 +52,20 @@ int mem_tell(stream_t *stream) {
     return s->position;
 }
 
+bool mem_is_eof(stream_t *stream) {
+    memory_stream_t *s = (memory_stream_t *)stream;
+    return s->position >= s->length;
+}
+
 memory_stream_t make_memory_stream(void STREAM_MEM_PTR *buffer, int length) {
     memory_stream_t stream = {
         .base =
             {
-                .get  = mem_get,
-                .put  = mem_put,
-                .seek = mem_seek,
-                .tell = mem_tell,
+                .get    = mem_get,
+                .put    = mem_put,
+                .seek   = mem_seek,
+                .tell   = mem_tell,
+                .is_eof = mem_is_eof,
             },
         .buffer   = (uint8_t STREAM_MEM_PTR *)buffer,
         .length   = length,
@@ -91,14 +97,20 @@ int file_tell(stream_t *stream) {
     return (int)ftell(s->file);
 }
 
+bool file_is_eof(stream_t *stream) {
+    file_stream_t *s = (file_stream_t *)stream;
+    return (bool)feof(s->file);
+}
+
 file_stream_t make_file_stream(FILE *f) {
     file_stream_t stream = {
         .base =
             {
-                .get  = file_get,
-                .put  = file_put,
-                .seek = file_seek,
-                .tell = file_tell,
+                .get    = file_get,
+                .put    = file_put,
+                .seek   = file_seek,
+                .tell   = file_tell,
+                .is_eof = file_is_eof,
             },
         .file = f,
     };
