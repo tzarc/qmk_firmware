@@ -16,67 +16,9 @@
 
 #include "rle.h"
 
-int16_t mem_get(rle_stream_t *in) {
-    memory_rle_stream_t *s = (memory_rle_stream_t *)in;
-    int16_t              c = (s->buffer[s->position]);
-    if (s->position >= s->length) return RLE_EOF;
-    s->position++;
-    return c;
-}
-
-bool mem_put(rle_stream_t *out, int16_t c) {
-    memory_rle_stream_t *s = (memory_rle_stream_t *)out;
-    if (c == RLE_EOF || s->position == s->length) {
-        return false;
-    }
-    s->buffer[s->position++] = (uint16_t)c;
-    return true;
-}
-
-memory_rle_stream_t make_memory_rle_stream_t(void *buffer, size_t length) {
-    memory_rle_stream_t stream = {
-        .base =
-            {
-                .get = mem_get,
-                .put = mem_put,
-            },
-        .buffer   = (uint8_t *)buffer,
-        .length   = length,
-        .position = 0,
-    };
-    return stream;
-}
-
-#ifdef RLE_HAS_FILE_IO
-int16_t file_get(rle_stream_t *in_stream) {
-    file_rle_stream_t *s = (file_rle_stream_t *)in_stream;
-    int                c = fgetc(s->file);
-    if (c < 0 || feof(s->file)) return RLE_EOF;
-    return (uint16_t)c;
-}
-
-bool file_put(rle_stream_t *out_stream, int16_t c) {
-    file_rle_stream_t *s = (file_rle_stream_t *)out_stream;
-    if (c == RLE_EOF) return false;
-    return fputc(c, s->file) == c;
-}
-
-file_rle_stream_t make_file_rle_stream_t(FILE *f) {
-    file_rle_stream_t stream = {
-        .base =
-            {
-                .get = file_get,
-                .put = file_put,
-            },
-        .file = f,
-    };
-    return stream;
-}
-#endif  // RLE_HAS_FILE_IO
-
-bool rle_decode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
-    int16_t (*get)(rle_stream_t *)       = in_stream->get;
-    bool (*put)(rle_stream_t *, int16_t) = out_stream->put;
+bool rle_decode(stream_t *in_stream, stream_t *out_stream) {
+    int16_t (*get)(stream_t * stream)         = in_stream->get;
+    bool (*put)(stream_t * stream, int16_t c) = out_stream->put;
     int16_t c;
     size_t  i, cnt;
     while (1) {
@@ -102,8 +44,8 @@ bool rle_decode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
 }
 
 #ifdef RLE_ENCODER
-static bool append(rle_stream_t *out_stream, uint8_t *buf, size_t len) {
-    bool (*put)(rle_stream_t *, int16_t) = out_stream->put;
+static bool rle_append_bytes(stream_t *out_stream, uint8_t *buf, size_t len) {
+    bool (*put)(stream_t * stream, int16_t c) = out_stream->put;
     int i;
     if (!put(out_stream, (int16_t)(127 + len))) return false;
     for (i = 0; i < len; i++) {
@@ -112,9 +54,9 @@ static bool append(rle_stream_t *out_stream, uint8_t *buf, size_t len) {
     return true;
 }
 
-bool rle_encode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
-    int16_t (*get)(rle_stream_t *)       = in_stream->get;
-    bool (*put)(rle_stream_t *, int16_t) = out_stream->put;
+bool rle_encode(stream_t *in_stream, stream_t *out_stream) {
+    int16_t (*get)(stream_t * stream)         = in_stream->get;
+    bool (*put)(stream_t * stream, int16_t c) = out_stream->put;
     uint8_t buf[256];
     size_t  len    = 0;
     bool    repeat = false;
@@ -141,7 +83,7 @@ bool rle_encode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
             if (buf[len - 1] == buf[len - 2]) {
                 repeat = true;
                 if (len > 2) {
-                    if (!append(out_stream, buf, (int16_t)(len - 2))) return false;
+                    if (!rle_append_bytes(out_stream, buf, (len - 2))) return false;
                     buf[0] = buf[1] = buf[len - 1];
                     len             = 2;
                 }
@@ -151,13 +93,12 @@ bool rle_encode(rle_stream_t *in_stream, rle_stream_t *out_stream) {
                 if (end) {
                     int fg = 0;
                 }
-                if (!append(out_stream, buf, (int16_t)len)) return false;
+                if (!rle_append_bytes(out_stream, buf, len)) return false;
                 len    = 0;
                 repeat = false;
             }
         }
     }
-    put(out_stream, RLE_EOF);
     return true;
 }
 #endif  // RLE_ENCODER
