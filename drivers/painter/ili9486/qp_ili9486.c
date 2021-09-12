@@ -22,7 +22,6 @@
 #include "qp_ili9xxx_internal.h"
 #include "qp_ili9xxx_opcodes.h"
 #include <qp_internal.h>
-#include <qp_fallback.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialization
@@ -155,7 +154,7 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
     }
 
     // Set the default viewport to be fullscreen
-    qp_ili9xxx_internal_lcd_viewport(lcd, 0, 0, lcd->qp_driver.screen_width- 1 , lcd->qp_driver.screen_height - 1);
+    qp_ili9xxx_internal_lcd_viewport(lcd, 0, 0, lcd->qp_driver.screen_width - 1 , lcd->qp_driver.screen_height - 1);
 
     // Disable sleep mode
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_CMD_SLEEP_OFF);
@@ -174,7 +173,6 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
      // turn display on
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_CMD_DISPLAY_ON);
     wait_ms(20);
-
 
     // Disable the comms to the LCD
     qp_ili9xxx_internal_lcd_stop(lcd);
@@ -196,17 +194,8 @@ painter_device_t qp_ili9486_make_device_spi(uint16_t screen_height, uint16_t scr
         if (!driver->allocated) {
             driver->allocated           = true;
             driver->qp_driver.init      = qp_ili9486_init;
-            driver->qp_driver.clear     = qp_ili9xxx_clear;
             driver->qp_driver.power     = qp_ili9xxx_power;
-            driver->qp_driver.pixdata   = qp_ili9xxx_pixdata;
             driver->qp_driver.viewport  = qp_ili9xxx_viewport;
-            driver->qp_driver.setpixel  = qp_ili9xxx_setpixel;
-            driver->qp_driver.line      = qp_ili9xxx_line;
-            driver->qp_driver.rect      = qp_ili9xxx_rect;
-            driver->qp_driver.circle    = qp_fallback_circle;
-            driver->qp_driver.ellipse   = qp_fallback_ellipse;
-            driver->qp_driver.drawimage = qp_ili9xxx_drawimage;
-            driver->qp_driver.drawtext  = qp_ili9xxx_drawtext;
             driver->qp_driver.brightness    = qp_ili9xxx_brightness;
             driver->reset_pin               = reset_pin;
             driver->dc_pin                  = dc_pin;
@@ -230,17 +219,8 @@ painter_device_t qp_ili9486_make_device_parallel(uint16_t screen_height, uint16_
         if (!driver->allocated) {
             driver->allocated           = true;
             driver->qp_driver.init      = qp_ili9486_init;
-            driver->qp_driver.clear     = qp_ili9xxx_clear;
             driver->qp_driver.power     = qp_ili9xxx_power;
-            driver->qp_driver.pixdata   = qp_ili9xxx_pixdata;
             driver->qp_driver.viewport  = qp_ili9xxx_viewport;
-            driver->qp_driver.setpixel  = qp_ili9xxx_setpixel;
-            driver->qp_driver.line      = qp_ili9xxx_line;
-            driver->qp_driver.rect      = qp_ili9xxx_rect;
-            driver->qp_driver.circle    = qp_fallback_circle;
-            driver->qp_driver.ellipse   = qp_fallback_ellipse;
-            driver->qp_driver.drawimage = qp_ili9xxx_drawimage;
-            driver->qp_driver.drawtext  = qp_ili9xxx_drawtext;
             driver->qp_driver.brightness    = qp_ili9xxx_brightness;
             driver->reset_pin               = reset_pin;
             driver->dc_pin                  = dc_pin;

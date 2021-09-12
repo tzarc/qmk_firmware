@@ -18,6 +18,8 @@
 #include <utf8.h>
 #include <qp_internal.h>
 #include <qp_utils.h>
+#include <qp.h>
+
 #include "qp_draw_impl.c"
 
 #ifdef CONSOLE_ENABLE
@@ -94,57 +96,82 @@ bool qp_comms_init(painter_device_t device, painter_rotation_t rotation) {
 
 bool qp_start(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    switch(driver->comms_interface) {
-#ifdef QP_ENABLE_SPI
-        case SPI:
-            return spi_start(driver->spi.chip_select_pin, driver->spi.is_little_endian, driver->spi.mode, driver->spi.spi_divisor);
-#endif // QP_ENABLE_SPI
-#ifdef QP_ENABLE_PARALLEL
-        case PARALLEL:
-            return parallel_start(driver->parallel.write_pin, driver->parallel.read_pin, driver->parallel.chip_select_pin);
-#endif // QP_ENABLE_PARALLEL
-#ifdef QP_ENABLE_I2C
-        case I2C:
-#   ifdef CONSOLE_ENABLE
-            dprint("I2C interface is not implemented");
-#   endif // CONSOLE ENABLE
-            break;
-#endif // QP_ENABLE_I2C
-        default:
-#   ifdef CONSOLE_ENABLE
-            dprintf("interface %i is not implemented", driver->comms_interface);
-#   endif // CONSOLE_ENABLE
-            break;
+
+    static bool retval = false;
+    if(!driver->render_started) {
+        switch(driver->comms_interface) {
+    #ifdef QP_ENABLE_SPI
+            case SPI:
+                retval = spi_start(driver->spi.chip_select_pin, driver->spi.is_little_endian, driver->spi.mode, driver->spi.spi_divisor);
+                driver->render_started = true;
+                break;
+    #endif // QP_ENABLE_SPI
+    #ifdef QP_ENABLE_PARALLEL
+            case PARALLEL:
+                retval = parallel_start(driver->parallel.write_pin, driver->parallel.read_pin, driver->parallel.chip_select_pin);
+                driver->render_started = true;
+                break;
+    #endif // QP_ENABLE_PARALLEL
+    #ifdef QP_ENABLE_I2C
+            case I2C:
+    #   ifdef CONSOLE_ENABLE
+                dprint("I2C interface is not implemented");
+    #   endif // CONSOLE ENABLE
+                break;
+    #endif // QP_ENABLE_I2C
+            default:
+    #   ifdef CONSOLE_ENABLE
+                dprintf("interface %i is not implemented", driver->comms_interface);
+    #   endif // CONSOLE_ENABLE
+                break;
+        }
     }
-    return false;
+#ifdef CONSOLE_ENABLED
+    else {
+            dprintf("skipping qp_start - already started");
+    }
+#endif
+
+    return retval;
 }
 
 bool qp_stop(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    switch(driver->comms_interface) {
-#ifdef QP_ENABLE_SPI
-        case SPI:
-            spi_stop();
-            return true;
-#endif // QP_ENABLE_SPI
-#ifdef QP_ENABLE_PARALLEL
-        case PARALLEL:
-            parallel_stop();
-            return true;
-#endif // QP_ENABLED_PARALLEL
-#ifdef QP_ENABLE_I2C
-        case I2C:
-#   ifdef CONSOLE_ENABLE
-            dprint("I2C interface is not implemented");
-#   endif // CONSOLE ENABLE
-            break;
-#endif // QP_ENABLE_I2C
-        default:
-#   ifdef CONSOLE_ENABLE
-            dprintf("interface %i is not implemented", driver->comms_interface);
-#   endif // CONSOLE_ENABLE
-            break;
+    if(driver->render_started) {
+        switch(driver->comms_interface) {
+    #ifdef QP_ENABLE_SPI
+            case SPI:
+                spi_stop();
+                driver->render_started = false;
+                return true;
+    #endif // QP_ENABLE_SPI
+    #ifdef QP_ENABLE_PARALLEL
+            case PARALLEL:
+                parallel_stop();
+                driver->render_started = false;
+                return true;
+    #endif // QP_ENABLED_PARALLEL
+    #ifdef QP_ENABLE_I2C
+            case I2C:
+    #   ifdef CONSOLE_ENABLE
+                dprint("I2C interface is not implemented");
+    #   endif // CONSOLE ENABLE
+                break;
+    #endif // QP_ENABLE_I2C
+            default:
+    #   ifdef CONSOLE_ENABLE
+                dprintf("interface %i is not implemented", driver->comms_interface);
+                driver->render_started = false;
+    #   endif // CONSOLE_ENABLE
+                break;
+        }
     }
+#ifdef CONSOLE_ENABLED
+    else {
+        dprint("Skipping qp_stop - render not started");
+    }
+#endif
+
     return false;
 }
 
@@ -155,121 +182,184 @@ bool qp_send(painter_device_t device, const uint8_t *data, uint16_t data_length)
 
 bool qp_init(painter_device_t device, painter_rotation_t rotation) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
 
     qp_comms_init(device, rotation);
 
+    qp_start(device);
     if (driver->init) {
-        return driver->init(device, rotation);
+        retval = driver->init(device, rotation);
     }
-    return false;
+    qp_stop(device);
+    return retval;
 }
 
 bool qp_clear(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
+    qp_start(device);
     if (driver->clear) {
-        return driver->clear(device);
+        retval = driver->clear(device);
+    } else {
+        dprint("--blanking screen with rect\n");
+        // just draw a black rectangle on the screen
+        qp_internal_impl_rect(device, 0, 0, driver->screen_width - 1, driver->screen_height - 1, HSV_BLACK, true);
     }
-    return false;
+    qp_stop(device);
+    return retval;
 }
 
 bool qp_power(painter_device_t device, bool power_on) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
+    qp_start(device);
     if (driver->power) {
-        return driver->power(device, power_on);
+        retval = driver->power(device, power_on);
     }
-    return false;
+    qp_stop(device);
+    return retval;
 }
 
 bool qp_brightness(painter_device_t device, uint8_t val) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
+    qp_start(device);
     if (driver->brightness) {
-        return driver->brightness(device, val);
+        retval = driver->brightness(device, val);
     }
-    return false;
+    qp_stop(device);
+    return retval;
 }
 
-bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
+bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, bool render_continue) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
+    qp_start(device);
     if (driver->viewport) {
-        return driver->viewport(device, left, top, right, bottom);
+        retval = driver->viewport(device, left, top, right, bottom, render_continue);
     }
-    return false;
+    if(!render_continue) qp_stop(device);
+    return retval;
 }
 
-bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
+bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count, bool render_continue) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
+    qp_start(device);
     if (driver->pixdata) {
-        return driver->pixdata(device, pixel_data, native_pixel_count);
+        retval = driver->pixdata(device, pixel_data, native_pixel_count, render_continue);
     } else {
-        return qp_internal_impl_pixdata(device, pixel_data, native_pixel_count);
+#ifdef CONSOLE_ENABLE
+        dprintf("using default %s func\n", "pixdata");
+#endif
+        retval = qp_internal_impl_pixdata(device, pixel_data, native_pixel_count);
     }
-    return false;
+    if (!render_continue) qp_stop(device);
+    return retval;
 }
 
-bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
+bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val, bool render_continue) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
+    qp_start(device);
     if (driver->setpixel) {
-        return driver->setpixel(device, x, y, hue, sat, val);
+        retval = driver->setpixel(device, x, y, hue, sat, val, render_continue);
     } else {
-        return qp_internal_impl_setpixel(device, x, y, hue, sat, val);
+#ifdef CONSOLE_ENABLE
+        dprintf("using default %s func\n", "setpixel");
+#endif
+        retval = qp_internal_impl_setpixel(device, x, y, hue, sat, val);
     }
-    return false;
+    if (!render_continue) qp_stop(device);
+    return retval;
 }
 
-bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val) {
+bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val, bool render_continue) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval = false;
+    qp_start(device);
     if (driver->line) {
-        return driver->line(device, x0, y0, x1, y1, hue, sat, val);
+        retval = driver->line(device, x0, y0, x1, y1, hue, sat, val, render_continue);
     } else {
-        return qp_internal_impl_line(device, x0, y0, x1, y1, hue, sat, val);
+#ifdef CONSOLE_ENABLE
+        dprintf("using default %s func\n", "line");
+#endif
+        retval = qp_internal_impl_line(device, x0, y0, x1, y1, hue, sat, val);
     }
-    return false;
+    if (!render_continue) qp_stop(device);
+    return retval;
 }
 
-bool qp_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+bool qp_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled, bool render_continue) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
 
-    // Cater for cases where people have submitted the coordinates backwards
-    uint16_t l = left < right ? left : right;
-    uint16_t r = left > right ? left : right;
-    uint16_t t = top < bottom ? top : bottom;
-    uint16_t b = top > bottom ? top : bottom;
-
+    qp_start(device);
     if (driver->rect) {
-        return driver->rect(device, l, t, r, b, hue, sat, val, filled);
+#ifdef CONSOLE_ENABLE
+        dprintf("using driver %s func\n", "rect");
+#endif
+        retval = driver->rect(device, left, top, right, bottom, hue, sat, val, filled, render_continue);
     } else {
-        return qp_internal_impl_rect(device, l, t, r, b, hue, sat, val, filled);
+#ifdef CONSOLE_ENABLE
+        dprintf("using default %s func\n", "rect");
+#endif
+        retval = qp_internal_impl_rect(device, left, top, right, bottom, hue, sat, val, filled);
     }
+    if (!render_continue) qp_stop(device);
+    return retval;
 }
 
-bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled, bool render_continue) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
+    qp_start(device);
     if (driver->circle) {
-        return driver->circle(device, x, y, radius, hue, sat, val, filled);
+        retval = driver->circle(device, x, y, radius, hue, sat, val, filled, render_continue);
     } else {
-        return qp_internal_impl_circle(device, x, y, radius, hue, sat, val, filled);
+#ifdef CONSOLE_ENABLE
+        dprintf("using default %s func\n", "circle");
+#endif
+        retval = qp_internal_impl_circle(device, x, y, radius, hue, sat, val, filled);
     }
+    if (!render_continue) qp_stop(device);
+    return retval;
 }
 
-bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled, bool render_continue) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
+    qp_start(device);
     if (driver->ellipse) {
-        return driver->ellipse(device, x, y, sizex, sizey, hue, sat, val, filled);
+        retval = driver->ellipse(device, x, y, sizex, sizey, hue, sat, val, filled, render_continue);
     } else {
-        qp_internal_impl_ellipse(device, x, y, sizex, sizey, hue, sat, val, filled);
+#ifdef CONSOLE_ENABLE
+        dprintf("using default %s func\n", "ellipse");
+#endif
+        retval = qp_internal_impl_ellipse(device, x, y, sizex, sizey, hue, sat, val, filled);
     }
+    if (!render_continue) qp_stop(device);
+    return retval;
 }
 
-bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image) { return qp_drawimage_recolor(device, x, y, image, 0, 0, 255); }
+bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, bool render_continue) {
+    return qp_drawimage_recolor(device, x, y, image, 0, 0, 255, render_continue);
+}
 
-bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue, uint8_t sat, uint8_t val) {
+bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue, uint8_t sat, uint8_t val, bool render_continue) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
+    qp_start(device);
     if (driver->drawimage) {
-        return driver->drawimage(device, x, y, image, hue, sat, val);
+        retval = driver->drawimage(device, x, y, image, hue, sat, val, render_continue);
     } else {
-        return qp_internal_impl_drawimage(device, x, y, image, hue, sat, val);
+#ifdef CONSOLE_ENABLE
+        dprintf("using default %s func\n", "drawimage_recolor");
+#endif
+        retval = qp_internal_impl_drawimage(device, x, y, image, hue, sat, val);
     }
-    return false;
+    if (!render_continue) qp_stop(device);
+    return retval;
 }
 
 int16_t qp_textwidth(painter_font_t font, const char *str) {
@@ -308,16 +398,23 @@ int16_t qp_textwidth(painter_font_t font, const char *str) {
     return width;
 }
 
-int16_t qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str) { return qp_drawtext_recolor(device, x, y, font, str, 0, 0, 255, 0, 0, 0); }
+int16_t qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, bool render_continue) { return qp_drawtext_recolor(device, x, y, font, str, 0, 0, 255, 0, 0, 0, render_continue); }
 
-int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg, bool render_continue) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    bool retval;
+    qp_start(device);
     if (driver->drawtext) {
-        return driver->drawtext(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+        retval = driver->drawtext(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg, render_continue);
     } else {
-        return qp_internal_impl_drawtext_recolor(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+#ifdef CONSOLE_ENABLE
+        dprintf("using default %s func\n", "drawtext_recolor");
+#endif
+        retval = qp_internal_impl_drawtext_recolor(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
     }
-    return 0;
+    if (!render_continue) qp_stop(device);
+    return retval;
 }
+
 
 

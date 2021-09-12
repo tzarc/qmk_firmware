@@ -104,22 +104,15 @@ painter_device_t qp_st7789_make_device_spi(uint16_t screen_width, uint16_t scree
             driver->qp_driver.init      = qp_st7789_init;
             driver->qp_driver.clear     = qp_st77xx_clear;
             driver->qp_driver.power     = qp_st77xx_power;
-            driver->qp_driver.pixdata   = qp_st77xx_pixdata;
             driver->qp_driver.viewport  = qp_st77xx_viewport;
-            driver->qp_driver.setpixel  = qp_st77xx_setpixel;
-            driver->qp_driver.line      = qp_st77xx_line;
-            driver->qp_driver.rect      = qp_st77xx_rect;
-            driver->qp_driver.circle    = qp_st77xx_circle;
-            driver->qp_driver.ellipse   = qp_fallback_ellipse;
-            driver->qp_driver.drawimage = qp_st77xx_drawimage;
+            driver->qp_driver.screen_height       = screen_height;
+            driver->qp_driver.screen_width        = screen_width;
             driver->dc_pin              = data_pin;
             driver->reset_pin           = reset_pin;
             driver->qp_driver.comms_interface     = SPI;
             driver->qp_driver.spi.chip_select_pin = chip_select_pin;
             driver->qp_driver.spi.clock_divisor   = spi_divisor;
             driver->qp_driver.spi.spi_mode        = spi_mode;
-            driver->qp_driver.screen_height       = screen_height;
-            driver->qp_driver.screen_width        = screen_width;
 #ifdef BACKLIGHT_ENABLE
             driver->uses_backlight = uses_backlight;
 #endif
