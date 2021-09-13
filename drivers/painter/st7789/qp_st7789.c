@@ -35,9 +35,8 @@ static st77xx_painter_device_t drivers[ST7789_NUM_DEVICES] = {0};
 // Initialization
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
-
     st77xx_painter_device_t *lcd = (st77xx_painter_device_t *)device;
-    lcd->rotation                 = rotation;
+    lcd->rotation                = rotation;
 
     // Initialize the SPI peripheral
     spi_init();
@@ -104,10 +103,8 @@ bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
 // Device creation
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 // Factory function for creating a handle to the ST7789 device
 painter_device_t qp_st7789_make_device(pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight, uint16_t lcd_width, uint16_t lcd_height) {
-
     for (uint32_t i = 0; i < ST7789_NUM_DEVICES; ++i) {
         st77xx_painter_device_t *driver = &drivers[i];
         if (!driver->allocated) {
@@ -139,7 +136,3 @@ painter_device_t qp_st7789_make_device(pin_t chip_select_pin, pin_t data_pin, pi
 
     return NULL;
 }
-
-
-
-

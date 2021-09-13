@@ -20,7 +20,6 @@
 #include <utf8.h>
 #include <spi_master.h>
 
-
 #ifdef BACKLIGHT_ENABLE
 #    include <backlight/backlight.h>
 #endif
@@ -41,14 +40,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Enable SPI comms
-void qp_st77xx_internal_lcd_start(st77xx_painter_device_t *lcd) {
-    spi_start(lcd->chip_select_pin, false, lcd->spi_mode, lcd->spi_divisor);
-}
+void qp_st77xx_internal_lcd_start(st77xx_painter_device_t *lcd) { spi_start(lcd->chip_select_pin, false, lcd->spi_mode, lcd->spi_divisor); }
 
 // Disable SPI comms
-void qp_st77xx_internal_lcd_stop(void) {
-        spi_stop();
-}
+void qp_st77xx_internal_lcd_stop(void) { spi_stop(); }
 
 // Send a command
 void qp_st77xx_internal_lcd_cmd(st77xx_painter_device_t *lcd, uint8_t b) {
@@ -219,7 +214,7 @@ bool st77xx_drawimage_uncompressed_impl(st77xx_painter_device_t *lcd, painter_im
         // Supplied pixel data is in 4bpp monochrome -- decode it to the equivalent pixel data
         lcd_send_mono_pixdata_recolor(lcd, image_bpp, pixel_count, pixel_data, byte_count, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
     } else if (image_format == IMAGE_FORMAT_PALETTE) {
-         // Supplied pixel data is in 1bpp monochrome -- decode it to the equivalent pixel data
+        // Supplied pixel data is in 1bpp monochrome -- decode it to the equivalent pixel data
         lcd_send_palette_pixdata(lcd, palette_data, image_bpp, pixel_count, pixel_data, byte_count);
     } else {
         dprint("ERROR: image format not recognized");
@@ -229,7 +224,6 @@ bool st77xx_drawimage_uncompressed_impl(st77xx_painter_device_t *lcd, painter_im
 
 // Manually set a single pixel's color
 bool qp_st77xx_internal_setpixel_impl(st77xx_painter_device_t *lcd, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
-
     // Configure where we're going to be rendering to
     qp_st77xx_internal_lcd_viewport(lcd, x, y, x, y);
 
@@ -241,34 +235,31 @@ bool qp_st77xx_internal_setpixel_impl(st77xx_painter_device_t *lcd, uint16_t x, 
 }
 
 bool qp_st77xx_internal_filled_rect_impl(st77xx_painter_device_t *lcd, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, rgb565_t fillbuffer[], uint16_t fillbufferlen) {
+    // rectify coordinates
+    if (left > right) {
+        uint16_t tmpleft = left;
+        left             = right;
+        right            = tmpleft;
+    }
+    if (top > bottom) {
+        uint16_t tmptop = top;
+        top             = bottom;
+        bottom          = tmptop;
+    }
 
-        // rectify coordinates
-        if (left > right)
-        {
-            uint16_t tmpleft = left;
-            left = right;
-            right = tmpleft;
-        }
-        if (top > bottom)
-        {
-            uint16_t tmptop = top;
-            top = bottom;
-            bottom = tmptop;
-        }
+    // Configure where we're going to be rendering to
+    qp_st77xx_internal_lcd_viewport(lcd, left, top, right, bottom);
 
-        // Configure where we're going to be rendering to
-        qp_st77xx_internal_lcd_viewport(lcd, left, top, right, bottom);
+    // Transmit the data to the LCD in chunks
+    uint32_t remaining = (right - left + 1) * (bottom - top + 1);
 
-        // Transmit the data to the LCD in chunks
-        uint32_t remaining = (right - left + 1) * (bottom - top + 1);
-
-        while (remaining > 0) {
-            uint32_t transmit = (remaining < fillbufferlen ? remaining : fillbufferlen);
-            uint32_t bytes    = transmit * sizeof(rgb565_t);
-            qp_st77xx_internal_lcd_sendbuf(lcd, fillbuffer, bytes);
-            remaining -= transmit;
-        }
-        return true;
+    while (remaining > 0) {
+        uint32_t transmit = (remaining < fillbufferlen ? remaining : fillbufferlen);
+        uint32_t bytes    = transmit * sizeof(rgb565_t);
+        qp_st77xx_internal_lcd_sendbuf(lcd, fillbuffer, bytes);
+        remaining -= transmit;
+    }
+    return true;
 }
 
 // Utilize 8-way symmetry to draw circle
@@ -291,21 +282,21 @@ bool qp_st77xx_circle_drawpixels(painter_device_t device, uint16_t centerx, uint
     */
 
     st77xx_painter_device_t *lcd = (st77xx_painter_device_t *)device;
-    debug_enable = true;
+    debug_enable                 = true;
     // Convert the color to RGB565
-    rgb565_t clr = hsv_to_st77xx(hue, sat, val);
+    rgb565_t clr     = hsv_to_st77xx(hue, sat, val);
     uint16_t bufsize = offsety << 1 < ST77XX_PIXDATA_BUFSIZE ? offsety << 1 : ST77XX_PIXDATA_BUFSIZE;
     rgb565_t buf[bufsize];
     if (filled) {
         for (uint32_t i = 0; i < bufsize; ++i) buf[i] = clr;
     }
-    uint16_t yplusy = LIMIT(centery + offsety, 0, lcd->lcd_height);
+    uint16_t yplusy  = LIMIT(centery + offsety, 0, lcd->lcd_height);
     uint16_t yminusy = LIMIT(centery - offsety, 0, lcd->lcd_height);
-    uint16_t yplusx = LIMIT(centery + offsetx, 0, lcd->lcd_height);
+    uint16_t yplusx  = LIMIT(centery + offsetx, 0, lcd->lcd_height);
     uint16_t yminusx = LIMIT(centery - offsetx, 0, lcd->lcd_height);
-    uint16_t xplusx = LIMIT(centerx + offsetx, 0, lcd->lcd_width);
+    uint16_t xplusx  = LIMIT(centerx + offsetx, 0, lcd->lcd_width);
     uint16_t xminusx = LIMIT(centerx - offsetx, 0, lcd->lcd_width);
-    uint16_t xplusy = LIMIT(centerx + offsety, 0, lcd->lcd_width);
+    uint16_t xplusy  = LIMIT(centerx + offsety, 0, lcd->lcd_width);
     uint16_t xminusy = LIMIT(centerx - offsety, 0, lcd->lcd_width);
 
     centerx = LIMIT(centerx, 0, lcd->lcd_width);
@@ -313,10 +304,10 @@ bool qp_st77xx_circle_drawpixels(painter_device_t device, uint16_t centerx, uint
 
     bool retval = true;
     if (offsetx == 0) {
-        if (!qp_st77xx_internal_setpixel_impl(lcd,centerx, yplusy, hue, sat, val)) {
+        if (!qp_st77xx_internal_setpixel_impl(lcd, centerx, yplusy, hue, sat, val)) {
             retval = false;
         }
-        if (!qp_st77xx_internal_setpixel_impl(lcd,centerx, yminusy, hue, sat, val)) {
+        if (!qp_st77xx_internal_setpixel_impl(lcd, centerx, yminusy, hue, sat, val)) {
             retval = false;
         }
         if (filled) {
@@ -324,10 +315,10 @@ bool qp_st77xx_circle_drawpixels(painter_device_t device, uint16_t centerx, uint
                 retval = false;
             }
         } else {
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xplusy, centery, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xplusy, centery, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xminusy, centery, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xminusy, centery, hue, sat, val)) {
                 retval = false;
             }
         }
@@ -341,16 +332,16 @@ bool qp_st77xx_circle_drawpixels(painter_device_t device, uint16_t centerx, uint
             }
 
         } else {
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xplusy, yplusy, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xplusy, yplusy, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xminusy, yplusy, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xminusy, yplusy, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xplusy, yminusy, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xplusy, yminusy, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xminusy, yminusy, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xminusy, yminusy, hue, sat, val)) {
                 retval = false;
             }
         }
@@ -373,28 +364,28 @@ bool qp_st77xx_circle_drawpixels(painter_device_t device, uint16_t centerx, uint
                 retval = false;
             }
         } else {
-             if (!qp_st77xx_internal_setpixel_impl(lcd,xplusx, yplusy, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xplusx, yplusy, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xminusx, yplusy, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xminusx, yplusy, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xplusx, yminusy, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xplusx, yminusy, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xminusx, yminusy, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xminusx, yminusy, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xplusy, yplusx, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xplusy, yplusx, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xminusy, yplusx, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xminusy, yplusx, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xplusy, yminusx, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xplusy, yminusx, hue, sat, val)) {
                 retval = false;
             }
-            if (!qp_st77xx_internal_setpixel_impl(lcd,xminusy, yminusx, hue, sat, val)) {
+            if (!qp_st77xx_internal_setpixel_impl(lcd, xminusy, yminusx, hue, sat, val)) {
                 retval = false;
             }
         }
@@ -402,8 +393,6 @@ bool qp_st77xx_circle_drawpixels(painter_device_t device, uint16_t centerx, uint
 
     return retval;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter API implementations
@@ -474,8 +463,8 @@ bool qp_st77xx_pixdata(painter_device_t device, const void *pixel_data, uint32_t
 
 // Manually set a single pixel's color
 bool qp_st77xx_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
-    st77xx_painter_device_t *lcd = (st77xx_painter_device_t *)device;
-    bool retval = true;
+    st77xx_painter_device_t *lcd    = (st77xx_painter_device_t *)device;
+    bool                     retval = true;
     qp_st77xx_internal_lcd_start(lcd);
 
     retval = qp_st77xx_internal_setpixel_impl(lcd, x, y, hue, sat, val);
@@ -490,11 +479,10 @@ bool qp_st77xx_rect(painter_device_t device, uint16_t left, uint16_t top, uint16
     bool retval = true;
 
     if (filled) {
-
         // Convert the color to RGB565
         rgb565_t clr = hsv_to_st77xx(hue, sat, val);
 
-        uint32_t totalpixels = abs(right-left+1)*abs(bottom-top+1);
+        uint32_t totalpixels = abs(right - left + 1) * abs(bottom - top + 1);
 
         totalpixels = totalpixels > ST77XX_PIXDATA_BUFSIZE ? ST77XX_PIXDATA_BUFSIZE : totalpixels;
 
@@ -535,16 +523,15 @@ bool qp_st77xx_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t 
     }
 
     // If we're doing horizontal or vertical, just use the filled rect implementation
-    bool retval = true;
-    st77xx_painter_device_t *lcd = (st77xx_painter_device_t *)device;
-    rgb565_t clr[1] = {hsv_to_st77xx(hue, sat, val)};
+    bool                     retval = true;
+    st77xx_painter_device_t *lcd    = (st77xx_painter_device_t *)device;
+    rgb565_t                 clr[1] = {hsv_to_st77xx(hue, sat, val)};
     qp_st77xx_internal_lcd_start(lcd);
 
     retval = qp_st77xx_internal_filled_rect_impl(lcd, x0, y0, x1, y1, hue, sat, val, clr, 1);
 
     qp_st77xx_internal_lcd_stop();
     return retval;
-
 }
 
 // Draw an image
@@ -559,7 +546,7 @@ bool qp_st77xx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const 
     painter_raw_image_descriptor_t *raw_image_desc = (painter_raw_image_descriptor_t *)image;
 
     if (image->compression == IMAGE_UNCOMPRESSED) {
-        st77xx_drawimage_uncompressed_impl(lcd, image->image_format, image->image_bpp, raw_image_desc->image_data, raw_image_desc->byte_count, image->width , image->height, NULL , hue, sat, val, hue, sat, 0);
+        st77xx_drawimage_uncompressed_impl(lcd, image->image_format, image->image_bpp, raw_image_desc->image_data, raw_image_desc->byte_count, image->width, image->height, NULL, hue, sat, val, hue, sat, 0);
     }
 
     qp_st77xx_internal_lcd_stop();
@@ -595,7 +582,7 @@ bool qp_st77xx_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t 
 }
 
 int16_t qp_st77xx_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
-    st77xx_painter_device_t *           lcd   = (st77xx_painter_device_t *)device;
+    st77xx_painter_device_t *            lcd   = (st77xx_painter_device_t *)device;
     const painter_raw_font_descriptor_t *fdesc = (const painter_raw_font_descriptor_t *)font;
 
     qp_st77xx_internal_lcd_start(lcd);
@@ -607,7 +594,7 @@ int16_t qp_st77xx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pain
 
         if (code_point >= 0) {
             if (code_point >= 0x20 && code_point < 0x7F) {
-                    if (fdesc->ascii_glyph_definitions != NULL) {
+                if (fdesc->ascii_glyph_definitions != NULL) {
                     // Search the font's ascii table
                     uint8_t                                  index      = code_point - 0x20;
                     const painter_font_ascii_glyph_offset_t *glyph_desc = &fdesc->ascii_glyph_definitions[index];

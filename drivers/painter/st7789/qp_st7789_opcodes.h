@@ -23,22 +23,22 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // System function commands
 
-#define ST7789_GET_SELF_DIAG 0x0F           // Get self-diagnostic result
-#define ST7789_SET_VERT_SCRL 0x33           // Set vertical scroll definition
-#define ST7789_SET_VERT_SCRL_ADDR 0x37      // SEt Vertical scroll start address
-#define ST7789_SET_MEM_CONT 0x3C            // Memory Write continue
-#define ST7789_GET_MEM_CONT 0x3E            // Memory Read continue
-#define ST7789_SET_TEAR_LINE 0x44           // Set tear scanline
-#define ST7789_GET_TEAR_LINE 0x45           // Get tear scanline
-#define ST7789_SET_BRIGHTNESS 0x51          // Set display brightness
-#define ST7789_GET_BRIGHTNESS 0x52          // Get display brightness
-#define ST7789_SET_CTRL 0x53                // Set CTRL display
-#define ST7789_GET_CTRL 0x54                // Get CTRL display value
-#define ST7789_SET_CAB_COLOR 0x55           // Set content adaptive brightness control and color enhancement
-#define ST7789_GET_CAB_COLOR 0x56           // Get content adaptive brightness control and color enhancement
-#define ST7789_SET_CAB_BRIGHTNESS 0x5E      // Set content adaptive minimum brightness
-#define ST7789_GET_CAB_BRIGHTNESS 0x5F      // Get content adaptive minimum brightness
-#define ST7789_GET_ABC_SELF_DIAG 0x68       // Get Auto brightness control self diagnostics
+#define ST7789_GET_SELF_DIAG 0x0F       // Get self-diagnostic result
+#define ST7789_SET_VERT_SCRL 0x33       // Set vertical scroll definition
+#define ST7789_SET_VERT_SCRL_ADDR 0x37  // SEt Vertical scroll start address
+#define ST7789_SET_MEM_CONT 0x3C        // Memory Write continue
+#define ST7789_GET_MEM_CONT 0x3E        // Memory Read continue
+#define ST7789_SET_TEAR_LINE 0x44       // Set tear scanline
+#define ST7789_GET_TEAR_LINE 0x45       // Get tear scanline
+#define ST7789_SET_BRIGHTNESS 0x51      // Set display brightness
+#define ST7789_GET_BRIGHTNESS 0x52      // Get display brightness
+#define ST7789_SET_CTRL 0x53            // Set CTRL display
+#define ST7789_GET_CTRL 0x54            // Get CTRL display value
+#define ST7789_SET_CAB_COLOR 0x55       // Set content adaptive brightness control and color enhancement
+#define ST7789_GET_CAB_COLOR 0x56       // Get content adaptive brightness control and color enhancement
+#define ST7789_SET_CAB_BRIGHTNESS 0x5E  // Set content adaptive minimum brightness
+#define ST7789_GET_CAB_BRIGHTNESS 0x5F  // Get content adaptive minimum brightness
+#define ST7789_GET_ABC_SELF_DIAG 0x68   // Get Auto brightness control self diagnostics
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Panel Function Commands
