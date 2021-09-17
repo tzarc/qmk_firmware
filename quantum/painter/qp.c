@@ -249,9 +249,6 @@ bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native
     if (driver->pixdata) {
         retval = driver->pixdata(device, pixel_data, native_pixel_count, render_continue);
     } else {
-#ifdef CONSOLE_ENABLE
-        dprintf("using default %s func\n", "pixdata");
-#endif
         retval = qp_internal_impl_pixdata(device, pixel_data, native_pixel_count);
     }
     if (!render_continue) qp_stop(device);
@@ -265,9 +262,6 @@ bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, u
     if (driver->setpixel) {
         retval = driver->setpixel(device, x, y, hue, sat, val, render_continue);
     } else {
-#ifdef CONSOLE_ENABLE
-        dprintf("using default %s func\n", "setpixel");
-#endif
         retval = qp_internal_impl_setpixel(device, x, y, hue, sat, val);
     }
     if (!render_continue) qp_stop(device);
@@ -281,9 +275,6 @@ bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uin
     if (driver->line) {
         retval = driver->line(device, x0, y0, x1, y1, hue, sat, val, render_continue);
     } else {
-#ifdef CONSOLE_ENABLE
-        dprintf("using default %s func\n", "line");
-#endif
         retval = qp_internal_impl_line(device, x0, y0, x1, y1, hue, sat, val);
     }
     if (!render_continue) qp_stop(device);
@@ -296,14 +287,8 @@ bool qp_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t righ
 
     qp_start(device);
     if (driver->rect) {
-#ifdef CONSOLE_ENABLE
-        dprintf("using driver %s func\n", "rect");
-#endif
         retval = driver->rect(device, left, top, right, bottom, hue, sat, val, filled, render_continue);
     } else {
-#ifdef CONSOLE_ENABLE
-        dprintf("using default %s func\n", "rect");
-#endif
         retval = qp_internal_impl_rect(device, left, top, right, bottom, hue, sat, val, filled);
     }
     if (!render_continue) qp_stop(device);
@@ -317,9 +302,6 @@ bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius,
     if (driver->circle) {
         retval = driver->circle(device, x, y, radius, hue, sat, val, filled, render_continue);
     } else {
-#ifdef CONSOLE_ENABLE
-        dprintf("using default %s func\n", "circle");
-#endif
         retval = qp_internal_impl_circle(device, x, y, radius, hue, sat, val, filled);
     }
     if (!render_continue) qp_stop(device);
@@ -333,9 +315,6 @@ bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex,
     if (driver->ellipse) {
         retval = driver->ellipse(device, x, y, sizex, sizey, hue, sat, val, filled, render_continue);
     } else {
-#ifdef CONSOLE_ENABLE
-        dprintf("using default %s func\n", "ellipse");
-#endif
         retval = qp_internal_impl_ellipse(device, x, y, sizex, sizey, hue, sat, val, filled);
     }
     if (!render_continue) qp_stop(device);
@@ -353,9 +332,6 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
     if (driver->drawimage) {
         retval = driver->drawimage(device, x, y, image, hue, sat, val, render_continue);
     } else {
-#ifdef CONSOLE_ENABLE
-        dprintf("using default %s func\n", "drawimage_recolor");
-#endif
         retval = qp_internal_impl_drawimage(device, x, y, image, hue, sat, val);
     }
     if (!render_continue) qp_stop(device);
@@ -407,9 +383,6 @@ int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, pai
     if (driver->drawtext) {
         retval = driver->drawtext(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg, render_continue);
     } else {
-#ifdef CONSOLE_ENABLE
-        dprintf("using default %s func\n", "drawtext_recolor");
-#endif
         retval = qp_internal_impl_drawtext_recolor(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
     }
     if (!render_continue) qp_stop(device);
