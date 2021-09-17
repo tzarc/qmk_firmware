@@ -33,9 +33,6 @@
 #include "qp_st77xx_internal.h"
 #include "qp_st77xx_opcodes.h"
 
-#define BYTE_SWAP(x) (((((uint16_t)(x)) >> 8) & 0x00FF) | ((((uint16_t)(x)) << 8) & 0xFF00))
-#define LIMIT(x, limit_min, limit_max) (x > limit_max ? limit_max : (x < limit_min ? limit_min : x))
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Low-level LCD control functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +56,7 @@ void qp_st77xx_internal_lcd_stop(st77xx_painter_device_t *lcd) {
 void qp_st77xx_internal_lcd_cmd(st77xx_painter_device_t *lcd, uint8_t b) {
     writePinLow(lcd->dc_pin);
     qp_send(lcd, &b, sizeof(b));
+    writePinHigh(lcd->dc_pin);
 }
 
 // Send data
@@ -136,14 +134,17 @@ bool qp_st77xx_power(painter_device_t device, bool power_on) {
 }
 
 // Viewport to draw to
-bool qp_st77xx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
+bool qp_st77xx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, bool render_continue) {
     st77xx_painter_device_t *lcd = (st77xx_painter_device_t *)device;
     qp_st77xx_internal_lcd_start(lcd);
 
     // Configure where we're going to be rendering to
     qp_st77xx_internal_lcd_viewport(lcd, left, top, right, bottom);
 
-    qp_st77xx_internal_lcd_stop(lcd);
+    if (!render_continue) qp_st77xx_internal_lcd_stop(lcd);
 
     return true;
 }
+
+
+

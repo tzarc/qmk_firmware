@@ -102,7 +102,7 @@ bool qp_start(painter_device_t device) {
         switch(driver->comms_interface) {
     #ifdef QP_ENABLE_SPI
             case SPI:
-                retval = spi_start(driver->spi.chip_select_pin, driver->spi.is_little_endian, driver->spi.mode, driver->spi.spi_divisor);
+                retval = spi_start(driver->spi.chip_select_pin, driver->spi.is_little_endian, driver->spi.mode, driver->spi.clock_divisor);
                 driver->render_started = true;
                 break;
     #endif // QP_ENABLE_SPI

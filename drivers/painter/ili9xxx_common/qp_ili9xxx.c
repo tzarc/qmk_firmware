@@ -26,9 +26,9 @@
 
 #include <qp_internal.h>
 #include <qp_utils.h>
-#include <qp_ili9xxx.h>
-#include <qp_ili9xxx_internal.h>
-#include <qp_ili9xxx_opcodes.h>
+#include "qp_ili9xxx.h"
+#include "qp_ili9xxx_internal.h"
+#include "qp_ili9xxx_opcodes.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Low-level LCD control functions
@@ -54,7 +54,11 @@ bool qp_ili9xxx_internal_lcd_stop(ili9xxx_painter_device_t *lcd) {
 // Send a command
 bool qp_ili9xxx_internal_lcd_cmd(ili9xxx_painter_device_t *lcd, uint8_t command) {
     writePinLow(lcd->dc_pin);
-    return qp_send(lcd, &command, sizeof(command));
+
+
+    bool retval = qp_send(lcd, &command, sizeof(command));
+    writePinHigh(lcd->dc_pin);
+    return retval;
 }
 
 // Send data
@@ -145,10 +149,6 @@ bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
 bool qp_ili9xxx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, bool render_continue) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     if(!lcd->qp_driver.render_started) qp_ili9xxx_internal_lcd_start(lcd);
-#ifdef CONSOLE_ENABLE
-        dprintf("opening viewport at %i, %i, %i, %i\n", left, top, right, bottom);
-#endif
-
     // Configure where we're going to be rendering to
     qp_ili9xxx_internal_lcd_viewport(lcd, left, top, right, bottom);
 

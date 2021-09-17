@@ -258,20 +258,12 @@ bool qp_internal_impl_circle(painter_device_t device, uint16_t x, uint16_t y, ui
 }
 
 bool qp_internal_impl_filled_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, rgb565_t fillbuffer[], uint16_t fillbufferlen) {
-
-#ifdef CONSOLE_ENABLE
-    dprintf("---- filled rect func; fillbufferlen = %i\n", fillbufferlen);
-#endif
-
     // Configure where we're going to be rendering to
     qp_viewport(device, left, top, right, bottom, true);
 
     // Transmit the data to the LCD in chunks
     uint32_t remaining = (right - left + 1) * (bottom - top + 1);
     while (remaining > 0) {
-#ifdef CONSOLE_ENABLE
-    dprintf("-- filling... (remaining: %i)\n", remaining);
-#endif
         uint32_t transmit = (remaining < fillbufferlen ? remaining : fillbufferlen);
         uint32_t bytes    = transmit * sizeof(rgb565_t);
         qp_send(device, (uint8_t *)fillbuffer, bytes);

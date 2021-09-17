@@ -159,31 +159,51 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
 static ili9xxx_painter_device_t drivers[ILI9341_NUM_DEVICES] = {0};
 
 // Factory function for creating a handle to the ILI9341 device with an spi interface
-painter_device_t qp_ili9341_make_device_spi(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t data_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight) {
+painter_device_t qp_ili9341_make_device_spi(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, bool uses_backlight) {
     for (uint32_t i = 0; i < ILI9341_NUM_DEVICES; ++i) {
         ili9xxx_painter_device_t *driver = &drivers[i];
         if (!driver->allocated) {
             driver->allocated           = true;
-            driver->qp_driver.init      = qp_ili9341_init;
-            driver->qp_driver.clear     = qp_ili9xxx_clear;
-            driver->qp_driver.power     = qp_ili9xxx_power;
-            driver->qp_driver.pixdata   = qp_ili9xxx_pixdata;
-            driver->qp_driver.viewport  = qp_ili9xxx_viewport;
-            driver->qp_driver.setpixel  = qp_ili9xxx_setpixel;
-            driver->qp_driver.line      = qp_ili9xxx_line;
-            driver->qp_driver.rect      = qp_ili9xxx_rect;
-            driver->qp_driver.circle    = qp_fallback_circle;
-            driver->qp_driver.ellipse   = qp_fallback_ellipse;
-            driver->qp_driver.drawimage = qp_ili9xxx_drawimage;
-            driver->qp_driver.drawtext  = qp_ili9xxx_drawtext;
-            driver->dc_pin              = data_pin;
             driver->reset_pin           = reset_pin;
-            driver->qp_driver.spi.chip_select_pin = chip_select_pin;
-            driver->qp_driver.spi.clock_divisor   = spi_divisor;
-            driver->qp_driver.screen_width        = screen_width;
-            driver->qp_driver.screen_height       = screen_height;
+            driver->dc_pin              = dc_pin;
+            driver->qp_driver.init      = qp_ili9341_init;
+            driver->qp_driver.power     = qp_ili9xxx_power;
+            driver->qp_driver.viewport  = qp_ili9xxx_viewport;
+            driver->qp_driver.brightness    = qp_ili9xxx_brightness;
+            driver->qp_driver.screen_height        = screen_height;
+            driver->qp_driver.screen_width         = screen_width;
+            driver->qp_driver.comms_interface      = SPI;
+            driver->qp_driver.spi.chip_select_pin  = chip_select_pin;
+            driver->qp_driver.spi.clock_divisor    = spi_divisor;
+            driver->qp_driver.spi.spi_mode         = 0;
 #ifdef BACKLIGHT_ENABLE
-            driver->uses_backlight = uses_backlight;
+            driver->uses_backlight          = uses_backlight;
+#endif
+            return (painter_device_t)driver;
+        }
+    }
+    return NULL;
+}
+
+painter_device_t qp_ili9341_make_device_parallel(uint16_t screen_height, uint16_t screen_width, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, pin_t write_pin, pin_t read_pin, bool uses_backlight) {
+    for (uint32_t i = 0; i < ILI9341_NUM_DEVICES; ++i) {
+        ili9xxx_painter_device_t *driver = &drivers[i];
+        if (!driver->allocated) {
+            driver->allocated           = true;
+            driver->reset_pin           = reset_pin;
+            driver->dc_pin              = dc_pin;
+            driver->qp_driver.init      = qp_ili9341_init;
+            driver->qp_driver.power     = qp_ili9xxx_power;
+            driver->qp_driver.viewport  = qp_ili9xxx_viewport;
+            driver->qp_driver.brightness    = qp_ili9xxx_brightness;
+            driver->qp_driver.screen_height             = screen_height;
+            driver->qp_driver.screen_width              = screen_width;
+            driver->qp_driver.comms_interface           = PARALLEL;
+            driver->qp_driver.parallel.chip_select_pin  = chip_select_pin;
+            driver->qp_driver.parallel.write_pin        = write_pin;
+            driver->qp_driver.parallel.read_pin         = read_pin;
+#ifdef BACKLIGHT_ENABLE
+            driver->uses_backlight          = uses_backlight;
 #endif
             return (painter_device_t)driver;
         }

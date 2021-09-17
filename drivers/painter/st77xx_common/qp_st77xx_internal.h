@@ -43,15 +43,8 @@ typedef uint16_t rgb565_t;
 
 bool qp_st77xx_clear(painter_device_t device);
 bool qp_st77xx_power(painter_device_t device, bool power_on);
-bool qp_st77xx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
-bool qp_st77xx_pixdata(painter_device_t device, const void *pixel_data, uint32_t byte_count);
-bool qp_st77xx_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
-bool qp_st77xx_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val);
-bool qp_st77xx_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
-bool qp_st77xx_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
-bool qp_st77xx_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
-bool qp_st77xx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val);
-int16_t qp_st77xx_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
+bool qp_st77xx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, bool render_continue);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Low-level LCD Forward declarations
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

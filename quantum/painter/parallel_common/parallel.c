@@ -57,12 +57,7 @@ const uint16_t nanoseconds_per_nop = 1000000000 / STM32_SYSCLK;
 
 void parallel_init(void) {
     static bool is_initialised = false;
-    if (!is_initialised) {
-#ifdef CONSOLE_ENABLE
-        dprintf("bitmask: "BYTE_TO_BINARY_PATTERN" "BYTE_TO_BINARY_PATTERN"\n", BYTE_TO_BINARY((bitmask & 0xFF00) >>8), BYTE_TO_BINARY(bitmask & 0xFF));
-#endif // CONSOLE_ENABL
-        is_initialised = true;
-    }
+    is_initialised = is_initialised ? true : false;
 }
 
 uint8_t internal_write(const uint8_t *data, uint16_t offset, uint16_t data_length) {
@@ -91,9 +86,6 @@ uint8_t internal_write(const uint8_t *data, uint16_t offset, uint16_t data_lengt
 
 void internal_write_init(void) {
      if (write_initialized) return;
-#ifdef CONSOLE_ENABLE
-        dprint("--write_init\n");
-#endif
     writePinHigh(r_pin);
     writePinLow(w_pin);
     palSetGroupMode(port_group, bitmask, 0, PAL_MODE_OUTPUT_PUSHPULL);
@@ -103,7 +95,7 @@ void internal_write_init(void) {
 
 bool parallel_write(uint8_t byte) {
     if (!write_initialized) {
-#ifdef CONSOLE_DEBUG
+#ifdef CONSOLE_ENABLE
         dprint("ERROR: write not initialised");
 #endif
         return false;
@@ -113,9 +105,6 @@ bool parallel_write(uint8_t byte) {
 }
 
 bool parallel_start(pin_t write_pin, pin_t read_pin, pin_t chip_select_pin) {
-#ifdef CONSOLE_ENABLE
-        dprint("--parallel_start\n");
-#endif
     r_pin = read_pin;
     w_pin = write_pin;
     cs_pin = chip_select_pin;
@@ -153,9 +142,6 @@ bool parallel_start(pin_t write_pin, pin_t read_pin, pin_t chip_select_pin) {
 // }
 
 void parallel_stop() {
-#ifdef CONSOLE_ENABLE
-        dprint("--parallel_stop\n");
-#endif
     writePinHigh(w_pin);
     writePinHigh(r_pin);
     writePinHigh(cs_pin);

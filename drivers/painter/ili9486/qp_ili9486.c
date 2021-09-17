@@ -45,7 +45,8 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
     qp_ili9xxx_internal_lcd_start(lcd);
     wait_ms(20);
 
-   // turn display off before we start doing anything
+
+    // turn display off before we start doing anything
     qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_CMD_DISPLAY_OFF);
     wait_ms(20);
 
@@ -170,9 +171,9 @@ bool qp_ili9486_init(painter_device_t device, painter_rotation_t rotation) {
     qp_ili9xxx_internal_lcd_data(lcd, 0x00);
     qp_ili9xxx_internal_lcd_data(lcd, 0x22);
 
-     // turn display on
-    qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_CMD_DISPLAY_ON);
-    wait_ms(20);
+    //  // turn display on
+    // qp_ili9xxx_internal_lcd_cmd(lcd, ILI9XXX_CMD_DISPLAY_ON);
+    // wait_ms(20);
 
     // Disable the comms to the LCD
     qp_ili9xxx_internal_lcd_stop(lcd);
