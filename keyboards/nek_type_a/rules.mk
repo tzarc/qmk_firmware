@@ -5,13 +5,6 @@ MCU = atmega32u4
 F_CPU = 8000000
 
 # Bootloader selection
-#   Teensy       halfkay
-#   Pro Micro    caterina
-#   Atmel DFU    atmel-dfu
-#   LUFA DFU     lufa-dfu
-#   QMK DFU      qmk-dfu
-#   ATmega32A    bootloadHID
-#   ATmega328P   USBasp
 BOOTLOADER = caterina
 
 BOOTMAGIC_ENABLE = no       # Enable Bootmagic Lite
@@ -26,10 +19,10 @@ NKRO_ENABLE = no            # USB Nkey Rollover
 BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality on B7 by default
 RGBLIGHT_ENABLE = no        # Enable keyboard RGB underglow
 UNICODE_ENABLE = no         # Unicode
-BLUETOOTH_ENABLE = yes      # Enable Bluetooth with the Adafruit EZ-Key HID
 AUDIO_ENABLE = no           # Audio output on port C6
 CUSTOM_MATRIX = yes
 DEBUG_ENABLE = yes
-BLUETOOTH = AdafruitBLE
+BLUETOOTH_ENABLE = yes
+BLUETOOTH_DRIVER = AdafruitBLE
 
 SRC += matrix.c mcp23017.c

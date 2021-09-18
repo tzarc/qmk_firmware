@@ -27,7 +27,7 @@
 #endif
 
 #ifdef LCD_SPI_MODE
-#   undef LCD_SPI_MODE
+#    undef LCD_SPI_MODE
 #endif
 
 #define LCD_SPI_MODE 3

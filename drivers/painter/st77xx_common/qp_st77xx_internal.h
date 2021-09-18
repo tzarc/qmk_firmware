@@ -64,5 +64,3 @@ void qp_st77xx_internal_lcd_viewport(st77xx_painter_device_t *lcd, uint16_t xbeg
 
 void qp_st77xx_internal_lcd_viewport_fill(st77xx_painter_device_t *lcd, uint16_t xbegin, uint16_t ybegin, uint16_t xend, uint16_t yend, uint8_t hue, uint8_t sat, uint8_t val);
 void qp_st77xx_internal_lcd_viewport_sendbuf(st77xx_painter_device_t *lcd, uint16_t xbegin, uint16_t ybegin, uint16_t xend, uint16_t yend, const void *filldata, uint16_t filldatalen, uint32_t maxfills);
-
-

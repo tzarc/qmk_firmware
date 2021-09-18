@@ -20,7 +20,6 @@
 #include <utf8.h>
 #include <spi_master.h>
 
-
 #ifdef BACKLIGHT_ENABLE
 #    include <backlight/backlight.h>
 #endif
@@ -145,6 +144,4 @@ bool qp_st77xx_viewport(painter_device_t device, uint16_t left, uint16_t top, ui
 
     return true;
 }
-
-
 

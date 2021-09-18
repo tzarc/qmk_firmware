@@ -16,40 +16,10 @@
 
 #pragma once
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include "stream.h"
 
-#define RLE_EOF ((int16_t)(-1))
-
-typedef struct rle_stream_t rle_stream_t;
-struct rle_stream_t {
-    int16_t (*get)(rle_stream_t *in_stream);
-    bool (*put)(rle_stream_t *out_stream, int16_t c);
-};
-
-typedef struct memory_rle_stream_t {
-    rle_stream_t base;
-    uint8_t *    buffer;
-    size_t       length;
-    size_t       position;
-} memory_rle_stream_t;
-
-#ifdef RLE_HAS_FILE_IO
-typedef struct file_rle_stream_t {
-    rle_stream_t base;
-    FILE *       file;
-} file_rle_stream_t;
-#endif  // RLE_HAS_FILE_IO
-
-memory_rle_stream_t make_memory_rle_stream_t(void *buffer, size_t length);
-
-#ifdef RLE_HAS_FILE_IO
-file_rle_stream_t make_file_rle_stream_t(FILE *f);
-#endif  // RLE_HAS_FILE_IO
-
-bool rle_decode(rle_stream_t *in_stream, rle_stream_t *out_stream);
+bool rle_decode(stream_t *in_stream, stream_t *out_stream);
 
 #ifdef RLE_ENCODER
-bool rle_encode(rle_stream_t *in_stream, rle_stream_t *out_stream);
+bool rle_encode(stream_t *in_stream, stream_t *out_stream);
 #endif  // RLE_ENCODER
