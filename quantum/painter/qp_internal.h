@@ -23,6 +23,8 @@
 // Quantum painter: cater for AVR address space
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#define QP_PACKED __attribute__((packed))
+
 #ifdef __FLASH
 #    define QP_RESIDENT_FLASH __flash
 #else
@@ -35,11 +37,42 @@
 #    define QP_RESIDENT_FLASH_OR_RAM
 #endif
 
-#define QP_RESIDENT_RAM
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum painter types
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum painter image types
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+typedef enum qp_image_format_t {
+    // Pixel formats available in the QGF frame format
+    GRAYSCALE_1BPP = 0x00,
+    GRAYSCALE_2BPP = 0x01,
+    GRAYSCALE_4BPP = 0x02,
+    GRAYSCALE_8BPP = 0x03,
+    PALETTE_1BPP   = 0x04,
+    PALETTE_2BPP   = 0x05,
+    PALETTE_4BPP   = 0x06,
+    PALETTE_8BPP   = 0x07,
+} qp_image_format_t;
+
+// Datatype containing a pixel's colour
+typedef union QP_PACKED qp_pixel_color_t {
+    uint8_t mono;
+    uint8_t palette_idx;
+
+    struct QP_PACKED {
+        uint8_t h;
+        uint8_t s;
+        uint8_t v;
+    } hsv888;
+
+    struct QP_PACKED {
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+    } rgb888;
+
+    uint16_t rgb565;
+} qp_pixel_color_t;
+_Static_assert(sizeof(qp_pixel_color_t) == 3, "Invalid size for qp_pixel_color_t");
 
 // Uncompressed raw image descriptor
 typedef struct painter_raw_image_descriptor_t {

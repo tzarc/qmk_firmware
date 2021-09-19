@@ -17,6 +17,7 @@
 #pragma once
 
 #include <qp.h>
+#include <qp_internal.h>
 #include <color.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,4 +25,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Generates a color-interpolated lookup table based off the number of items, from foreground to background, for use with monochrome image rendering
-void qp_generate_palette(HSV* lookup_table, int16_t items, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg);
+void qp_generate_palette(qp_pixel_color_t* lookup_table, int16_t items, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg);
+
+// Convert from input pixel data + palette to equivalent pixels
+void qp_decode_to_hsv(int16_t count, qp_image_format_t src_format, const void* src_data, qp_pixel_color_t* palette, qp_pixel_color_t* dest_colors);

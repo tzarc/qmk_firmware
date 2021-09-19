@@ -68,11 +68,11 @@ void qp_ili9xxx_internal_lcd_viewport(ili9xxx_painter_device_t *lcd, uint16_t xb
 
 // Static buffer to contain a generated color palette
 #if QUANTUM_PAINTER_SUPPORTS_256_PALETTE
-static HSV      hsv_lookup_table[256];
-static rgb565_t rgb565_palette[256];
+static qp_pixel_color_t hsv_lookup_table[256];
+static rgb565_t         rgb565_palette[256];
 #else
-static HSV      hsv_lookup_table[16];
-static rgb565_t rgb565_palette[16];
+static qp_pixel_color_t hsv_lookup_table[16];
+static rgb565_t         rgb565_palette[16];
 #endif
 
 // Static buffer used for transmitting image data
@@ -157,7 +157,7 @@ static inline void lcd_send_mono_pixdata_recolor(ili9xxx_painter_device_t *lcd, 
         uint16_t items = 1 << bits_per_pixel;  // number of items we need to interpolate
         qp_generate_palette(hsv_lookup_table, items, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
         for (uint16_t i = 0; i < items; ++i) {
-            rgb565_palette[i] = hsv_to_ili9xxx(hsv_lookup_table[i].h, hsv_lookup_table[i].s, hsv_lookup_table[i].v);
+            rgb565_palette[i] = hsv_to_ili9xxx(hsv_lookup_table[i].hsv888.h, hsv_lookup_table[i].hsv888.s, hsv_lookup_table[i].hsv888.v);
         }
     }
 

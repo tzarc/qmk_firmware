@@ -17,7 +17,7 @@
 #include <quantum.h>
 #include <qp_utils.h>
 
-void qp_generate_palette(HSV* lookup_table, int16_t items, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg) {
+void qp_generate_palette(qp_pixel_color_t* lookup_table, int16_t items, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg) {
     // Make sure we take the "shortest" route from one hue to the other
     if ((hue_fg - hue_bg) >= 128) {
         hue_bg += 256;
@@ -27,8 +27,10 @@ void qp_generate_palette(HSV* lookup_table, int16_t items, int16_t hue_fg, int16
 
     // Interpolate each of the lookup table entries
     for (int16_t i = 0; i < items; ++i) {
-        lookup_table[i].h = (uint8_t)((hue_fg - hue_bg) * i / (items - 1) + hue_bg);
-        lookup_table[i].s = (uint8_t)((sat_fg - sat_bg) * i / (items - 1) + sat_bg);
-        lookup_table[i].v = (uint8_t)((val_fg - val_bg) * i / (items - 1) + val_bg);
+        lookup_table[i].hsv888.h = (uint8_t)((hue_fg - hue_bg) * i / (items - 1) + hue_bg);
+        lookup_table[i].hsv888.s = (uint8_t)((sat_fg - sat_bg) * i / (items - 1) + sat_bg);
+        lookup_table[i].hsv888.v = (uint8_t)((val_fg - val_bg) * i / (items - 1) + val_bg);
     }
 }
+
+void qp_decode_to_hsv(int16_t count, qp_image_format_t src_format, const void* src_data, qp_pixel_color_t* palette, qp_pixel_color_t* dest_colors) {}
