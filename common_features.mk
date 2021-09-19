@@ -152,18 +152,22 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
             OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE
             QUANTUM_LIB_SRC += spi_master.c
             COMMON_VPATH += \
+                $(DRIVER_PATH)/painter/comms \
                 $(DRIVER_PATH)/painter/ili9xxx_common \
                 $(DRIVER_PATH)/painter/ili9341
             SRC += \
+                $(DRIVER_PATH)/painter/comms/qp_comms_spi.c \
                 $(DRIVER_PATH)/painter/ili9xxx_common/qp_ili9xxx.c \
                 $(DRIVER_PATH)/painter/ili9341/qp_ili9341.c
         else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),st7789)
             OPT_DEFS += -DQUANTUM_PAINTER_ST7789_ENABLE
             QUANTUM_LIB_SRC += spi_master.c
             COMMON_VPATH += \
+                $(DRIVER_PATH)/painter/comms \
                 $(DRIVER_PATH)/painter/st77xx_common \
                 $(DRIVER_PATH)/painter/st7789
             SRC += \
+                $(DRIVER_PATH)/painter/comms/qp_comms_spi.c \
                 $(DRIVER_PATH)/painter/st77xx_common/qp_st77xx.c \
                 $(DRIVER_PATH)/painter/st7789/qp_st7789.c
         else
