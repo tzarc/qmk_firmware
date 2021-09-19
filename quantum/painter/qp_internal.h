@@ -128,6 +128,11 @@ typedef bool (*painter_driver_ellipse_func)(painter_device_t device, uint16_t x,
 typedef bool (*painter_driver_drawimage_func)(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val);
 typedef int16_t (*painter_driver_drawtext_func)(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
 
+typedef void (*painter_driver_convert_palette_pixfmt_func)(painter_device_t driver, int16_t palette_size, qp_pixel_color_t *palette);
+typedef size_t (*painter_driver_append_pixel)(painter_device_t driver, uint8_t *buffer, size_t pixel_index, qp_pixel_color_t pixel);
+typedef bool (*painter_driver_comms_begin_func)(painter_device_t driver);
+typedef void (*painter_driver_comms_end_func)(painter_device_t driver);
+
 // Driver vtable definition
 struct painter_driver_vtable_t {
     painter_driver_init_func       init;
@@ -143,6 +148,11 @@ struct painter_driver_vtable_t {
     painter_driver_ellipse_func    ellipse;
     painter_driver_drawimage_func  drawimage;
     painter_driver_drawtext_func   drawtext;
+
+    painter_driver_convert_palette_pixfmt_func palette_convert;
+    painter_driver_append_pixel                append_pixel;
+    painter_driver_comms_begin_func            comms_begin;
+    painter_driver_comms_end_func              comms_end;
 };
 
 // Driver base definition

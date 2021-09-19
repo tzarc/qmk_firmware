@@ -125,18 +125,19 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
 
 // Driver vtable
 static const struct painter_driver_vtable_t QP_RESIDENT_FLASH driver_vtable = {
-    .init      = qp_ili9341_init,
-    .clear     = qp_ili9xxx_clear,
-    .power     = qp_ili9xxx_power,
-    .pixdata   = qp_ili9xxx_pixdata,
-    .viewport  = qp_ili9xxx_viewport,
-    .setpixel  = qp_ili9xxx_setpixel,
-    .line      = qp_ili9xxx_line,
-    .rect      = qp_ili9xxx_rect,
-    .circle    = qp_fallback_circle,
-    .ellipse   = qp_fallback_ellipse,
-    .drawimage = qp_ili9xxx_drawimage,
-    .drawtext  = qp_ili9xxx_drawtext,
+    .init            = qp_ili9341_init,
+    .clear           = qp_ili9xxx_clear,
+    .power           = qp_ili9xxx_power,
+    .pixdata         = qp_ili9xxx_pixdata,
+    .viewport        = qp_ili9xxx_viewport,
+    .setpixel        = qp_ili9xxx_setpixel,
+    .line            = qp_ili9xxx_line,
+    .rect            = qp_ili9xxx_rect,
+    .circle          = qp_fallback_circle,
+    .ellipse         = qp_fallback_ellipse,
+    .drawimage       = qp_ili9xxx_drawimage,
+    .drawtext        = qp_ili9xxx_drawtext,
+    .palette_convert = qp_ili9xxx_palette_convert,
 };
 
 // Driver storage

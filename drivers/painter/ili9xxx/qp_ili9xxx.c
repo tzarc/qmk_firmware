@@ -69,10 +69,8 @@ void qp_ili9xxx_internal_lcd_viewport(ili9xxx_painter_device_t *lcd, uint16_t xb
 // Static buffer to contain a generated color palette
 #if QUANTUM_PAINTER_SUPPORTS_256_PALETTE
 static qp_pixel_color_t hsv_lookup_table[256];
-static rgb565_t         rgb565_palette[256];
 #else
 static qp_pixel_color_t hsv_lookup_table[16];
-static rgb565_t         rgb565_palette[16];
 #endif
 
 // Static buffer used for transmitting image data
@@ -94,29 +92,35 @@ static inline rgb565_t hsv_to_ili9xxx(uint8_t hue, uint8_t sat, uint8_t val) {
 // Palette / Monochrome-format image rendering
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Palette renderer
-static inline void lcd_send_palette_pixdata_impl(ili9xxx_painter_device_t *lcd, const rgb565_t *const rgb565_palette, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data, uint32_t byte_count) {
-    const uint8_t  pixel_bitmask       = (1 << bits_per_pixel) - 1;
-    const uint8_t  pixels_per_byte     = 8 / bits_per_pixel;
-    const uint16_t max_transmit_pixels = ((ILI9XXX_PIXDATA_BUFSIZE / pixels_per_byte) * pixels_per_byte);  // the number of rgb565 pixels that we can completely fit in the buffer
-    const uint8_t *pixdata             = (const uint8_t *)pixel_data;
-    uint32_t       remaining_pixels    = pixel_count;  // don't try to derive from byte_count, we may not use an entire byte
+struct pixdata_state {
+    ili9xxx_painter_device_t *lcd;
+    uint16_t                  write_pos;
+};
 
-    // Transmit each block of pixels
-    while (remaining_pixels > 0) {
-        uint16_t  transmit_pixels = remaining_pixels < max_transmit_pixels ? remaining_pixels : max_transmit_pixels;
-        rgb565_t *target16        = (rgb565_t *)pixdata_transmit_buf;
-        for (uint16_t p = 0; p < transmit_pixels; p += pixels_per_byte) {
-            uint8_t pixval      = *pixdata;
-            uint8_t loop_pixels = remaining_pixels < pixels_per_byte ? remaining_pixels : pixels_per_byte;
-            for (uint8_t q = 0; q < loop_pixels; ++q) {
-                *target16++ = rgb565_palette[pixval & pixel_bitmask];
-                pixval >>= bits_per_pixel;
-            }
-            ++pixdata;
-        }
-        qp_comms_spi_send_data(&lcd->spi_config, pixdata_transmit_buf, transmit_pixels * sizeof(rgb565_t));
-        remaining_pixels -= transmit_pixels;
+void lcd_append_pixel(qp_pixel_color_t color, void *cb_arg) {
+    struct pixdata_state *state              = (struct pixdata_state *)cb_arg;
+    pixdata_transmit_buf[state->write_pos++] = color.rgb565;
+
+    // If we've hit the transmit limit, send out the entire buffer and reset
+    if (state->write_pos == ILI9XXX_PIXDATA_BUFSIZE) {
+        qp_comms_spi_send_data(&state->lcd->spi_config, pixdata_transmit_buf, ILI9XXX_PIXDATA_BUFSIZE * sizeof(rgb565_t));
+        state->write_pos = 0;
+    }
+}
+
+static inline void lcd_decode_send_pixdata(ili9xxx_painter_device_t *lcd, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data) {
+    // State describing the decoder
+    struct pixdata_state state = {
+        .lcd       = lcd,
+        .write_pos = 0,
+    };
+
+    // Decode and transmit each block of pixels
+    qp_decode_palette(pixel_count, bits_per_pixel, pixel_data, hsv_lookup_table, lcd_append_pixel, &state);
+
+    // If we have a partial decode, send any remaining pixels
+    if (state.write_pos > 0) {
+        qp_comms_spi_send_data(&lcd->spi_config, pixdata_transmit_buf, state.write_pos * sizeof(rgb565_t));
     }
 }
 
@@ -125,44 +129,29 @@ static inline void lcd_send_palette_pixdata(ili9xxx_painter_device_t *lcd, const
     // Generate the color lookup table
     uint16_t items = 1 << bits_per_pixel;  // number of items we need to interpolate
     for (uint16_t i = 0; i < items; ++i) {
-        rgb565_palette[i] = rgb_to_ili9xxx(rgb_palette[i * 3 + 0], rgb_palette[i * 3 + 1], rgb_palette[i * 3 + 2]);
+        hsv_lookup_table[i].rgb565 = rgb_to_ili9xxx(rgb_palette[i * 3 + 0], rgb_palette[i * 3 + 1], rgb_palette[i * 3 + 2]);
     }
 
-    // Transmit each block of pixels
-    lcd_send_palette_pixdata_impl(lcd, rgb565_palette, bits_per_pixel, pixel_count, pixel_data, byte_count);
+    lcd_decode_send_pixdata(lcd, bits_per_pixel, pixel_count, pixel_data);
 }
 
 // Recolored renderer
 static inline void lcd_send_mono_pixdata_recolor(ili9xxx_painter_device_t *lcd, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data, uint32_t byte_count, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg) {
-    // Memoize the last batch of colors so we're not regenerating the palette if we're not changing anything
-    static uint8_t last_bits_per_pixel = UINT8_MAX;
-    static int16_t last_hue_fg         = INT16_MIN;
-    static int16_t last_sat_fg         = INT16_MIN;
-    static int16_t last_val_fg         = INT16_MIN;
-    static int16_t last_hue_bg         = INT16_MIN;
-    static int16_t last_sat_bg         = INT16_MIN;
-    static int16_t last_val_bg         = INT16_MIN;
+    qp_pixel_color_t fg_hsv888 = {.hsv888 = {.h = hue_fg, .s = sat_fg, .v = val_fg}};
+    qp_pixel_color_t bg_hsv888 = {.hsv888 = {.h = hue_bg, .s = sat_bg, .v = val_bg}};
 
-    // Regenerate the palette only if the inputs have changed
-    if (last_bits_per_pixel != bits_per_pixel || last_hue_fg != hue_fg || last_sat_fg != sat_fg || last_val_fg != val_fg || last_hue_bg != hue_bg || last_sat_bg != sat_bg || last_val_bg != val_bg) {
-        last_bits_per_pixel = bits_per_pixel;
-        last_hue_fg         = hue_fg;
-        last_sat_fg         = sat_fg;
-        last_val_fg         = val_fg;
-        last_hue_bg         = hue_bg;
-        last_sat_bg         = sat_bg;
-        last_val_bg         = val_bg;
-
-        // Generate the color lookup table
+    static qp_pixel_color_t last_fg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
+    static qp_pixel_color_t last_bg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
+    if (memcmp(&fg_hsv888.hsv888, &last_fg_hsv888.hsv888, sizeof(fg_hsv888.hsv888)) || memcmp(&bg_hsv888.hsv888, &last_bg_hsv888.hsv888, sizeof(bg_hsv888.hsv888))) {
         uint16_t items = 1 << bits_per_pixel;  // number of items we need to interpolate
-        qp_generate_palette(hsv_lookup_table, items, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
-        for (uint16_t i = 0; i < items; ++i) {
-            rgb565_palette[i] = hsv_to_ili9xxx(hsv_lookup_table[i].hsv888.h, hsv_lookup_table[i].hsv888.s, hsv_lookup_table[i].hsv888.v);
-        }
+        qp_interpolate_palette(hsv_lookup_table, items, fg_hsv888, bg_hsv888);
+        last_fg_hsv888 = fg_hsv888;
+        last_bg_hsv888 = bg_hsv888;
+
+        qp_ili9xxx_palette_convert((painter_device_t)lcd, items, hsv_lookup_table);
     }
 
-    // Transmit each block of pixels
-    lcd_send_palette_pixdata_impl(lcd, rgb565_palette, bits_per_pixel, pixel_count, pixel_data, byte_count);
+    lcd_decode_send_pixdata(lcd, bits_per_pixel, pixel_count, pixel_data);
 }
 
 // Uncompressed image drawing helper
@@ -394,4 +383,27 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
     qp_comms_spi_stop(&lcd->spi_config);
 
     return (int16_t)x;
+}
+
+void qp_ili9xxx_palette_convert(painter_device_t driver, int16_t palette_size, qp_pixel_color_t *palette) {
+    for (int16_t i = 0; i < palette_size; ++i) {
+        palette[i].rgb565 = hsv_to_ili9xxx(palette[i].hsv888.h, palette[i].hsv888.s, palette[i].hsv888.v);
+    }
+}
+
+size_t qp_ili9xxx_append_pixel(painter_device_t driver, uint8_t *buffer, size_t pixel_index, qp_pixel_color_t pixel) {
+    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
+    uint16_t *buf = (uint16_t *)buffer;
+    buf[pixel_index] = pixel.rgb565;
+    return sizeof(uint16_t);
+}
+
+bool qp_ili9xxx_comms_begin_func(painter_device_t driver) {
+    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
+    return qp_comms_spi_start(&lcd->spi_config);
+}
+
+void qp_ili9xxx_comms_end_func(painter_device_t driver) {
+    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
+    qp_comms_spi_stop(&lcd->spi_config);
 }
