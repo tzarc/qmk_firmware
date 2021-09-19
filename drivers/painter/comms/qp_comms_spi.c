@@ -21,7 +21,7 @@
 bool qp_comms_spi_start(const struct qp_comms_spi_config_t *spi_config) { return spi_start(spi_config->chip_select_pin, spi_config->lsb_first, spi_config->mode, spi_config->divisor); }
 
 size_t qp_comms_spi_send_data(const struct qp_comms_spi_config_t *spi_config, const void *data, size_t byte_count) {
-    writePinHigh(spi_config->dc_pin);
+    if (spi_config->dc_pin != NO_PIN) writePinHigh(spi_config->dc_pin);
 
     uint32_t       bytes_remaining = byte_count;
     const uint8_t *p               = (const uint8_t *)data;
@@ -38,12 +38,12 @@ size_t qp_comms_spi_send_data(const struct qp_comms_spi_config_t *spi_config, co
 void qp_comms_spi_stop(const struct qp_comms_spi_config_t *spi_config) { spi_stop(); }
 
 void qp_comms_spi_cmd8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd) {
-    writePinLow(spi_config->dc_pin);
+    if (spi_config->dc_pin != NO_PIN) writePinLow(spi_config->dc_pin);
     spi_write(cmd);
 }
 
 void qp_comms_spi_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd) {
-    writePinHigh(spi_config->dc_pin);
+    if (spi_config->dc_pin != NO_PIN) writePinHigh(spi_config->dc_pin);
     spi_write(cmd);
 }
 
