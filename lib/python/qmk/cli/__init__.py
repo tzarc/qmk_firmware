@@ -45,6 +45,7 @@ subcommands = [
     'qmk.cli.format.python',
     'qmk.cli.format.text',
     'qmk.cli.generate.api',
+    'qmk.cli.generate.compilation_database',
     'qmk.cli.generate.config_h',
     'qmk.cli.generate.dfu_header',
     'qmk.cli.generate.docs',
