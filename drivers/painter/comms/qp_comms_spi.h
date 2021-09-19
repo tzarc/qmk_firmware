@@ -33,8 +33,8 @@ bool   qp_comms_spi_start(const struct qp_comms_spi_config_t *spi_config);
 size_t qp_comms_spi_send_data(const struct qp_comms_spi_config_t *spi_config, const void *data, size_t byte_count);
 void   qp_comms_spi_stop(const struct qp_comms_spi_config_t *spi_config);
 
-bool qp_comms_spi_cmd8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd);
-bool qp_comms_spi_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd);
+void qp_comms_spi_cmd8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd);
+void qp_comms_spi_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd);
 
 size_t qp_comms_spi_cmd8_databuf(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd, const void *data, size_t byte_count);
-bool   qp_comms_spi_cmd8_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd, uint8_t data);
+void   qp_comms_spi_cmd8_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd, uint8_t data);

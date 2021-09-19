@@ -37,19 +37,22 @@ size_t qp_comms_spi_send_data(const struct qp_comms_spi_config_t *spi_config, co
 
 void qp_comms_spi_stop(const struct qp_comms_spi_config_t *spi_config) { spi_stop(); }
 
-bool qp_comms_spi_cmd8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd) {
+void qp_comms_spi_cmd8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd) {
     writePinLow(spi_config->dc_pin);
-    return spi_write(cmd) == SPI_STATUS_SUCCESS;
+    spi_write(cmd);
 }
 
-bool qp_comms_spi_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd) {
+void qp_comms_spi_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd) {
     writePinHigh(spi_config->dc_pin);
-    return spi_write(cmd) == SPI_STATUS_SUCCESS;
+    spi_write(cmd);
 }
 
 size_t qp_comms_spi_cmd8_databuf(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd, const void *data, size_t byte_count) {
-    if (!qp_comms_spi_cmd8(spi_config, cmd)) return 0;
+    qp_comms_spi_cmd8(spi_config, cmd);
     return qp_comms_spi_send_data(spi_config, data, byte_count);
 }
 
-bool qp_comms_spi_cmd8_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd, uint8_t data) { return qp_comms_spi_cmd8(spi_config, cmd) && qp_comms_spi_data8(spi_config, data); }
+void qp_comms_spi_cmd8_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd, uint8_t data) {
+    qp_comms_spi_cmd8(spi_config, cmd);
+    qp_comms_spi_data8(spi_config, data);
+}

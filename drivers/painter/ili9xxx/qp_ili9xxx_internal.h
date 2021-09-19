@@ -17,6 +17,7 @@
 #pragma once
 
 #include <qp.h>
+#include <qp_comms_spi.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter ILI9xxx internals
@@ -24,13 +25,9 @@
 
 // Device definition
 typedef struct ili9xxx_painter_device_t {
-    struct painter_driver_t qp_driver;  // must be first, so it can be cast from the painter_device_t* type
-    bool                    allocated;
-    pin_t                   chip_select_pin;
-    pin_t                   data_pin;
-    pin_t                   reset_pin;
-    uint16_t                spi_divisor;
-    painter_rotation_t      rotation;
+    struct painter_driver_t      qp_driver;  // must be first, so it can be cast from the painter_device_t* type
+    struct qp_comms_spi_config_t spi_config;
+    painter_rotation_t           rotation;
 #ifdef BACKLIGHT_ENABLE
     bool uses_backlight;
 #endif
@@ -54,10 +51,4 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
 // Low-level LCD Forward declarations
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void qp_ili9xxx_internal_lcd_start(ili9xxx_painter_device_t *lcd);
-void qp_ili9xxx_internal_lcd_stop(void);
-void qp_ili9xxx_internal_lcd_cmd(ili9xxx_painter_device_t *lcd, uint8_t b);
-void qp_ili9xxx_internal_lcd_sendbuf(ili9xxx_painter_device_t *lcd, const void *data, uint16_t len);
-void qp_ili9xxx_internal_lcd_data(ili9xxx_painter_device_t *lcd, uint8_t b);
-void qp_ili9xxx_internal_lcd_reg(ili9xxx_painter_device_t *lcd, uint8_t reg, uint8_t val);
 void qp_ili9xxx_internal_lcd_viewport(ili9xxx_painter_device_t *lcd, uint16_t xbegin, uint16_t ybegin, uint16_t xend, uint16_t yend);

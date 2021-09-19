@@ -16,7 +16,26 @@
 
 #pragma once
 
+#include <quantum.h>
 #include <qp.h>
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum painter: cater for AVR address space
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef __FLASH
+#    define QP_RESIDENT_FLASH __flash
+#else
+#    define QP_RESIDENT_FLASH
+#endif
+
+#ifdef __MEMX
+#    define QP_RESIDENT_FLASH_OR_RAM __memx
+#else
+#    define QP_RESIDENT_FLASH_OR_RAM
+#endif
+
+#define QP_RESIDENT_RAM
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum painter image types
@@ -59,10 +78,9 @@ typedef struct painter_raw_font_descriptor_t {
 } painter_raw_font_descriptor_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter definitions
+// Quantum Painter driver callbacks
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Callback function types
 typedef bool (*painter_driver_init_func)(painter_device_t driver, painter_rotation_t rotation);
 typedef bool (*painter_driver_clear_func)(painter_device_t driver);
 typedef bool (*painter_driver_power_func)(painter_device_t driver, bool power_on);
@@ -77,8 +95,8 @@ typedef bool (*painter_driver_ellipse_func)(painter_device_t device, uint16_t x,
 typedef bool (*painter_driver_drawimage_func)(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val);
 typedef int16_t (*painter_driver_drawtext_func)(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
 
-// Driver base definition
-struct painter_driver_t {
+// Driver vtable definition
+struct painter_driver_vtable_t {
     painter_driver_init_func       init;
     painter_driver_clear_func      clear;
     painter_driver_power_func      power;
@@ -92,4 +110,9 @@ struct painter_driver_t {
     painter_driver_ellipse_func    ellipse;
     painter_driver_drawimage_func  drawimage;
     painter_driver_drawtext_func   drawtext;
+};
+
+// Driver base definition
+struct painter_driver_t {
+    const struct painter_driver_vtable_t QP_RESIDENT_FLASH *vtable;
 };
