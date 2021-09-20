@@ -30,11 +30,4 @@ struct qp_comms_spi_config_t {
 bool   qp_comms_spi_init(painter_device_t device);
 bool   qp_comms_spi_start(painter_device_t device);
 size_t qp_comms_spi_send_data(painter_device_t device, const void *data, size_t byte_count);
-size_t qp_comms_spi_send_data_dc_pin(painter_device_t device, const void *data, size_t byte_count);
 void   qp_comms_spi_stop(painter_device_t device);
-
-void qp_comms_spi_cmd8(painter_device_t device, uint8_t cmd);
-void qp_comms_spi_data8(painter_device_t device, uint8_t cmd);
-
-size_t qp_comms_spi_cmd8_databuf(painter_device_t device, uint8_t cmd, const void *data, size_t byte_count);
-void   qp_comms_spi_cmd8_data8(painter_device_t device, uint8_t cmd, uint8_t data);

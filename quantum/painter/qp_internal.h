@@ -71,8 +71,10 @@ typedef union QP_PACKED qp_pixel_color_t {
     } rgb888;
 
     uint16_t rgb565;
+
+    uint32_t dummy;
 } qp_pixel_color_t;
-_Static_assert(sizeof(qp_pixel_color_t) == 3, "Invalid size for qp_pixel_color_t");
+_Static_assert(sizeof(qp_pixel_color_t) == 4, "Invalid size for qp_pixel_color_t");
 
 // Uncompressed raw image descriptor
 typedef struct painter_raw_image_descriptor_t {
@@ -170,14 +172,7 @@ struct painter_driver_t {
     void *                                                 comms_config;
 };
 
-#define qp_driver_init(device, rotation) ((((struct painter_driver_t *)(device))->driver_vtable->init != NULL) ? (((struct painter_driver_t *)(device))->driver_vtable->init((device), (rotation))) : false)
-
-#define qp_comms_init(device) ((((struct painter_driver_t *)(device))->comms_vtable->comms_init != NULL) ? (((struct painter_driver_t *)(device))->comms_vtable->comms_init((device))) : false)
-#define qp_comms_start(device) ((((struct painter_driver_t *)(device))->comms_vtable->comms_start != NULL) ? (((struct painter_driver_t *)(device))->comms_vtable->comms_start((device))) : false)
-#define qp_comms_stop(device)                                                          \
-    do {                                                                               \
-        if (((struct painter_driver_t *)(device))->comms_vtable->comms_stop != NULL) { \
-            ((struct painter_driver_t *)(device))->comms_vtable->comms_stop((device)); \
-        }                                                                              \
-    } while (0)
-#define qp_comms_send(device, data, byte_count) ((((struct painter_driver_t *)(device))->comms_vtable->comms_send != NULL) ? (((struct painter_driver_t *)(device))->comms_vtable->comms_send((device), (data), (byte_count))) : 0)
+bool   qp_comms_init(painter_device_t device);
+bool   qp_comms_start(painter_device_t device);
+void   qp_comms_stop(painter_device_t device);
+size_t qp_comms_send(painter_device_t device, const void *data, size_t byte_count);

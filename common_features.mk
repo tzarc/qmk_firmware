@@ -138,6 +138,7 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
     SRC += \
         $(QUANTUM_DIR)/utf8.c \
         $(QUANTUM_DIR)/painter/qp.c \
+        $(QUANTUM_DIR)/painter/qp_internal.c \
         $(QUANTUM_DIR)/painter/qp_utils.c \
         $(DRIVER_PATH)/painter/fallback/qp_fallback.c
 

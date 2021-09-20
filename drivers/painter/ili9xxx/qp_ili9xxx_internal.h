@@ -45,13 +45,6 @@ typedef struct ili9xxx_painter_device_t {
 #endif
 } ili9xxx_painter_device_t;
 
-#define qp_ili9xxx_cmd8(device, cmd)                                                                   \
-    do {                                                                                               \
-        if (((struct ili9xxx_painter_device_t *)(device))->ili9xxx_vtable->send_cmd8 != NULL) {        \
-            ((struct ili9xxx_painter_device_t *)(device))->ili9xxx_vtable->send_cmd8((device), (cmd)); \
-        }                                                                                              \
-    } while (0)
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Device Forward declarations
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,5 +72,6 @@ void qp_ili9xxx_internal_lcd_viewport(painter_device_t device, uint16_t xbegin, 
 size_t qp_ili9xxx_spi_send_data_dc_pin(painter_device_t device, const void *data, size_t byte_count);
 void   qp_ili9xxx_spi_cmd8(painter_device_t device, uint8_t cmd);
 
+void   qp_ili9xxx_cmd8(painter_device_t device, uint8_t cmd);
 void   qp_ili9xxx_cmd8_data8(painter_device_t device, uint8_t cmd, uint8_t data);
 size_t qp_ili9xxx_cmd8_databuf(painter_device_t device, uint8_t cmd, const void *data, size_t byte_count);

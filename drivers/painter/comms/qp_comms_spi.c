@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gpio.h>
 #include <spi_master.h>
-#include <wait.h>
 
 #include <qp.h>
 #include <qp_internal.h>

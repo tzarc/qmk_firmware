@@ -54,6 +54,13 @@ size_t qp_ili9xxx_spi_send_data_dc_pin(painter_device_t device, const void *data
 // Low-level LCD control functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void qp_ili9xxx_cmd8(painter_device_t device, uint8_t cmd) {
+    struct ili9xxx_painter_device_t *lcd = (struct ili9xxx_painter_device_t *)device;
+    if (lcd->ili9xxx_vtable && lcd->ili9xxx_vtable->send_cmd8) {
+        lcd->ili9xxx_vtable->send_cmd8(device, cmd);
+    }
+}
+
 void qp_ili9xxx_cmd8_data8(painter_device_t device, uint8_t cmd, uint8_t data) {
     qp_ili9xxx_cmd8(device, cmd);
     qp_comms_send(device, &data, sizeof(data));
@@ -210,20 +217,20 @@ bool qp_ili9xxx_clear(painter_device_t device) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
 
     // Re-init the LCD
-    qp_driver_init(device, lcd->rotation);
+    qp_init(device, lcd->rotation);
 
     return true;
 }
 
 // Power control -- on/off (will also handle backlight if set to use the normal QMK backlight driver)
 bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     qp_comms_start(device);
     qp_ili9xxx_cmd8(device, power_on ? ILI9XXX_CMD_DISPLAY_ON : ILI9XXX_CMD_DISPLAY_OFF);
     qp_comms_stop(device);
 
 #ifdef BACKLIGHT_ENABLE
     // If we're using the backlight to control the display as well, toggle that too.
+    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     if (lcd->uses_backlight) {
         if (power_on) {
             // There's a small amount of time for the LCD to get the display back on the screen -- it's all white beforehand.
