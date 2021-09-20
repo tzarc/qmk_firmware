@@ -15,14 +15,34 @@
  */
 
 #include <spi_master.h>
+#include <wait.h>
 
+#include <qp.h>
+#include <qp_internal.h>
 #include "qp_comms_spi.h"
 
-bool qp_comms_spi_start(const struct qp_comms_spi_config_t *spi_config) { return spi_start(spi_config->chip_select_pin, spi_config->lsb_first, spi_config->mode, spi_config->divisor); }
+bool qp_comms_spi_init(painter_device_t device) {
+    struct painter_driver_t *     driver     = (struct painter_driver_t *)device;
+    struct qp_comms_spi_config_t *spi_config = (struct qp_comms_spi_config_t *)driver->comms_config;
 
-size_t qp_comms_spi_send_data(const struct qp_comms_spi_config_t *spi_config, const void *data, size_t byte_count) {
-    if (spi_config->dc_pin != NO_PIN) writePinHigh(spi_config->dc_pin);
+    // Initialize the SPI peripheral
+    spi_init();
 
+    // Set up CS as output high
+    setPinOutput(spi_config->chip_select_pin);
+    writePinHigh(spi_config->chip_select_pin);
+
+    return true;
+}
+
+bool qp_comms_spi_start(painter_device_t device) {
+    struct painter_driver_t *     driver     = (struct painter_driver_t *)device;
+    struct qp_comms_spi_config_t *spi_config = (struct qp_comms_spi_config_t *)driver->comms_config;
+
+    return spi_start(spi_config->chip_select_pin, spi_config->lsb_first, spi_config->mode, spi_config->divisor);
+}
+
+size_t qp_comms_spi_send_data(painter_device_t device, const void *data, size_t byte_count) {
     uint32_t       bytes_remaining = byte_count;
     const uint8_t *p               = (const uint8_t *)data;
     while (bytes_remaining > 0) {
@@ -35,24 +55,4 @@ size_t qp_comms_spi_send_data(const struct qp_comms_spi_config_t *spi_config, co
     return byte_count - bytes_remaining;
 }
 
-void qp_comms_spi_stop(const struct qp_comms_spi_config_t *spi_config) { spi_stop(); }
-
-void qp_comms_spi_cmd8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd) {
-    if (spi_config->dc_pin != NO_PIN) writePinLow(spi_config->dc_pin);
-    spi_write(cmd);
-}
-
-void qp_comms_spi_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd) {
-    if (spi_config->dc_pin != NO_PIN) writePinHigh(spi_config->dc_pin);
-    spi_write(cmd);
-}
-
-size_t qp_comms_spi_cmd8_databuf(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd, const void *data, size_t byte_count) {
-    qp_comms_spi_cmd8(spi_config, cmd);
-    return qp_comms_spi_send_data(spi_config, data, byte_count);
-}
-
-void qp_comms_spi_cmd8_data8(const struct qp_comms_spi_config_t *spi_config, uint8_t cmd, uint8_t data) {
-    qp_comms_spi_cmd8(spi_config, cmd);
-    qp_comms_spi_data8(spi_config, data);
-}
+void qp_comms_spi_stop(painter_device_t device) { spi_stop(); }

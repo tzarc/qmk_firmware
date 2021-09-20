@@ -98,24 +98,26 @@ struct pixdata_state {
     uint16_t         write_pos;
 };
 
-void lcd_append_pixel(qp_pixel_color_t color, void* cb_arg) {
+static inline void lcd_append_pixel(qp_pixel_color_t color, void* cb_arg) {
+    /*
     struct pixdata_state* state              = (struct pixdata_state*)cb_arg;
     pixdata_transmit_buf[state->write_pos++] = color.rgb565;
 
     // If we've hit the transmit limit, send out the entire buffer and reset
     if (state->write_pos == ILI9XXX_PIXDATA_BUFSIZE) {
-        qp_comms_spi_send_data(&state->lcd->spi_config, pixdata_transmit_buf, ILI9XXX_PIXDATA_BUFSIZE * sizeof(rgb565_t));
+        qp_comms_send(state->device, pixdata_transmit_buf, ILI9XXX_PIXDATA_BUFSIZE * sizeof(rgb565_t));
         state->write_pos = 0;
     }
+    */
 }
 
 // Draw an image
 bool qp_fallback_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t* image, uint8_t hue, uint8_t sat, uint8_t val) {
-    painter_driver_t* drv = (painter_driver_t*)device;
-    drv->vtable.comms_begin(device);
+    struct painter_driver_t* driver = (struct painter_driver_t*)device;
+    qp_comms_start(device);
 
     // Configure where we're going to be rendering to
-    drv->vtable.viewport(device, x, y, x + image->width - 1, y + image->height - 1);
+    driver->driver_vtable->viewport(device, x, y, x + image->width - 1, y + image->height - 1);
 
     bool ret = false;
     if (image->compression == IMAGE_UNCOMPRESSED) {
@@ -123,13 +125,12 @@ bool qp_fallback_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t
 
         // Stream data to the LCD
         if (image->image_format == IMAGE_FORMAT_RGB565) {
-            ret = drv->vtable.pixdata(device, raw_image_desc->image_data, raw_image_desc->byte_count / sizeof(uint16_t));
+            ret = driver->driver_vtable->pixdata(device, raw_image_desc->image_data, raw_image_desc->byte_count / sizeof(uint16_t));
         } else if (image->image_format == IMAGE_FORMAT_GRAYSCALE) {
         } else if (image->image_format == IMAGE_FORMAT_PALETTE) {
         }
     }
 
-    drv->vtable.comms_end(device);
-
+    qp_comms_stop(device);
     return ret;
 }

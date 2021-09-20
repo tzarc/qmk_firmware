@@ -23,15 +23,34 @@
 // Quantum Painter ILI9xxx internals
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Device callbacks
+typedef void (*ili9xxx_send_cmd8_func)(painter_device_t device, uint8_t cmd);
+
+// Device vtable
+typedef struct ili9xxx_painter_device_vtable_t {
+    ili9xxx_send_cmd8_func send_cmd8;
+} ili9xxx_painter_device_vtable_t;
+
 // Device definition
 typedef struct ili9xxx_painter_device_t {
-    struct painter_driver_t      qp_driver;  // must be first, so it can be cast from the painter_device_t* type
-    struct qp_comms_spi_config_t spi_config;
-    painter_rotation_t           rotation;
+    struct painter_driver_t                      qp_driver;  // must be first, so it can be cast from the painter_device_t* type
+    const struct ili9xxx_painter_device_vtable_t QP_RESIDENT_FLASH *ili9xxx_vtable;
+    struct qp_comms_spi_config_t                                    spi_config;
+    pin_t                                                           dc_pin;
+    pin_t                                                           reset_pin;
+
+    painter_rotation_t rotation;
 #ifdef BACKLIGHT_ENABLE
     bool uses_backlight;
 #endif
 } ili9xxx_painter_device_t;
+
+#define qp_ili9xxx_cmd8(device, cmd)                                                                   \
+    do {                                                                                               \
+        if (((struct ili9xxx_painter_device_t *)(device))->ili9xxx_vtable->send_cmd8 != NULL) {        \
+            ((struct ili9xxx_painter_device_t *)(device))->ili9xxx_vtable->send_cmd8((device), (cmd)); \
+        }                                                                                              \
+    } while (0)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Device Forward declarations
@@ -52,4 +71,13 @@ void    qp_ili9xxx_palette_convert(painter_device_t driver, int16_t palette_size
 // Low-level LCD Forward declarations
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void qp_ili9xxx_internal_lcd_viewport(ili9xxx_painter_device_t *lcd, uint16_t xbegin, uint16_t ybegin, uint16_t xend, uint16_t yend);
+void qp_ili9xxx_internal_lcd_viewport(painter_device_t device, uint16_t xbegin, uint16_t ybegin, uint16_t xend, uint16_t yend);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Helpers
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+size_t qp_ili9xxx_spi_send_data_dc_pin(painter_device_t device, const void *data, size_t byte_count);
+void   qp_ili9xxx_spi_cmd8(painter_device_t device, uint8_t cmd);
+
+void   qp_ili9xxx_cmd8_data8(painter_device_t device, uint8_t cmd, uint8_t data);
+size_t qp_ili9xxx_cmd8_databuf(painter_device_t device, uint8_t cmd, const void *data, size_t byte_count);

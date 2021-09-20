@@ -24,6 +24,7 @@
 #    include <backlight/backlight.h>
 #endif
 
+#include <spi_master.h>
 #include <qp_internal.h>
 #include <qp_utils.h>
 #include <qp_fallback.h>
@@ -34,25 +35,51 @@
 #define BYTE_SWAP(x) (((((uint16_t)(x)) >> 8) & 0x00FF) | ((((uint16_t)(x)) << 8) & 0xFF00))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SPI control functions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void qp_ili9xxx_spi_cmd8(painter_device_t device, uint8_t cmd) {
+    struct ili9xxx_painter_device_t *lcd = (struct ili9xxx_painter_device_t *)device;
+    writePinLow(lcd->dc_pin);
+    spi_write(cmd);
+}
+
+size_t qp_ili9xxx_spi_send_data_dc_pin(painter_device_t device, const void *data, size_t byte_count) {
+    struct ili9xxx_painter_device_t *lcd = (struct ili9xxx_painter_device_t *)device;
+    writePinHigh(lcd->dc_pin);
+    return qp_comms_spi_send_data(device, data, byte_count);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Low-level LCD control functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void qp_ili9xxx_cmd8_data8(painter_device_t device, uint8_t cmd, uint8_t data) {
+    qp_ili9xxx_cmd8(device, cmd);
+    qp_comms_send(device, &data, sizeof(data));
+}
+
+size_t qp_ili9xxx_cmd8_databuf(painter_device_t device, uint8_t cmd, const void *data, size_t byte_count) {
+    qp_ili9xxx_cmd8(device, cmd);
+    return qp_comms_send(device, data, byte_count);
+}
+
 // Set the drawing viewport area
-void qp_ili9xxx_internal_lcd_viewport(ili9xxx_painter_device_t *lcd, uint16_t xbegin, uint16_t ybegin, uint16_t xend, uint16_t yend) {
+void qp_ili9xxx_internal_lcd_viewport(painter_device_t device, uint16_t xbegin, uint16_t ybegin, uint16_t xend, uint16_t yend) {
     // Set up the x-window
     uint8_t xbuf[4] = {xbegin >> 8, xbegin & 0xFF, xend >> 8, xend & 0xFF};
-    qp_comms_spi_cmd8_databuf(&lcd->spi_config,
-                              0x2A,  // column address set
-                              xbuf, sizeof(xbuf));
+    qp_ili9xxx_cmd8_databuf(device,
+                            0x2A,  // column address set
+                            xbuf, sizeof(xbuf));
 
     // Set up the y-window
     uint8_t ybuf[4] = {ybegin >> 8, ybegin & 0xFF, yend >> 8, yend & 0xFF};
-    qp_comms_spi_cmd8_databuf(&lcd->spi_config,
-                              0x2B,  // page (row) address set
-                              ybuf, sizeof(ybuf));
+    qp_ili9xxx_cmd8_databuf(device,
+                            0x2B,  // page (row) address set
+                            ybuf, sizeof(ybuf));
 
     // Lock in the window
-    qp_comms_spi_cmd8(&lcd->spi_config, 0x2C);  // enable memory writes
+    qp_ili9xxx_cmd8(device, 0x2C);  // enable memory writes
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,25 +120,25 @@ static inline rgb565_t hsv_to_ili9xxx(uint8_t hue, uint8_t sat, uint8_t val) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct pixdata_state {
-    ili9xxx_painter_device_t *lcd;
-    uint16_t                  write_pos;
+    painter_device_t device;
+    uint16_t         write_pos;
 };
 
-void lcd_append_pixel(qp_pixel_color_t color, void *cb_arg) {
+static inline void lcd_append_pixel(qp_pixel_color_t color, void *cb_arg) {
     struct pixdata_state *state              = (struct pixdata_state *)cb_arg;
     pixdata_transmit_buf[state->write_pos++] = color.rgb565;
 
     // If we've hit the transmit limit, send out the entire buffer and reset
     if (state->write_pos == ILI9XXX_PIXDATA_BUFSIZE) {
-        qp_comms_spi_send_data(&state->lcd->spi_config, pixdata_transmit_buf, ILI9XXX_PIXDATA_BUFSIZE * sizeof(rgb565_t));
+        qp_comms_send(state->device, pixdata_transmit_buf, ILI9XXX_PIXDATA_BUFSIZE * sizeof(rgb565_t));
         state->write_pos = 0;
     }
 }
 
-static inline void lcd_decode_send_pixdata(ili9xxx_painter_device_t *lcd, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data) {
+static inline void lcd_decode_send_pixdata(painter_device_t device, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data) {
     // State describing the decoder
     struct pixdata_state state = {
-        .lcd       = lcd,
+        .device    = device,
         .write_pos = 0,
     };
 
@@ -120,12 +147,13 @@ static inline void lcd_decode_send_pixdata(ili9xxx_painter_device_t *lcd, uint8_
 
     // If we have a partial decode, send any remaining pixels
     if (state.write_pos > 0) {
-        qp_comms_spi_send_data(&lcd->spi_config, pixdata_transmit_buf, state.write_pos * sizeof(rgb565_t));
+        qp_comms_send(device, pixdata_transmit_buf, state.write_pos * sizeof(rgb565_t));
     }
 }
 
 // Recolored renderer
-static inline void lcd_send_palette_pixdata(ili9xxx_painter_device_t *lcd, const uint8_t *const rgb_palette, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data, uint32_t byte_count) {
+static inline void lcd_send_palette_pixdata(painter_device_t device, const uint8_t *const rgb_palette, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data, uint32_t byte_count) {
+    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     // Generate the color lookup table
     uint16_t items = 1 << bits_per_pixel;  // number of items we need to interpolate
     for (uint16_t i = 0; i < items; ++i) {
@@ -136,9 +164,10 @@ static inline void lcd_send_palette_pixdata(ili9xxx_painter_device_t *lcd, const
 }
 
 // Recolored renderer
-static inline void lcd_send_mono_pixdata_recolor(ili9xxx_painter_device_t *lcd, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data, uint32_t byte_count, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg) {
-    qp_pixel_color_t fg_hsv888 = {.hsv888 = {.h = hue_fg, .s = sat_fg, .v = val_fg}};
-    qp_pixel_color_t bg_hsv888 = {.hsv888 = {.h = hue_bg, .s = sat_bg, .v = val_bg}};
+static inline void lcd_send_mono_pixdata_recolor(painter_device_t device, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data, uint32_t byte_count, int16_t hue_fg, int16_t sat_fg, int16_t val_fg, int16_t hue_bg, int16_t sat_bg, int16_t val_bg) {
+    ili9xxx_painter_device_t *lcd       = (ili9xxx_painter_device_t *)device;
+    qp_pixel_color_t          fg_hsv888 = {.hsv888 = {.h = hue_fg, .s = sat_fg, .v = val_fg}};
+    qp_pixel_color_t          bg_hsv888 = {.hsv888 = {.h = hue_bg, .s = sat_bg, .v = val_bg}};
 
     static qp_pixel_color_t last_fg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
     static qp_pixel_color_t last_bg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
@@ -155,11 +184,12 @@ static inline void lcd_send_mono_pixdata_recolor(ili9xxx_painter_device_t *lcd, 
 }
 
 // Uncompressed image drawing helper
-static bool drawimage_uncompressed_impl(ili9xxx_painter_device_t *lcd, painter_image_format_t image_format, uint8_t image_bpp, const uint8_t *pixel_data, uint32_t byte_count, int32_t width, int32_t height, const uint8_t *palette_data, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+static bool drawimage_uncompressed_impl(painter_device_t device, painter_image_format_t image_format, uint8_t image_bpp, const uint8_t *pixel_data, uint32_t byte_count, int32_t width, int32_t height, const uint8_t *palette_data, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     // Stream data to the LCD
     if (image_format == IMAGE_FORMAT_RAW || image_format == IMAGE_FORMAT_RGB565) {
         // The pixel data is in the correct format already -- send it directly to the device
-        qp_comms_spi_send_data(&lcd->spi_config, pixel_data, width * height * sizeof(rgb565_t));
+        qp_comms_send(device, pixel_data, width * height * sizeof(rgb565_t));
     } else if (image_format == IMAGE_FORMAT_GRAYSCALE) {
         // Supplied pixel data is in 4bpp monochrome -- decode it to the equivalent pixel data
         lcd_send_mono_pixdata_recolor(lcd, image_bpp, width * height, pixel_data, byte_count, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
@@ -180,7 +210,7 @@ bool qp_ili9xxx_clear(painter_device_t device) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
 
     // Re-init the LCD
-    lcd->qp_driver.vtable->init(device, lcd->rotation);
+    qp_driver_init(device, lcd->rotation);
 
     return true;
 }
@@ -188,11 +218,9 @@ bool qp_ili9xxx_clear(painter_device_t device) {
 // Power control -- on/off (will also handle backlight if set to use the normal QMK backlight driver)
 bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    qp_comms_spi_start(&lcd->spi_config);
-
-    qp_comms_spi_cmd8(&lcd->spi_config, power_on ? ILI9XXX_CMD_DISPLAY_ON : ILI9XXX_CMD_DISPLAY_OFF);
-
-    qp_comms_spi_stop(&lcd->spi_config);
+    qp_comms_start(device);
+    qp_ili9xxx_cmd8(device, power_on ? ILI9XXX_CMD_DISPLAY_ON : ILI9XXX_CMD_DISPLAY_OFF);
+    qp_comms_stop(device);
 
 #ifdef BACKLIGHT_ENABLE
     // If we're using the backlight to control the display as well, toggle that too.
@@ -213,40 +241,30 @@ bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
 
 // Viewport to draw to
 bool qp_ili9xxx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    qp_comms_spi_start(&lcd->spi_config);
-
-    // Configure where we're going to be rendering to
-    qp_ili9xxx_internal_lcd_viewport(lcd, left, top, right, bottom);
-
-    qp_comms_spi_stop(&lcd->spi_config);
+    qp_comms_start(device);
+    qp_ili9xxx_internal_lcd_viewport(device, left, top, right, bottom);
+    qp_comms_stop(device);
     return true;
 }
 
 // Stream pixel data to the current write position in GRAM
 bool qp_ili9xxx_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    qp_comms_spi_start(&lcd->spi_config);
-
-    qp_comms_spi_send_data(&lcd->spi_config, pixel_data, native_pixel_count * sizeof(uint16_t));
-
-    qp_comms_spi_stop(&lcd->spi_config);
+    qp_comms_start(device);
+    qp_comms_send(device, pixel_data, native_pixel_count * sizeof(uint16_t));
+    qp_comms_stop(device);
     return true;
 }
 
 // Manually set a single pixel's color
 bool qp_ili9xxx_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    qp_comms_spi_start(&lcd->spi_config);
-
-    // Configure where we're going to be rendering to
-    qp_ili9xxx_internal_lcd_viewport(lcd, x, y, x, y);
+    qp_comms_start(device);
+    qp_ili9xxx_internal_lcd_viewport(device, x, y, x, y);
 
     // Convert the color to RGB565 and transmit to the device
     rgb565_t buf = hsv_to_ili9xxx(hue, sat, val);
-    qp_comms_spi_send_data(&lcd->spi_config, &buf, sizeof(buf));
+    qp_comms_send(device, &buf, sizeof(buf));
 
-    qp_comms_spi_stop(&lcd->spi_config);
+    qp_comms_stop(device);
     return true;
 }
 
@@ -279,7 +297,7 @@ bool qp_ili9xxx_rect(painter_device_t device, uint16_t left, uint16_t top, uint1
         rgb565_t buf[ILI9XXX_PIXDATA_BUFSIZE];
         for (uint32_t i = 0; i < ILI9XXX_PIXDATA_BUFSIZE; ++i) buf[i] = clr;
 
-        qp_comms_spi_start(&lcd->spi_config);
+        qp_comms_start(device);
 
         // Configure where we're going to be rendering to
         qp_ili9xxx_internal_lcd_viewport(lcd, l, t, r, b);
@@ -289,11 +307,11 @@ bool qp_ili9xxx_rect(painter_device_t device, uint16_t left, uint16_t top, uint1
         while (remaining > 0) {
             uint32_t transmit = (remaining < ILI9XXX_PIXDATA_BUFSIZE ? remaining : ILI9XXX_PIXDATA_BUFSIZE);
             uint32_t bytes    = transmit * sizeof(rgb565_t);
-            qp_comms_spi_send_data(&lcd->spi_config, buf, bytes);
+            qp_comms_send(device, buf, bytes);
             remaining -= transmit;
         }
 
-        qp_comms_spi_stop(&lcd->spi_config);
+        qp_comms_stop(device);
     } else {
         if (!qp_ili9xxx_rect(device, l, t, r, t, hue, sat, val, true)) return false;
         if (!qp_ili9xxx_rect(device, l, b, r, b, hue, sat, val, true)) return false;
@@ -307,7 +325,7 @@ bool qp_ili9xxx_rect(painter_device_t device, uint16_t left, uint16_t top, uint1
 // Draw an image
 bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    qp_comms_spi_start(&lcd->spi_config);
+    qp_comms_start(device);
 
     // Configure where we're going to be rendering to
     qp_ili9xxx_internal_lcd_viewport(lcd, x, y, x + image->width - 1, y + image->height - 1);
@@ -318,7 +336,7 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
         ret                                                  = drawimage_uncompressed_impl(lcd, image->image_format, image->image_bpp, raw_image_desc->image_data, raw_image_desc->byte_count, image->width, image->height, raw_image_desc->image_palette, hue, sat, val, hue, sat, 0);
     }
 
-    qp_comms_spi_stop(&lcd->spi_config);
+    qp_comms_stop(device);
 
     return ret;
 }
@@ -327,7 +345,7 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
     ili9xxx_painter_device_t *           lcd   = (ili9xxx_painter_device_t *)device;
     const painter_raw_font_descriptor_t *fdesc = (const painter_raw_font_descriptor_t *)font;
 
-    qp_comms_spi_start(&lcd->spi_config);
+    qp_comms_start(device);
 
     const char *c = str;
     while (*c) {
@@ -380,30 +398,19 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
         }
     }
 
-    qp_comms_spi_stop(&lcd->spi_config);
+    qp_comms_stop(device);
 
     return (int16_t)x;
 }
 
-void qp_ili9xxx_palette_convert(painter_device_t driver, int16_t palette_size, qp_pixel_color_t *palette) {
+void qp_ili9xxx_palette_convert(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette) {
     for (int16_t i = 0; i < palette_size; ++i) {
         palette[i].rgb565 = hsv_to_ili9xxx(palette[i].hsv888.h, palette[i].hsv888.s, palette[i].hsv888.v);
     }
 }
 
-size_t qp_ili9xxx_append_pixel(painter_device_t driver, uint8_t *buffer, size_t pixel_index, qp_pixel_color_t pixel) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    uint16_t *buf = (uint16_t *)buffer;
+size_t qp_ili9xxx_append_pixel(painter_device_t device, uint8_t *buffer, size_t pixel_index, qp_pixel_color_t pixel) {
+    uint16_t *buf    = (uint16_t *)buffer;
     buf[pixel_index] = pixel.rgb565;
     return sizeof(uint16_t);
-}
-
-bool qp_ili9xxx_comms_begin_func(painter_device_t driver) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    return qp_comms_spi_start(&lcd->spi_config);
-}
-
-void qp_ili9xxx_comms_end_func(painter_device_t driver) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    qp_comms_spi_stop(&lcd->spi_config);
 }

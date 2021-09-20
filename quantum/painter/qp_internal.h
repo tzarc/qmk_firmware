@@ -114,24 +114,27 @@ typedef struct painter_raw_font_descriptor_t {
 // Quantum Painter driver callbacks
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef bool (*painter_driver_init_func)(painter_device_t driver, painter_rotation_t rotation);
-typedef bool (*painter_driver_clear_func)(painter_device_t driver);
-typedef bool (*painter_driver_power_func)(painter_device_t driver, bool power_on);
-typedef bool (*painter_driver_brightness_func)(painter_device_t driver, uint8_t val);
-typedef bool (*painter_driver_viewport_func)(painter_device_t driver, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
-typedef bool (*painter_driver_pixdata_func)(painter_device_t driver, const void *pixel_data, uint32_t native_pixel_count);
-typedef bool (*painter_driver_setpixel_func)(painter_device_t driver, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
-typedef bool (*painter_driver_line_func)(painter_device_t driver, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val);
-typedef bool (*painter_driver_rect_func)(painter_device_t driver, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
+typedef bool (*painter_driver_init_func)(painter_device_t device, painter_rotation_t rotation);
+typedef bool (*painter_driver_clear_func)(painter_device_t device);
+typedef bool (*painter_driver_power_func)(painter_device_t device, bool power_on);
+typedef bool (*painter_driver_brightness_func)(painter_device_t device, uint8_t val);
+typedef bool (*painter_driver_viewport_func)(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
+typedef bool (*painter_driver_pixdata_func)(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count);
+typedef bool (*painter_driver_setpixel_func)(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
+typedef bool (*painter_driver_line_func)(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val);
+typedef bool (*painter_driver_rect_func)(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
 typedef bool (*painter_driver_circle_func)(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
 typedef bool (*painter_driver_ellipse_func)(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
 typedef bool (*painter_driver_drawimage_func)(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val);
 typedef int16_t (*painter_driver_drawtext_func)(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
 
-typedef void (*painter_driver_convert_palette_pixfmt_func)(painter_device_t driver, int16_t palette_size, qp_pixel_color_t *palette);
-typedef size_t (*painter_driver_append_pixel)(painter_device_t driver, uint8_t *buffer, size_t pixel_index, qp_pixel_color_t pixel);
-typedef bool (*painter_driver_comms_begin_func)(painter_device_t driver);
-typedef void (*painter_driver_comms_end_func)(painter_device_t driver);
+typedef void (*painter_driver_convert_palette_pixfmt_func)(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette);
+typedef size_t (*painter_driver_append_pixel)(painter_device_t device, uint8_t *buffer, size_t pixel_index, qp_pixel_color_t pixel);
+
+typedef bool (*painter_driver_comms_init_func)(painter_device_t device);
+typedef bool (*painter_driver_comms_start_func)(painter_device_t device);
+typedef void (*painter_driver_comms_stop_func)(painter_device_t device);
+typedef size_t (*painter_driver_comms_send_func)(painter_device_t device, const void *data, size_t byte_count);
 
 // Driver vtable definition
 struct painter_driver_vtable_t {
@@ -151,11 +154,30 @@ struct painter_driver_vtable_t {
 
     painter_driver_convert_palette_pixfmt_func palette_convert;
     painter_driver_append_pixel                append_pixel;
-    painter_driver_comms_begin_func            comms_begin;
-    painter_driver_comms_end_func              comms_end;
+};
+
+struct painter_comms_vtable_t {
+    painter_driver_comms_init_func  comms_init;
+    painter_driver_comms_start_func comms_start;
+    painter_driver_comms_stop_func  comms_stop;
+    painter_driver_comms_send_func  comms_send;
 };
 
 // Driver base definition
 struct painter_driver_t {
-    const struct painter_driver_vtable_t QP_RESIDENT_FLASH *vtable;
+    const struct painter_driver_vtable_t QP_RESIDENT_FLASH *driver_vtable;
+    const struct painter_comms_vtable_t QP_RESIDENT_FLASH *comms_vtable;
+    void *                                                 comms_config;
 };
+
+#define qp_driver_init(device, rotation) ((((struct painter_driver_t *)(device))->driver_vtable->init != NULL) ? (((struct painter_driver_t *)(device))->driver_vtable->init((device), (rotation))) : false)
+
+#define qp_comms_init(device) ((((struct painter_driver_t *)(device))->comms_vtable->comms_init != NULL) ? (((struct painter_driver_t *)(device))->comms_vtable->comms_init((device))) : false)
+#define qp_comms_start(device) ((((struct painter_driver_t *)(device))->comms_vtable->comms_start != NULL) ? (((struct painter_driver_t *)(device))->comms_vtable->comms_start((device))) : false)
+#define qp_comms_stop(device)                                                          \
+    do {                                                                               \
+        if (((struct painter_driver_t *)(device))->comms_vtable->comms_stop != NULL) { \
+            ((struct painter_driver_t *)(device))->comms_vtable->comms_stop((device)); \
+        }                                                                              \
+    } while (0)
+#define qp_comms_send(device, data, byte_count) ((((struct painter_driver_t *)(device))->comms_vtable->comms_send != NULL) ? (((struct painter_driver_t *)(device))->comms_vtable->comms_send((device), (data), (byte_count))) : 0)
