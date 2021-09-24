@@ -29,6 +29,6 @@ void qp_interpolate_palette(qp_pixel_color_t* lookup_table, int16_t items, qp_pi
 
 // Convert from input pixel data + palette to equivalent pixels
 typedef void (*pixel_output_callback)(qp_pixel_color_t color, void* cb_arg);
-void qp_decode_palette(int16_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg);
-void qp_decode_grayscale(int16_t pixel_count, uint8_t bits_per_pixel, const void* src_data, pixel_output_callback output_callback, void* cb_arg);
-void qp_decode_recolor(int16_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* cb_arg);
+void qp_decode_palette(uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg);
+void qp_decode_grayscale(uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, pixel_output_callback output_callback, void* cb_arg);
+void qp_decode_recolor(uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* cb_arg);

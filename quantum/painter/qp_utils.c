@@ -58,7 +58,7 @@ static qp_pixel_color_t hsv_lookup_table[16];
 // Palette / Monochrome-format codec
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void qp_decode_palette(int16_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg) {
+void qp_decode_palette(uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg) {
     const uint8_t  pixel_bitmask    = (1 << bits_per_pixel) - 1;
     const uint8_t  pixels_per_byte  = 8 / bits_per_pixel;
     const uint8_t* pixdata          = (const uint8_t*)src_data;
@@ -75,13 +75,13 @@ void qp_decode_palette(int16_t pixel_count, uint8_t bits_per_pixel, const void* 
     }
 }
 
-void qp_decode_grayscale(int16_t pixel_count, uint8_t bits_per_pixel, const void* src_data, pixel_output_callback output_callback, void* cb_arg) {
+void qp_decode_grayscale(uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, pixel_output_callback output_callback, void* cb_arg) {
     qp_pixel_color_t white = {.hsv888 = {.h = 0, .s = 0, .v = 255}};
     qp_pixel_color_t black = {.hsv888 = {.h = 0, .s = 0, .v = 0}};
     qp_decode_recolor(pixel_count, bits_per_pixel, src_data, white, black, output_callback, cb_arg);
 }
 
-void qp_decode_recolor(int16_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* cb_arg) {
+void qp_decode_recolor(uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* cb_arg) {
     static qp_pixel_color_t last_fg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
     static qp_pixel_color_t last_bg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
     if (memcmp(&fg_hsv888.hsv888, &last_fg_hsv888.hsv888, sizeof(fg_hsv888.hsv888)) || memcmp(&bg_hsv888.hsv888, &last_bg_hsv888.hsv888, sizeof(bg_hsv888.hsv888))) {
