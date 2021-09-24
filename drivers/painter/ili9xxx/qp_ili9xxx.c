@@ -176,13 +176,15 @@ static inline void lcd_send_mono_pixdata_recolor(painter_device_t device, uint8_
     qp_pixel_color_t          fg_hsv888 = {.hsv888 = {.h = hue_fg, .s = sat_fg, .v = val_fg}};
     qp_pixel_color_t          bg_hsv888 = {.hsv888 = {.h = hue_bg, .s = sat_bg, .v = val_bg}};
 
+    static uint8_t last_bpp = 255;
     static qp_pixel_color_t last_fg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
     static qp_pixel_color_t last_bg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
-    if (memcmp(&fg_hsv888.hsv888, &last_fg_hsv888.hsv888, sizeof(fg_hsv888.hsv888)) || memcmp(&bg_hsv888.hsv888, &last_bg_hsv888.hsv888, sizeof(bg_hsv888.hsv888))) {
+    if (last_bpp != bits_per_pixel || memcmp(&fg_hsv888.hsv888, &last_fg_hsv888.hsv888, sizeof(fg_hsv888.hsv888)) || memcmp(&bg_hsv888.hsv888, &last_bg_hsv888.hsv888, sizeof(bg_hsv888.hsv888))) {
         uint16_t items = 1 << bits_per_pixel;  // number of items we need to interpolate
         qp_interpolate_palette(hsv_lookup_table, items, fg_hsv888, bg_hsv888);
         last_fg_hsv888 = fg_hsv888;
         last_bg_hsv888 = bg_hsv888;
+        last_bpp = bits_per_pixel;
 
         qp_ili9xxx_palette_convert((painter_device_t)lcd, items, hsv_lookup_table);
     }
