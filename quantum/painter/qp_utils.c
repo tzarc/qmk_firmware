@@ -1,4 +1,4 @@
-/* Copyright 2020 Nick Brassel (@tzarc)
+/* Copyright 2021 Nick Brassel (@tzarc)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,9 @@
  */
 
 #include <quantum.h>
+#include <qp.h>
 #include <qp_utils.h>
+#include <qp_comms.h>
 
 void qp_interpolate_palette(qp_pixel_color_t* lookup_table, int16_t items, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888) {
     int16_t hue_fg = fg_hsv888.hsv888.h;

@@ -1,4 +1,4 @@
-/* Copyright 2020 Nick Brassel (@tzarc)
+/* Copyright 2021 Nick Brassel (@tzarc)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -171,8 +171,3 @@ struct painter_driver_t {
     const struct painter_comms_vtable_t QP_RESIDENT_FLASH *comms_vtable;
     void *                                                 comms_config;
 };
-
-bool   qp_comms_init(painter_device_t device);
-bool   qp_comms_start(painter_device_t device);
-void   qp_comms_stop(painter_device_t device);
-size_t qp_comms_send(painter_device_t device, const void *data, size_t byte_count);

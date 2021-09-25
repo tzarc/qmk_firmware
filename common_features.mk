@@ -127,56 +127,8 @@ ifeq ($(strip $(POINTING_DEVICE_ENABLE)), yes)
     SRC += $(QUANTUM_DIR)/pointing_device.c
 endif
 
-QUANTUM_PAINTER_ENABLE ?= no
-VALID_QUANTUM_PAINTER_DRIVERS := qmk_oled_wrapper ili9341_spi st7789
-QUANTUM_PAINTER_DRIVERS ?=
 ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
-    OPT_DEFS += -DQUANTUM_PAINTER_ENABLE
-    COMMON_VPATH += \
-        $(QUANTUM_DIR)/painter \
-        $(DRIVER_PATH)/painter/fallback
-    SRC += \
-        $(QUANTUM_DIR)/utf8.c \
-        $(QUANTUM_DIR)/painter/qp.c \
-        $(QUANTUM_DIR)/painter/qp_internal.c \
-        $(QUANTUM_DIR)/painter/qp_utils.c \
-        $(DRIVER_PATH)/painter/fallback/qp_fallback.c
-
-    define handle_quantum_painter_driver
-        CURRENT_PAINTER_DRIVER := $1
-        ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),qmk_oled_wrapper)
-            OPT_DEFS += -DQUANTUM_PAINTER_QMK_OLED_WRAPPER_ENABLE
-            OLED_DRIVER_ENABLE = yes
-            COMMON_VPATH += $(DRIVER_PATH)/painter/qmk_oled_wrapper
-            SRC += $(DRIVER_PATH)/painter/qmk_oled_wrapper/qp_qmk_oled_wrapper.c
-        else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341_spi)
-            OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE
-            QUANTUM_LIB_SRC += spi_master.c
-            COMMON_VPATH += \
-                $(DRIVER_PATH)/painter/comms \
-                $(DRIVER_PATH)/painter/ili9xxx \
-                $(DRIVER_PATH)/painter/ili9xxx/ili9341
-            SRC += \
-                $(DRIVER_PATH)/painter/ili9xxx/qp_ili9xxx.c \
-                $(DRIVER_PATH)/painter/ili9xxx/ili9341/qp_ili9341.c \
-                $(DRIVER_PATH)/painter/comms/qp_comms_spi.c \
-                $(DRIVER_PATH)/painter/ili9xxx/ili9341/qp_ili9341_spi.c
-        else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),st7789)
-            OPT_DEFS += -DQUANTUM_PAINTER_ST7789_ENABLE
-            QUANTUM_LIB_SRC += spi_master.c
-            COMMON_VPATH += \
-                $(DRIVER_PATH)/painter/comms \
-                $(DRIVER_PATH)/painter/st77xx \
-                $(DRIVER_PATH)/painter/st77xx/st7789
-            SRC += \
-                $(DRIVER_PATH)/painter/comms/qp_comms_spi.c \
-                $(DRIVER_PATH)/painter/st77xx/qp_st77xx.c \
-                $(DRIVER_PATH)/painter/st77xx/st7789/qp_st7789.c
-        else
-            $$(error "$$(CURRENT_PAINTER_DRIVER)" is not a valid quantum painter driver)
-        endif
-    endef
-    $(foreach qp_driver,$(QUANTUM_PAINTER_DRIVERS),$(eval $(call handle_quantum_painter_driver,$(qp_driver))))
+    include $(QUANTUM_DIR)/painter/rules.mk
 endif
 
 ifeq ($(strip $(PROGRAMMABLE_BUTTON_ENABLE)), yes)

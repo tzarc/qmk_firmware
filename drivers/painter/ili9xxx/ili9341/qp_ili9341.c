@@ -1,4 +1,4 @@
-/* Copyright 2020 Nick Brassel (@tzarc)
+/* Copyright 2021 Nick Brassel (@tzarc)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
 
 #include <wait.h>
 #include <qp.h>
+#include <qp_comms.h>
 #include <qp_ili9341.h>
 #include <qp_internal.h>
 #include <qp_fallback.h>

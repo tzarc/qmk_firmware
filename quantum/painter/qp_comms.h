@@ -16,11 +16,12 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <stdlib.h>
 #include <qp.h>
+#include <qp_internal.h>
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter OLED wrapper device factory
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Factory method for wrapping the normal QMK OLED functionality
-painter_device_t qp_qmk_oled_wrapper_make_device(void);
+bool   qp_comms_init(painter_device_t device);
+bool   qp_comms_start(painter_device_t device);
+void   qp_comms_stop(painter_device_t device);
+size_t qp_comms_send(painter_device_t device, const void *data, size_t byte_count);
