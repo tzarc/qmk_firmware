@@ -37,7 +37,7 @@ void qp_fill_pixdata(painter_device_t device, uint32_t num_pixels, uint8_t hue, 
 bool qp_setpixel_impl(painter_device_t device, uint16_t x, uint16_t y);
 
 // qp_rect internal implementation, but uses the global pixdata buffer with pre-converted native pixels.
-bool qp_rect_helper_impl(painter_device_t device, uint16_t l, uint16_t t, uint16_t r, uint16_t b);
+bool qp_fillrect_helper_impl(painter_device_t device, uint16_t l, uint16_t t, uint16_t r, uint16_t b);
 
 // Generates a color-interpolated lookup table based off the number of items, from foreground to background, for use with monochrome image rendering
 void qp_interpolate_palette(qp_pixel_color_t* lookup_table, int16_t items, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888);

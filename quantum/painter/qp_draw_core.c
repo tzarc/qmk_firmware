@@ -80,13 +80,13 @@ bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uin
 // Quantum Painter External API: qp_rect
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool qp_rect_helper_impl(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
+bool qp_fillrect_helper_impl(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     uint32_t pixels_in_pixdata = qp_num_pixels_in_buffer(device);
 
-    uint16_t l = left < right ? left : right;
-    uint16_t r = left > right ? left : right;
-    uint16_t t = top < bottom ? top : bottom;
-    uint16_t b = top > bottom ? top : bottom;
+    uint16_t l = QP_MIN(left, right);
+    uint16_t r = QP_MAX(left, right);
+    uint16_t t = QP_MIN(top, bottom);
+    uint16_t b = QP_MAX(top, bottom);
     uint16_t w = r - l + 1;
     uint16_t h = b - t + 1;
 
@@ -104,30 +104,28 @@ bool qp_rect_helper_impl(painter_device_t device, uint16_t left, uint16_t top, u
 
 bool qp_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
     // Cater for cases where people have submitted the coordinates backwards
-    uint16_t l = left < right ? left : right;
-    uint16_t r = left > right ? left : right;
-    uint16_t t = top < bottom ? top : bottom;
-    uint16_t b = top > bottom ? top : bottom;
+    uint16_t l = QP_MIN(left, right);
+    uint16_t r = QP_MAX(left, right);
+    uint16_t t = QP_MIN(top, bottom);
+    uint16_t b = QP_MAX(top, bottom);
     uint16_t w = r - l + 1;
     uint16_t h = b - t + 1;
 
     if (filled) {
         // Fill up the pixdata buffer with the required number of native pixels
-        uint32_t required_pixels = QP_MIN(w * h, qp_num_pixels_in_buffer(device));
-        qp_fill_pixdata(device, required_pixels, hue, sat, val);
+        qp_fill_pixdata(device, w * h, hue, sat, val);
 
         // Perform the draw
-        return qp_rect_helper_impl(device, l, t, r, b);
+        return qp_fillrect_helper_impl(device, l, t, r, b);
     } else {
         // Fill up the pixdata buffer with the required number of native pixels
-        uint32_t required_pixels = QP_MIN(QP_MAX(w, h), qp_num_pixels_in_buffer(device));
-        qp_fill_pixdata(device, required_pixels, hue, sat, val);
+        qp_fill_pixdata(device, QP_MAX(w, h), hue, sat, val);
 
         // Draw 4x filled rects to create an outline
-        if (!qp_rect_helper_impl(device, l, t, r, t)) return false;
-        if (!qp_rect_helper_impl(device, l, b, r, b)) return false;
-        if (!qp_rect_helper_impl(device, l, t + 1, l, b - 1)) return false;
-        if (!qp_rect_helper_impl(device, r, t + 1, r, b - 1)) return false;
+        if (!qp_fillrect_helper_impl(device, l, t, r, t)) return false;
+        if (!qp_fillrect_helper_impl(device, l, b, r, b)) return false;
+        if (!qp_fillrect_helper_impl(device, l, t + 1, l, b - 1)) return false;
+        if (!qp_fillrect_helper_impl(device, r, t + 1, r, b - 1)) return false;
     }
 
     return true;

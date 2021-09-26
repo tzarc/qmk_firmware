@@ -41,85 +41,94 @@ bool qp_circle_helper_impl(painter_device_t device, uint16_t centerx, uint16_t c
     so we only need four points or two points and one line
     */
 
+    int16_t xpx = ((int16_t)centerx) + ((int16_t)offsetx);
+    int16_t xmx = ((int16_t)centerx) - ((int16_t)offsetx);
+    int16_t xpy = ((int16_t)centerx) + ((int16_t)offsety);
+    int16_t xmy = ((int16_t)centerx) - ((int16_t)offsety);
+    int16_t ypx = ((int16_t)centery) + ((int16_t)offsetx);
+    int16_t ymx = ((int16_t)centery) - ((int16_t)offsetx);
+    int16_t ypy = ((int16_t)centery) + ((int16_t)offsety);
+    int16_t ymy = ((int16_t)centery) - ((int16_t)offsety);
+
     if (offsetx == 0) {
-        if (!qp_setpixel_impl(device, centerx, centery + offsety)) {
+        if (!qp_setpixel_impl(device, centerx, ypy)) {
             return false;
         }
-        if (!qp_setpixel_impl(device, centerx, centery - offsety)) {
+        if (!qp_setpixel_impl(device, centerx, ymy)) {
             return false;
         }
         if (filled) {
-            if (!qp_rect_helper_impl(device, centerx + offsety, centery, centerx - offsety, centery)) {
+            if (!qp_fillrect_helper_impl(device, xpy, centery, xmy, centery)) {
                 return false;
             }
         } else {
-            if (!qp_setpixel_impl(device, centerx + offsety, centery)) {
+            if (!qp_setpixel_impl(device, xpy, centery)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx - offsety, centery)) {
+            if (!qp_setpixel_impl(device, xmy, centery)) {
                 return false;
             }
         }
     } else if (offsetx == offsety) {
         if (filled) {
-            if (!qp_rect_helper_impl(device, centerx + offsety, centery + offsety, centerx - offsety, centery + offsety)) {
+            if (!qp_fillrect_helper_impl(device, xpy, ypy, xmy, ypy)) {
                 return false;
             }
-            if (!qp_rect_helper_impl(device, centerx + offsety, centery - offsety, centerx - offsety, centery - offsety)) {
+            if (!qp_fillrect_helper_impl(device, xpy, ymy, xmy, ymy)) {
                 return false;
             }
         } else {
-            if (!qp_setpixel_impl(device, centerx + offsety, centery + offsety)) {
+            if (!qp_setpixel_impl(device, xpy, ypy)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx - offsety, centery + offsety)) {
+            if (!qp_setpixel_impl(device, xmy, ypy)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx + offsety, centery - offsety)) {
+            if (!qp_setpixel_impl(device, xpy, ymy)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx - offsety, centery - offsety)) {
+            if (!qp_setpixel_impl(device, xmy, ymy)) {
                 return false;
             }
         }
 
     } else {
         if (filled) {
-            if (!qp_rect_helper_impl(device, centerx + offsetx, centery + offsety, centerx - offsetx, centery + offsety)) {
+            if (!qp_fillrect_helper_impl(device, xpx, ypy, xmx, ypy)) {
                 return false;
             }
-            if (!qp_rect_helper_impl(device, centerx + offsetx, centery - offsety, centerx - offsetx, centery - offsety)) {
+            if (!qp_fillrect_helper_impl(device, xpx, ymy, xmx, ymy)) {
                 return false;
             }
-            if (!qp_rect_helper_impl(device, centerx + offsety, centery + offsetx, centerx - offsety, centery + offsetx)) {
+            if (!qp_fillrect_helper_impl(device, xpy, ypx, xmy, ypx)) {
                 return false;
             }
-            if (!qp_rect_helper_impl(device, centerx + offsety, centery - offsetx, centerx - offsety, centery - offsetx)) {
+            if (!qp_fillrect_helper_impl(device, xpy, ymx, xmy, ymx)) {
                 return false;
             }
         } else {
-            if (!qp_setpixel_impl(device, centerx + offsetx, centery + offsety)) {
+            if (!qp_setpixel_impl(device, xpx, ypy)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx - offsetx, centery + offsety)) {
+            if (!qp_setpixel_impl(device, xmx, ypy)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx + offsetx, centery - offsety)) {
+            if (!qp_setpixel_impl(device, xpx, ymy)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx - offsetx, centery - offsety)) {
+            if (!qp_setpixel_impl(device, xmx, ymy)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx + offsety, centery + offsetx)) {
+            if (!qp_setpixel_impl(device, xpy, ypx)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx - offsety, centery + offsetx)) {
+            if (!qp_setpixel_impl(device, xmy, ypx)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx + offsety, centery - offsetx)) {
+            if (!qp_setpixel_impl(device, xpy, ymx)) {
                 return false;
             }
-            if (!qp_setpixel_impl(device, centerx - offsety, centery - offsetx)) {
+            if (!qp_setpixel_impl(device, xmy, ymx)) {
                 return false;
             }
         }
@@ -134,8 +143,7 @@ bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius,
     int16_t ycalc = (int16_t)radius;
     int16_t err   = ((5 - (radius >> 2)) >> 2);
 
-    uint32_t required_pixels = QP_MIN((radius * 2) + 1, qp_num_pixels_in_buffer(device));
-    qp_fill_pixdata(device, required_pixels, hue, sat, val);
+    qp_fill_pixdata(device, (radius * 2) + 1, hue, sat, val);
 
     qp_circle_helper_impl(device, x, y, xcalc, ycalc, filled);
     while (xcalc < ycalc) {

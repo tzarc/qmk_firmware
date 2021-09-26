@@ -54,7 +54,9 @@ bool qp_setpixel_impl(painter_device_t device, uint16_t x, uint16_t y) { return 
 
 // Fills the global native pixel buffer with equivalent pixels matching the supplied HSV
 void qp_fill_pixdata(painter_device_t device, uint32_t num_pixels, uint8_t hue, uint8_t sat, uint8_t val) {
-    struct painter_driver_t* driver = (struct painter_driver_t*)device;
+    struct painter_driver_t* driver            = (struct painter_driver_t*)device;
+    uint32_t                 pixels_in_pixdata = qp_num_pixels_in_buffer(device);
+    num_pixels                                 = QP_MIN(pixels_in_pixdata, num_pixels);
 
     // Convert the color to native pixel format
     qp_pixel_color_t color = {.hsv888 = {.h = hue, .s = sat, .v = val}};

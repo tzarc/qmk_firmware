@@ -35,36 +35,36 @@ bool qp_ellipse_helper_impl(painter_device_t device, uint16_t centerx, uint16_t 
     When offsetx == 0 only two pixels can be drawn for filled or unfilled ellipses
     */
 
-    int16_t xx = ((int16_t)centerx) + ((int16_t)offsetx);
-    int16_t xl = ((int16_t)centerx) - ((int16_t)offsetx);
-    int16_t yy = ((int16_t)centery) + ((int16_t)offsety);
-    int16_t yl = ((int16_t)centery) - ((int16_t)offsety);
+    int16_t xpx = ((int16_t)centerx) + ((int16_t)offsetx);
+    int16_t xmx = ((int16_t)centerx) - ((int16_t)offsetx);
+    int16_t ypy = ((int16_t)centery) + ((int16_t)offsety);
+    int16_t ymy = ((int16_t)centery) - ((int16_t)offsety);
 
     if (offsetx == 0) {
-        if (!qp_setpixel_impl(device, xx, yy)) {
+        if (!qp_setpixel_impl(device, xpx, ypy)) {
             return false;
         }
-        if (!qp_setpixel_impl(device, xx, yl)) {
+        if (!qp_setpixel_impl(device, xpx, ymy)) {
             return false;
         }
     } else if (filled) {
-        if (!qp_rect_helper_impl(device, xx, yy, xl, yy)) {
+        if (!qp_fillrect_helper_impl(device, xpx, ypy, xmx, ypy)) {
             return false;
         }
-        if (offsety > 0 && !qp_rect_helper_impl(device, xx, yl, xl, yl)) {
+        if (offsety > 0 && !qp_fillrect_helper_impl(device, xpx, ymy, xmx, ymy)) {
             return false;
         }
     } else {
-        if (!qp_setpixel_impl(device, xx, yy)) {
+        if (!qp_setpixel_impl(device, xpx, ypy)) {
             return false;
         }
-        if (!qp_setpixel_impl(device, xx, yl)) {
+        if (!qp_setpixel_impl(device, xpx, ymy)) {
             return false;
         }
-        if (!qp_setpixel_impl(device, xl, yy)) {
+        if (!qp_setpixel_impl(device, xmx, ypy)) {
             return false;
         }
-        if (!qp_setpixel_impl(device, xl, yl)) {
+        if (!qp_setpixel_impl(device, xmx, ymy)) {
             return false;
         }
     }
@@ -82,8 +82,7 @@ bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex,
     int16_t dx = 0;
     int16_t dy = ((int16_t)sizey);
 
-    uint32_t required_pixels = QP_MIN(QP_MAX(sizex, sizey), qp_num_pixels_in_buffer(device));
-    qp_fill_pixdata(device, required_pixels, hue, sat, val);
+    qp_fill_pixdata(device, QP_MAX(sizex, sizey), hue, sat, val);
 
     for (int16_t delta = (2 * bb) + (aa * (1 - (2 * sizey))); bb * dx <= aa * dy; dx++) {
         if (!qp_ellipse_helper_impl(device, x, y, dx, dy, filled)) {
