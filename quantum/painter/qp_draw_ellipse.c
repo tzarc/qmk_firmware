@@ -14,9 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <qp.h>
 #include <qp_internal.h>
-#include <qp_utils.h>
+#include <qp_draw.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter External API: qp_ellipse
@@ -74,6 +73,11 @@ bool qp_ellipse_helper_impl(painter_device_t device, uint16_t centerx, uint16_t 
 
 // Fallback implementation for drawing ellipses
 bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (!driver->validate_ok) {
+        return false;
+    }
+
     int16_t aa = ((int16_t)sizex) * ((int16_t)sizex);
     int16_t bb = ((int16_t)sizey) * ((int16_t)sizey);
     int16_t fa = 4 * ((int16_t)aa);

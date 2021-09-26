@@ -16,8 +16,10 @@
 
 #pragma once
 
-#include <qp.h>
+#include <qp_internal.h>
 
 bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation);
 
 extern ili9xxx_painter_device_t ili9341_drivers[ILI9341_NUM_DEVICES];
+
+extern const struct painter_driver_vtable_t QP_RESIDENT_FLASH ili9341_driver_vtable;

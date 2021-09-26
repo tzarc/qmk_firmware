@@ -14,18 +14,63 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <quantum.h>
-#include <utf8.h>
 #include <qp_internal.h>
-#include <qp_utils.h>
+#include <qp_draw.h>
 
 _Static_assert((QP_PIXDATA_BUFFER_SIZE > 0) && (QP_PIXDATA_BUFFER_SIZE % 16) == 0, "QP_PIXDATA_BUFFER_SIZE needs to be a non-zero multiple of 16");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Global variables
+//
+// NOTE: The variables in this section are intentionally outside a stack frame. They are able to be defined with larger
+//       sizes than the normal stack frames would allow, and as such need to be external.
+//
+//       **** DO NOT refactor this and decide to place the variables inside the function calling them -- you will ****
+//       **** very likely get artifacts rendered to the screen as a result.                                       ****
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Buffer used for transmitting native pixel data to the downstream device.
+uint8_t qp_global_pixdata_buffer[QP_PIXDATA_BUFFER_SIZE];
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Helpers
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint32_t qp_num_pixels_in_buffer(painter_device_t device) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    return ((QP_PIXDATA_BUFFER_SIZE * 8) / driver->native_bits_per_pixel);
+}
+
+// qp_setpixel internal implementation, but accepts a buffer with pre-converted native pixel. Only the first pixel is used.
+bool qp_setpixel_impl(painter_device_t device, uint16_t x, uint16_t y) { return qp_viewport(device, x, y, x, y) && qp_pixdata(device, qp_global_pixdata_buffer, 1); }
+
+// Fills the global native pixel buffer with equivalent pixels matching the supplied HSV
+void qp_fill_pixdata(painter_device_t device, uint32_t num_pixels, uint8_t hue, uint8_t sat, uint8_t val) {
+    struct painter_driver_t *driver            = (struct painter_driver_t *)device;
+    uint32_t                 pixels_in_pixdata = qp_num_pixels_in_buffer(device);
+    num_pixels                                 = QP_MIN(pixels_in_pixdata, num_pixels);
+
+    // Convert the color to native pixel format
+    qp_pixel_color_t color = {.hsv888 = {.h = hue, .s = sat, .v = val}};
+    driver->driver_vtable->palette_convert(device, 1, &color);
+
+    // Append the required number of pixels
+    uint8_t palette_idx = 0;
+    for (uint32_t i = 0; i < num_pixels; ++i) {
+        driver->driver_vtable->append_pixels(device, qp_global_pixdata_buffer, &color, i, 1, &palette_idx);
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter External API: qp_setpixel
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (!driver->validate_ok) {
+        return false;
+    }
     qp_fill_pixdata(device, 1, hue, sat, val);
     return qp_setpixel_impl(device, x, y);
 }
@@ -40,6 +85,11 @@ bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uin
     } else if (y0 == y1) {
         return qp_rect(device, x0, y0, x1, y0, hue, sat, val, true);
     } else {
+        struct painter_driver_t *driver = (struct painter_driver_t *)device;
+        if (!driver->validate_ok) {
+            return false;
+        }
+
         qp_fill_pixdata(device, 1, hue, sat, val);
 
         // draw angled line using Bresenham's algo
@@ -103,6 +153,11 @@ bool qp_fillrect_helper_impl(painter_device_t device, uint16_t left, uint16_t to
 }
 
 bool qp_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (!driver->validate_ok) {
+        return false;
+    }
+
     // Cater for cases where people have submitted the coordinates backwards
     uint16_t l = QP_MIN(left, right);
     uint16_t r = QP_MAX(left, right);

@@ -16,12 +16,8 @@
 
 #ifdef QUANTUM_PAINTER_SPI_ENABLE
 
-#    include <gpio.h>
 #    include <spi_master.h>
-
-#    include <qp.h>
-#    include <qp_internal.h>
-#    include "qp_comms_spi.h"
+#    include <qp_comms_spi.h>
 
 bool qp_comms_spi_init(painter_device_t device) {
     struct painter_driver_t *     driver     = (struct painter_driver_t *)device;

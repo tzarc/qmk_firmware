@@ -22,6 +22,8 @@
 #    include <stdint.h>
 #    include <gpio.h>
 
+#    include <qp_internal.h>
+
 struct qp_comms_spi_config_t {
     pin_t    chip_select_pin;
     uint16_t divisor;

@@ -15,11 +15,9 @@
  */
 
 #include <wait.h>
-#include <qp.h>
+#include <qp_internal.h>
 #include <qp_comms.h>
 #include <qp_ili9341.h>
-#include <qp_internal.h>
-#include <qp_fallback.h>
 #include <qp_ili9xxx_internal.h>
 #include <qp_ili9xxx_opcodes.h>
 #include <qp_ili9341_internal.h>
@@ -120,3 +118,17 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
 
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Driver vtable
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+const struct painter_driver_vtable_t QP_RESIDENT_FLASH ili9341_driver_vtable = {
+    .init            = qp_ili9341_init,
+    .power           = qp_ili9xxx_power,
+    .clear           = qp_ili9xxx_clear,
+    .pixdata         = qp_ili9xxx_pixdata,
+    .viewport        = qp_ili9xxx_viewport,
+    .palette_convert = qp_ili9xxx_palette_convert,
+    .append_pixels   = qp_ili9xxx_append_pixels,
+};

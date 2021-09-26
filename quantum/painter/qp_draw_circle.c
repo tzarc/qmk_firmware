@@ -16,7 +16,7 @@
 
 #include <qp.h>
 #include <qp_internal.h>
-#include <qp_utils.h>
+#include <qp_draw.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter External API: qp_circle
@@ -138,6 +138,11 @@ bool qp_circle_helper_impl(painter_device_t device, uint16_t centerx, uint16_t c
 }
 
 bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (!driver->validate_ok) {
+        return false;
+    }
+
     // plot the initial set of points for x, y and r
     int16_t xcalc = 0;
     int16_t ycalc = (int16_t)radius;

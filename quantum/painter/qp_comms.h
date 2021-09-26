@@ -18,7 +18,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include <qp.h>
+
 #include <qp_internal.h>
 
 bool     qp_comms_init(painter_device_t device);

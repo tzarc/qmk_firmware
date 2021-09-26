@@ -14,11 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <qp.h>
-#include <qp_comms.h>
-#include <qp_ili9341.h>
 #include <qp_internal.h>
-#include <qp_fallback.h>
+#include <qp_comms_spi.h>
+#include <qp_ili9341.h>
 #include <qp_ili9xxx_internal.h>
 #include <qp_ili9341_internal.h>
 
@@ -27,17 +25,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Device creation
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Driver vtable
-static const struct painter_driver_vtable_t QP_RESIDENT_FLASH driver_vtable = {
-    .init            = qp_ili9341_init,
-    .power           = qp_ili9xxx_power,
-    .clear           = qp_ili9xxx_clear,
-    .pixdata         = qp_ili9xxx_pixdata,
-    .viewport        = qp_ili9xxx_viewport,
-    .palette_convert = qp_ili9xxx_palette_convert,
-    .append_pixels   = qp_ili9xxx_append_pixels,
-};
 
 static const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_vtable = {
     .comms_init  = qp_comms_spi_init,
@@ -60,10 +47,10 @@ painter_device_t qp_ili9341_make_spi_device(pin_t chip_select_pin, pin_t dc_pin,
     for (uint32_t i = 0; i < ILI9341_NUM_DEVICES; ++i) {
         ili9xxx_painter_device_t *driver = &ili9341_drivers[i];
         if (!driver->qp_driver.driver_vtable) {
-            driver->qp_driver.driver_vtable         = &driver_vtable;
+            driver->qp_driver.driver_vtable         = &ili9341_driver_vtable;
             driver->qp_driver.comms_vtable          = &spi_comms_vtable;
             driver->qp_driver.TEMP_vtable           = &TEMP_vtable;
-            driver->qp_driver.native_bits_per_pixel = 16;
+            driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
             driver->ili9xxx_vtable                  = &spi_ili9xxx_vtable;
 
             // SPI and other pin configuration

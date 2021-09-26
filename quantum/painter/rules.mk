@@ -7,18 +7,15 @@ QUANTUM_PAINTER_NEEDS_COMMS_I2C ?= no
 QUANTUM_PAINTER_NEEDS_COMMS_PARALLEL ?= no
 
 OPT_DEFS += -DQUANTUM_PAINTER_ENABLE
-COMMON_VPATH += \
-    $(QUANTUM_DIR)/painter \
-    $(DRIVER_PATH)/painter/fallback
+COMMON_VPATH += $(QUANTUM_DIR)/painter
 SRC += \
     $(QUANTUM_DIR)/utf8.c \
     $(QUANTUM_DIR)/painter/qp.c \
-    $(QUANTUM_DIR)/painter/qp_comms.c \
     $(QUANTUM_DIR)/painter/qp_draw_core.c \
     $(QUANTUM_DIR)/painter/qp_draw_circle.c \
     $(QUANTUM_DIR)/painter/qp_draw_ellipse.c \
-    $(QUANTUM_DIR)/painter/qp_utils.c \
-    $(DRIVER_PATH)/painter/fallback/qp_fallback.c
+    $(QUANTUM_DIR)/painter/qp_draw_image.c \
+    $(QUANTUM_DIR)/painter/qp_draw_text.c
 
 # Handler for each driver
 define handle_quantum_painter_driver
@@ -26,10 +23,8 @@ define handle_quantum_painter_driver
 
     ifeq ($$(filter $$(strip $$(CURRENT_PAINTER_DRIVER)),$$(VALID_QUANTUM_PAINTER_DRIVERS)),)
         $$(error "$$(CURRENT_PAINTER_DRIVER)" is not a valid Quantum Painter driver)
-    endif
 
-
-    ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),qmk_oled_wrapper)
+    else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),qmk_oled_wrapper)
         OLED_ENABLE := yes
         OLED_DRIVER := SSD1306
         OPT_DEFS += -DQUANTUM_PAINTER_QMK_OLED_WRAPPER_ENABLE
@@ -68,7 +63,9 @@ ifeq ($(strip $(QUANTUM_PAINTER_NEEDS_COMMS_SPI)), yes)
     OPT_DEFS += -DQUANTUM_PAINTER_SPI_ENABLE
     QUANTUM_LIB_SRC += spi_master.c
     VPATH += $(DRIVER_PATH)/painter/comms
-    SRC += $(DRIVER_PATH)/painter/comms/qp_comms_spi.c
+    SRC += \
+        $(QUANTUM_DIR)/painter/qp_comms.c \
+        $(DRIVER_PATH)/painter/comms/qp_comms_spi.c
 endif
 
 # If I2C comms is needed, set up the required files
@@ -76,12 +73,16 @@ ifeq ($(strip $(QUANTUM_PAINTER_NEEDS_COMMS_I2C)), yes)
     OPT_DEFS += -DQUANTUM_PAINTER_I2C_ENABLE
     QUANTUM_LIB_SRC += i2c_master.c
     VPATH += $(DRIVER_PATH)/painter/comms
-    SRC += $(DRIVER_PATH)/painter/comms/qp_comms_i2c.c
+    SRC += \
+        $(QUANTUM_DIR)/painter/qp_comms.c \
+        $(DRIVER_PATH)/painter/comms/qp_comms_i2c.c
 endif
 
 # If parallel comms is needed, set up the required files
 ifeq ($(strip $(QUANTUM_PAINTER_NEEDS_COMMS_PARALLEL)), yes)
     OPT_DEFS += -DQUANTUM_PAINTER_PARALLEL_ENABLE
     VPATH += $(DRIVER_PATH)/painter/comms
-    SRC += $(DRIVER_PATH)/painter/comms/qp_comms_parallel.c
+    SRC += \
+        $(QUANTUM_DIR)/painter/qp_comms.c \
+        $(DRIVER_PATH)/painter/comms/qp_comms_parallel.c
 endif

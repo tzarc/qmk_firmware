@@ -17,7 +17,7 @@
 #include <quantum.h>
 #include <utf8.h>
 #include <qp_internal.h>
-#include <qp_utils.h>
+#include <qp_draw.h>
 
 static bool validate_driver_vtable(struct painter_driver_t *driver) { return (driver->driver_vtable && driver->driver_vtable->init && driver->driver_vtable->power && driver->driver_vtable->clear && driver->driver_vtable->viewport && driver->driver_vtable->pixdata && driver->driver_vtable->palette_convert && driver->driver_vtable->append_pixels) ? true : false; }
 
@@ -32,29 +32,47 @@ static bool validate_driver_integrity(struct painter_driver_t *driver) { return 
 bool qp_init(painter_device_t device, painter_rotation_t rotation) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!validate_driver_integrity(driver)) {
+        driver->validate_ok = false;
         return false;
     }
 
+    driver->validate_ok = true;
     return driver->driver_vtable->init(device, rotation);
 }
 
 bool qp_power(painter_device_t device, bool power_on) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (!driver->validate_ok) {
+        return false;
+    }
+
     return driver->driver_vtable->power(device, power_on);
 }
 
 bool qp_clear(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (!driver->validate_ok) {
+        return false;
+    }
+
     return driver->driver_vtable->clear(device);
 }
 
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (!driver->validate_ok) {
+        return false;
+    }
+
     return driver->driver_vtable->viewport(device, left, top, right, bottom);
 }
 
 bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (!driver->validate_ok) {
+        return false;
+    }
+
     return driver->driver_vtable->pixdata(device, pixel_data, native_pixel_count);
 }
 
