@@ -19,7 +19,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// This controls whether 256-color palettes are supported -- will require 1280 bytes of RAM at minimum for palette generation (instead of 112 for 16-color)
+// This controls the maximum size of the pixel data buffer used for single blocks of transmission
+#ifndef QP_PIXDATA_BUFFER_SIZE
+#    define QP_PIXDATA_BUFFER_SIZE 32
+#endif
+
+// This controls whether 256-color palettes are supported -- will require a significant amount of RAM
 #ifndef QUANTUM_PAINTER_SUPPORTS_256_PALETTE
 #    define QUANTUM_PAINTER_SUPPORTS_256_PALETTE FALSE
 #endif
@@ -67,14 +72,11 @@ typedef const painter_font_descriptor_t *painter_font_t;
 // Initialize a device and set its rotation -- need to create the device using its corresponding factory method first
 bool qp_init(painter_device_t device, painter_rotation_t rotation);
 
-// Clear's a device's screen
-bool qp_clear(painter_device_t device);
-
-// Handle turning a display on or off
+// Handle turning a display on or off -- if a display backlight is controlled through the backlight subsystem, it will need to be handled externally to QP
 bool qp_power(painter_device_t device, bool power_on);
 
-// Handle configuring the lcd backlight brightness or contrast
-bool qp_brightness(painter_device_t device, uint8_t val);
+// Clear's a device's screen
+bool qp_clear(painter_device_t device);
 
 // Set the viewport that pixdata is to get streamed into
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);

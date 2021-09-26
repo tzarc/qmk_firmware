@@ -21,7 +21,7 @@
 #include <qp.h>
 #include <qp_internal.h>
 
-bool   qp_comms_init(painter_device_t device);
-bool   qp_comms_start(painter_device_t device);
-void   qp_comms_stop(painter_device_t device);
-size_t qp_comms_send(painter_device_t device, const void *data, size_t byte_count);
+bool     qp_comms_init(painter_device_t device);
+bool     qp_comms_start(painter_device_t device);
+void     qp_comms_stop(painter_device_t device);
+uint32_t qp_comms_send(painter_device_t device, const void *data, uint32_t byte_count);

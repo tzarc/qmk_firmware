@@ -19,3 +19,5 @@
 #include <qp.h>
 
 bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation);
+
+extern ili9xxx_painter_device_t ili9341_drivers[ILI9341_NUM_DEVICES];

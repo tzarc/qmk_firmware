@@ -18,31 +18,20 @@
 
 bool qp_comms_init(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->comms_vtable && driver->comms_vtable->comms_init) {
-        return driver->comms_vtable->comms_init(device);
-    }
-    return false;
+    return driver->comms_vtable->comms_init(device);
 }
 
 bool qp_comms_start(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->comms_vtable && driver->comms_vtable->comms_start) {
-        return driver->comms_vtable->comms_start(device);
-    }
-    return false;
+    return driver->comms_vtable->comms_start(device);
 }
 
 void qp_comms_stop(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->comms_vtable && driver->comms_vtable->comms_stop) {
-        driver->comms_vtable->comms_stop(device);
-    }
+    driver->comms_vtable->comms_stop(device);
 }
 
-size_t qp_comms_send(painter_device_t device, const void *data, size_t byte_count) {
+uint32_t qp_comms_send(painter_device_t device, const void *data, uint32_t byte_count) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->comms_vtable && driver->comms_vtable->comms_send) {
-        return driver->comms_vtable->comms_send(device, data, byte_count);
-    }
-    return 0;
+    return driver->comms_vtable->comms_send(device, data, byte_count);
 }

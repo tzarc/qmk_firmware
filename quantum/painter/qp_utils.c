@@ -19,6 +19,58 @@
 #include <qp_utils.h>
 #include <qp_comms.h>
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Palette lookup table
+//
+// NOTE: The variables in this section are intentionally outside a stack frame. They are able to be defined with larger
+//       sizes than the normal stack frames would allow, and as such need to be external.
+//
+//       **** DO NOT refactor this and decide to place the variables inside the function calling them -- you will ****
+//       **** very likely get artifacts rendered to the screen as a result.                                       ****
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Static buffer to contain a generated color palette
+#if QUANTUM_PAINTER_SUPPORTS_256_PALETTE
+static qp_pixel_color_t pixel_lookup_table[256];
+#else
+static qp_pixel_color_t pixel_lookup_table[16];
+#endif
+
+// Buffer used for transmitting native pixel data to the downstream device.
+uint8_t qp_global_pixdata_buffer[QP_PIXDATA_BUFFER_SIZE];
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Helpers
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint32_t qp_num_pixels_in_buffer(painter_device_t device) {
+    struct painter_driver_t* driver = (struct painter_driver_t*)device;
+    return ((QP_PIXDATA_BUFFER_SIZE * 8) / driver->native_bits_per_pixel);
+}
+
+// qp_setpixel internal implementation, but accepts a buffer with pre-converted native pixel. Only the first pixel is used.
+bool qp_setpixel_impl(painter_device_t device, uint16_t x, uint16_t y) { return qp_viewport(device, x, y, x, y) && qp_pixdata(device, qp_global_pixdata_buffer, 1); }
+
+// Fills the global native pixel buffer with equivalent pixels matching the supplied HSV
+void qp_fill_pixdata(painter_device_t device, uint32_t num_pixels, uint8_t hue, uint8_t sat, uint8_t val) {
+    struct painter_driver_t* driver = (struct painter_driver_t*)device;
+
+    // Convert the color to native pixel format
+    qp_pixel_color_t color = {.hsv888 = {.h = hue, .s = sat, .v = val}};
+    driver->driver_vtable->palette_convert(device, 1, &color);
+
+    // Append the required number of pixels
+    uint8_t palette_idx = 0;
+    for (uint32_t i = 0; i < num_pixels; ++i) {
+        driver->driver_vtable->append_pixels(device, qp_global_pixdata_buffer, &color, i, 1, &palette_idx);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Palette / Monochrome-format decoder
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void qp_interpolate_palette(qp_pixel_color_t* lookup_table, int16_t items, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888) {
     int16_t hue_fg = fg_hsv888.hsv888.h;
     int16_t hue_bg = bg_hsv888.hsv888.h;
@@ -37,28 +89,6 @@ void qp_interpolate_palette(qp_pixel_color_t* lookup_table, int16_t items, qp_pi
         lookup_table[i].hsv888.v = (uint8_t)((fg_hsv888.hsv888.v - bg_hsv888.hsv888.v) * i / (items - 1) + bg_hsv888.hsv888.v);
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Helpers
-//
-// NOTE: The variables in this section are intentionally outside a stack frame. They are able to be defined with larger
-//       sizes than the normal stack frames would allow, and as such need to be external.
-//
-//       **** DO NOT refactor this and decide to place the variables inside the function calling them -- you will ****
-//       **** very likely get artifacts rendered to the screen as a result.                                       ****
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Static buffer to contain a generated color palette
-#if QUANTUM_PAINTER_SUPPORTS_256_PALETTE
-static qp_pixel_color_t hsv_lookup_table[256];
-#else
-static qp_pixel_color_t hsv_lookup_table[16];
-#endif
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Palette / Monochrome-format codec
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void qp_decode_palette(uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg) {
     const uint8_t  pixel_bitmask    = (1 << bits_per_pixel) - 1;
@@ -87,13 +117,17 @@ void qp_decode_recolor(uint32_t pixel_count, uint8_t bits_per_pixel, const void*
     static qp_pixel_color_t last_fg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
     static qp_pixel_color_t last_bg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
     if (memcmp(&fg_hsv888.hsv888, &last_fg_hsv888.hsv888, sizeof(fg_hsv888.hsv888)) || memcmp(&bg_hsv888.hsv888, &last_bg_hsv888.hsv888, sizeof(bg_hsv888.hsv888))) {
-        qp_interpolate_palette(hsv_lookup_table, (1 << bits_per_pixel), fg_hsv888, bg_hsv888);
+        qp_interpolate_palette(pixel_lookup_table, (1 << bits_per_pixel), fg_hsv888, bg_hsv888);
         last_fg_hsv888 = fg_hsv888;
         last_bg_hsv888 = bg_hsv888;
     }
 
-    qp_decode_palette(pixel_count, bits_per_pixel, src_data, hsv_lookup_table, output_callback, cb_arg);
+    qp_decode_palette(pixel_count, bits_per_pixel, src_data, pixel_lookup_table, output_callback, cb_arg);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Image decoder
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct pixdata_state {
     painter_device_t device;
@@ -103,11 +137,11 @@ struct pixdata_state {
 static inline void lcd_append_pixel(qp_pixel_color_t color, void* cb_arg) {
     /*
     struct pixdata_state* state              = (struct pixdata_state*)cb_arg;
-    pixdata_transmit_buf[state->write_pos++] = color.rgb565;
+    qp_global_pixdata_buffer[state->write_pos++] = color.rgb565;
 
     // If we've hit the transmit limit, send out the entire buffer and reset
     if (state->write_pos == ILI9XXX_PIXDATA_BUFSIZE) {
-        qp_comms_send(state->device, pixdata_transmit_buf, ILI9XXX_PIXDATA_BUFSIZE * sizeof(rgb565_t));
+        qp_comms_send(state->device, qp_global_pixdata_buffer, ILI9XXX_PIXDATA_BUFSIZE * sizeof(rgb565_t));
         state->write_pos = 0;
     }
     */

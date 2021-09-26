@@ -20,6 +20,13 @@
 #include <qp.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum painter: helper defines
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define QP_MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define QP_MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum painter: cater for AVR address space
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -117,45 +124,30 @@ typedef struct painter_raw_font_descriptor_t {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef bool (*painter_driver_init_func)(painter_device_t device, painter_rotation_t rotation);
-typedef bool (*painter_driver_clear_func)(painter_device_t device);
 typedef bool (*painter_driver_power_func)(painter_device_t device, bool power_on);
-typedef bool (*painter_driver_brightness_func)(painter_device_t device, uint8_t val);
+typedef bool (*painter_driver_clear_func)(painter_device_t device);
 typedef bool (*painter_driver_viewport_func)(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
 typedef bool (*painter_driver_pixdata_func)(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count);
-typedef bool (*painter_driver_setpixel_func)(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
-typedef bool (*painter_driver_line_func)(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val);
-typedef bool (*painter_driver_rect_func)(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
-typedef bool (*painter_driver_circle_func)(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
-typedef bool (*painter_driver_ellipse_func)(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
-typedef bool (*painter_driver_drawimage_func)(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val);
-typedef int16_t (*painter_driver_drawtext_func)(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
-
-typedef void (*painter_driver_convert_palette_pixfmt_func)(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette);
-typedef size_t (*painter_driver_append_pixel)(painter_device_t device, uint8_t *buffer, size_t pixel_index, qp_pixel_color_t pixel);
+typedef void (*painter_driver_convert_palette_func)(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette);
+typedef void (*painter_driver_append_pixels)(painter_device_t device, uint8_t *target_buffer, qp_pixel_color_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices);
 
 typedef bool (*painter_driver_comms_init_func)(painter_device_t device);
 typedef bool (*painter_driver_comms_start_func)(painter_device_t device);
 typedef void (*painter_driver_comms_stop_func)(painter_device_t device);
-typedef size_t (*painter_driver_comms_send_func)(painter_device_t device, const void *data, size_t byte_count);
+typedef uint32_t (*painter_driver_comms_send_func)(painter_device_t device, const void *data, uint32_t byte_count);
+
+typedef bool (*painter_driver_drawimage_func)(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val);
+typedef int16_t (*painter_driver_drawtext_func)(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
 
 // Driver vtable definition
 struct painter_driver_vtable_t {
-    painter_driver_init_func       init;
-    painter_driver_clear_func      clear;
-    painter_driver_power_func      power;
-    painter_driver_brightness_func brightness;
-    painter_driver_viewport_func   viewport;
-    painter_driver_pixdata_func    pixdata;
-    painter_driver_setpixel_func   setpixel;
-    painter_driver_line_func       line;
-    painter_driver_rect_func       rect;
-    painter_driver_circle_func     circle;
-    painter_driver_ellipse_func    ellipse;
-    painter_driver_drawimage_func  drawimage;
-    painter_driver_drawtext_func   drawtext;
-
-    painter_driver_convert_palette_pixfmt_func palette_convert;
-    painter_driver_append_pixel                append_pixel;
+    painter_driver_init_func            init;
+    painter_driver_power_func           power;
+    painter_driver_clear_func           clear;
+    painter_driver_viewport_func        viewport;
+    painter_driver_pixdata_func         pixdata;
+    painter_driver_convert_palette_func palette_convert;
+    painter_driver_append_pixels        append_pixels;
 };
 
 struct painter_comms_vtable_t {
@@ -165,9 +157,18 @@ struct painter_comms_vtable_t {
     painter_driver_comms_send_func  comms_send;
 };
 
+// Temporary vtable definition for APIs currently in transition
+struct painter_driver_TEMP_FUNC_vtable_t {
+    painter_driver_drawimage_func drawimage;
+    painter_driver_drawtext_func  drawtext;
+};
+
 // Driver base definition
 struct painter_driver_t {
     const struct painter_driver_vtable_t QP_RESIDENT_FLASH *driver_vtable;
     const struct painter_comms_vtable_t QP_RESIDENT_FLASH *comms_vtable;
-    void *                                                 comms_config;
+    const struct painter_driver_TEMP_FUNC_vtable_t QP_RESIDENT_FLASH *TEMP_vtable;
+
+    uint8_t native_bits_per_pixel;
+    void *  comms_config;
 };

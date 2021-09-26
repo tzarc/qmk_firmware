@@ -19,107 +19,53 @@
 #include <qp_internal.h>
 #include <qp_utils.h>
 
+static bool validate_driver_vtable(struct painter_driver_t *driver) { return (driver->driver_vtable && driver->driver_vtable->init && driver->driver_vtable->power && driver->driver_vtable->clear && driver->driver_vtable->viewport && driver->driver_vtable->pixdata && driver->driver_vtable->palette_convert && driver->driver_vtable->append_pixels) ? true : false; }
+
+static bool validate_comms_vtable(struct painter_driver_t *driver) { return (driver->comms_vtable && driver->comms_vtable->comms_init && driver->comms_vtable->comms_start && driver->comms_vtable->comms_stop && driver->comms_vtable->comms_send) ? true : false; }
+
+static bool validate_driver_integrity(struct painter_driver_t *driver) { return validate_driver_vtable(driver) && validate_comms_vtable(driver); }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// External API
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool qp_init(painter_device_t device, painter_rotation_t rotation) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->init) {
-        return driver->driver_vtable->init(device, rotation);
+    if (!validate_driver_integrity(driver)) {
+        return false;
     }
-    return false;
-}
 
-bool qp_clear(painter_device_t device) {
-    struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->clear) {
-        return driver->driver_vtable->clear(device);
-    }
-    return false;
+    return driver->driver_vtable->init(device, rotation);
 }
 
 bool qp_power(painter_device_t device, bool power_on) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->power) {
-        return driver->driver_vtable->power(device, power_on);
-    }
-    return false;
+    return driver->driver_vtable->power(device, power_on);
 }
 
-bool qp_brightness(painter_device_t device, uint8_t val) {
+bool qp_clear(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->brightness) {
-        return driver->driver_vtable->brightness(device, val);
-    }
-    return false;
+    return driver->driver_vtable->clear(device);
 }
 
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->viewport) {
-        return driver->driver_vtable->viewport(device, left, top, right, bottom);
-    }
-    return false;
+    return driver->driver_vtable->viewport(device, left, top, right, bottom);
 }
 
 bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->pixdata) {
-        return driver->driver_vtable->pixdata(device, pixel_data, native_pixel_count);
-    }
-    return false;
+    return driver->driver_vtable->pixdata(device, pixel_data, native_pixel_count);
 }
 
-bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
-    struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->setpixel) {
-        return driver->driver_vtable->setpixel(device, x, y, hue, sat, val);
-    }
-    return false;
-}
-
-bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val) {
-    struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->line) {
-        return driver->driver_vtable->line(device, x0, y0, x1, y1, hue, sat, val);
-    }
-    return false;
-}
-
-bool qp_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
-    struct painter_driver_t *driver = (struct painter_driver_t *)device;
-
-    // Cater for cases where people have submitted the coordinates backwards
-    uint16_t l = left < right ? left : right;
-    uint16_t r = left > right ? left : right;
-    uint16_t t = top < bottom ? top : bottom;
-    uint16_t b = top > bottom ? top : bottom;
-
-    if (driver->driver_vtable && driver->driver_vtable->rect) {
-        return driver->driver_vtable->rect(device, l, t, r, b, hue, sat, val, filled);
-    }
-    return false;
-}
-
-bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
-    struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->circle) {
-        return driver->driver_vtable->circle(device, x, y, radius, hue, sat, val, filled);
-    }
-    return false;
-}
-
-bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
-    struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->ellipse) {
-        return driver->driver_vtable->ellipse(device, x, y, sizex, sizey, hue, sat, val, filled);
-    }
-    return false;
-}
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image) { return qp_drawimage_recolor(device, x, y, image, 0, 0, 255); }
 
 bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue, uint8_t sat, uint8_t val) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->drawimage) {
-        return driver->driver_vtable->drawimage(device, x, y, image, hue, sat, val);
+    if (driver->TEMP_vtable && driver->TEMP_vtable->drawimage) {
+        return driver->TEMP_vtable->drawimage(device, x, y, image, hue, sat, val);
     }
     return false;
 }
@@ -164,8 +110,8 @@ int16_t qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_fon
 
 int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->driver_vtable && driver->driver_vtable->drawtext) {
-        return driver->driver_vtable->drawtext(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+    if (driver->TEMP_vtable && driver->TEMP_vtable->drawtext) {
+        return driver->TEMP_vtable->drawtext(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
     }
     return 0;
 }

@@ -39,17 +39,21 @@
 // SPI control functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef QUANTUM_PAINTER_ILI9XXX_SPI_ENABLE
+
 void qp_ili9xxx_spi_cmd8(painter_device_t device, uint8_t cmd) {
     struct ili9xxx_painter_device_t *lcd = (struct ili9xxx_painter_device_t *)device;
     writePinLow(lcd->dc_pin);
     spi_write(cmd);
 }
 
-size_t qp_ili9xxx_spi_send_data_dc_pin(painter_device_t device, const void *data, size_t byte_count) {
+uint32_t qp_ili9xxx_spi_send_data_dc_pin(painter_device_t device, const void *data, uint32_t byte_count) {
     struct ili9xxx_painter_device_t *lcd = (struct ili9xxx_painter_device_t *)device;
     writePinHigh(lcd->dc_pin);
     return qp_comms_spi_send_data(device, data, byte_count);
 }
+
+#endif  // QUANTUM_PAINTER_ILI9XXX_SPI_ENABLE
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Low-level LCD control functions
@@ -57,9 +61,7 @@ size_t qp_ili9xxx_spi_send_data_dc_pin(painter_device_t device, const void *data
 
 void qp_ili9xxx_cmd8(painter_device_t device, uint8_t cmd) {
     struct ili9xxx_painter_device_t *lcd = (struct ili9xxx_painter_device_t *)device;
-    if (lcd->ili9xxx_vtable && lcd->ili9xxx_vtable->send_cmd8) {
-        lcd->ili9xxx_vtable->send_cmd8(device, cmd);
-    }
+    lcd->ili9xxx_vtable->send_cmd8(device, cmd);
 }
 
 void qp_ili9xxx_cmd8_data8(painter_device_t device, uint8_t cmd, uint8_t data) {
@@ -67,7 +69,7 @@ void qp_ili9xxx_cmd8_data8(painter_device_t device, uint8_t cmd, uint8_t data) {
     qp_comms_send(device, &data, sizeof(data));
 }
 
-size_t qp_ili9xxx_cmd8_databuf(painter_device_t device, uint8_t cmd, const void *data, size_t byte_count) {
+uint32_t qp_ili9xxx_cmd8_databuf(painter_device_t device, uint8_t cmd, const void *data, uint32_t byte_count) {
     qp_ili9xxx_cmd8(device, cmd);
     return qp_comms_send(device, data, byte_count);
 }
@@ -215,36 +217,20 @@ static bool drawimage_uncompressed_impl(painter_device_t device, painter_image_f
 // Quantum Painter API implementations
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Power control
+bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
+    qp_comms_start(device);
+    qp_ili9xxx_cmd8(device, power_on ? ILI9XXX_CMD_DISPLAY_ON : ILI9XXX_CMD_DISPLAY_OFF);
+    qp_comms_stop(device);
+    return true;
+}
+
 // Screen clear
 bool qp_ili9xxx_clear(painter_device_t device) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
 
     // Re-init the LCD
     qp_init(device, lcd->rotation);
-
-    return true;
-}
-
-// Power control -- on/off (will also handle backlight if set to use the normal QMK backlight driver)
-bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
-    qp_comms_start(device);
-    qp_ili9xxx_cmd8(device, power_on ? ILI9XXX_CMD_DISPLAY_ON : ILI9XXX_CMD_DISPLAY_OFF);
-    qp_comms_stop(device);
-
-#ifdef BACKLIGHT_ENABLE
-    // If we're using the backlight to control the display as well, toggle that too.
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    if (lcd->uses_backlight) {
-        if (power_on) {
-            // There's a small amount of time for the LCD to get the display back on the screen -- it's all white beforehand.
-            // Delay for a small amount of time and let the LCD catch up before turning the backlight on.
-            wait_ms(20);
-            backlight_set(get_backlight_level());
-        } else {
-            backlight_set(0);
-        }
-    }
-#endif
 
     return true;
 }
@@ -265,72 +251,22 @@ bool qp_ili9xxx_pixdata(painter_device_t device, const void *pixel_data, uint32_
     return true;
 }
 
-// Manually set a single pixel's color
-bool qp_ili9xxx_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
-    qp_comms_start(device);
-    qp_ili9xxx_internal_lcd_viewport(device, x, y, x, y);
-
-    // Convert the color to RGB565 and transmit to the device
-    rgb565_t buf = hsv_to_ili9xxx(hue, sat, val);
-    qp_comms_send(device, &buf, sizeof(buf));
-
-    qp_comms_stop(device);
-    return true;
-}
-
-// Draw a line
-bool qp_ili9xxx_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val) {
-    // If we're not doing horizontal or vertical, fallback to the base implementation
-    if (x0 != x1 && y0 != y1) {
-        return qp_fallback_line(device, x0, y0, x1, y1, hue, sat, val);
+void qp_ili9xxx_palette_convert(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette) {
+    for (int16_t i = 0; i < palette_size; ++i) {
+        palette[i].rgb565 = hsv_to_ili9xxx(palette[i].hsv888.h, palette[i].hsv888.s, palette[i].hsv888.v);
     }
-
-    // If we're doing horizontal or vertical, just use the optimized rect draw so we don't need to deal with single pixels or buffers.
-    return qp_ili9xxx_rect(device, x0, y0, x1, y1, hue, sat, val, true);
 }
 
-// Draw a rectangle
-bool qp_ili9xxx_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-
-    // Cater for cases where people have submitted the coordinates backwards
-    uint16_t l = left < right ? left : right;
-    uint16_t r = left > right ? left : right;
-    uint16_t t = top < bottom ? top : bottom;
-    uint16_t b = top > bottom ? top : bottom;
-
-    if (filled) {
-        // Convert the color to RGB565
-        rgb565_t clr = hsv_to_ili9xxx(hue, sat, val);
-
-        // Build a larger buffer so we can stream to the LCD in larger chunks, for speed
-        rgb565_t buf[ILI9XXX_PIXDATA_BUFSIZE];
-        for (uint32_t i = 0; i < ILI9XXX_PIXDATA_BUFSIZE; ++i) buf[i] = clr;
-
-        qp_comms_start(device);
-
-        // Configure where we're going to be rendering to
-        qp_ili9xxx_internal_lcd_viewport(lcd, l, t, r, b);
-
-        // Transmit the data to the LCD in chunks
-        uint32_t remaining = (r - l + 1) * (b - t + 1);
-        while (remaining > 0) {
-            uint32_t transmit = (remaining < ILI9XXX_PIXDATA_BUFSIZE ? remaining : ILI9XXX_PIXDATA_BUFSIZE);
-            uint32_t bytes    = transmit * sizeof(rgb565_t);
-            qp_comms_send(device, buf, bytes);
-            remaining -= transmit;
-        }
-
-        qp_comms_stop(device);
-    } else {
-        if (!qp_ili9xxx_rect(device, l, t, r, t, hue, sat, val, true)) return false;
-        if (!qp_ili9xxx_rect(device, l, b, r, b, hue, sat, val, true)) return false;
-        if (!qp_ili9xxx_rect(device, l, t + 1, l, b - 1, hue, sat, val, true)) return false;
-        if (!qp_ili9xxx_rect(device, r, t + 1, r, b - 1, hue, sat, val, true)) return false;
+void qp_ili9xxx_append_pixels(painter_device_t device, uint8_t *target_buffer, qp_pixel_color_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices) {
+    uint16_t *buf = (uint16_t *)target_buffer;
+    for (uint32_t i = 0; i < pixel_count; ++i) {
+        buf[pixel_offset + i] = palette[palette_indices[i]].rgb565;
     }
-
-    return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter ***OLD*** API implementations
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Draw an image
 bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val) {
@@ -411,16 +347,4 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
     qp_comms_stop(device);
 
     return (int16_t)x;
-}
-
-void qp_ili9xxx_palette_convert(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette) {
-    for (int16_t i = 0; i < palette_size; ++i) {
-        palette[i].rgb565 = hsv_to_ili9xxx(palette[i].hsv888.h, palette[i].hsv888.s, palette[i].hsv888.v);
-    }
-}
-
-size_t qp_ili9xxx_append_pixel(painter_device_t device, uint8_t *buffer, size_t pixel_index, qp_pixel_color_t pixel) {
-    uint16_t *buf    = (uint16_t *)buffer;
-    buf[pixel_index] = pixel.rgb565;
-    return sizeof(uint16_t);
 }

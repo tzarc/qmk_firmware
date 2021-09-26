@@ -14,12 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gpio.h>
-#include <spi_master.h>
+#ifdef QUANTUM_PAINTER_SPI_ENABLE
 
-#include <qp.h>
-#include <qp_internal.h>
-#include "qp_comms_spi.h"
+#    include <gpio.h>
+#    include <spi_master.h>
+
+#    include <qp.h>
+#    include <qp_internal.h>
+#    include "qp_comms_spi.h"
 
 bool qp_comms_spi_init(painter_device_t device) {
     struct painter_driver_t *     driver     = (struct painter_driver_t *)device;
@@ -56,3 +58,5 @@ size_t qp_comms_spi_send_data(painter_device_t device, const void *data, size_t 
 }
 
 void qp_comms_spi_stop(painter_device_t device) { spi_stop(); }
+
+#endif  // QUANTUM_PAINTER_SPI_ENABLE
