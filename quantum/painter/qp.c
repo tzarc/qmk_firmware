@@ -17,6 +17,7 @@
 #include <quantum.h>
 #include <utf8.h>
 #include <qp_internal.h>
+#include <qp_comms.h>
 #include <qp_draw.h>
 
 static bool validate_driver_vtable(struct painter_driver_t *driver) { return (driver->driver_vtable && driver->driver_vtable->init && driver->driver_vtable->power && driver->driver_vtable->clear && driver->driver_vtable->viewport && driver->driver_vtable->pixdata && driver->driver_vtable->palette_convert && driver->driver_vtable->append_pixels) ? true : false; }
@@ -30,50 +31,108 @@ static bool validate_driver_integrity(struct painter_driver_t *driver) { return 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool qp_init(painter_device_t device, painter_rotation_t rotation) {
+    qp_dprintf("qp_init: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
+
+    driver->validate_ok = false;
     if (!validate_driver_integrity(driver)) {
-        driver->validate_ok = false;
+        qp_dprintf("Failed to validate driver integrity in qp_init\n");
         return false;
     }
 
     driver->validate_ok = true;
-    return driver->driver_vtable->init(device, rotation);
+
+    if (!qp_comms_init(device)) {
+        driver->validate_ok = false;
+        qp_dprintf("qp_init: fail (could not init comms)\n");
+        return false;
+    }
+
+    if (!qp_comms_start(device)) {
+        qp_dprintf("qp_init: fail (could not start comms)\n");
+        return false;
+    }
+
+    bool ret = driver->driver_vtable->init(device, rotation);
+    qp_comms_stop(device);
+    qp_dprintf("qp_init: %s\n", ret ? "ok" : "fail");
+    return ret;
 }
 
 bool qp_power(painter_device_t device, bool power_on) {
+    qp_dprintf("qp_power: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_power: fail (validation_ok == false)\n");
         return false;
     }
 
-    return driver->driver_vtable->power(device, power_on);
+    if (!qp_comms_start(device)) {
+        qp_dprintf("qp_power: fail (could not start comms)\n");
+        return false;
+    }
+
+    bool ret = driver->driver_vtable->power(device, power_on);
+    qp_comms_stop(device);
+    qp_dprintf("qp_power: %s\n", ret ? "ok" : "fail");
+    return ret;
 }
 
 bool qp_clear(painter_device_t device) {
+    qp_dprintf("qp_clear: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_clear: fail (validation_ok == false)\n");
         return false;
     }
 
-    return driver->driver_vtable->clear(device);
+    if (!qp_comms_start(device)) {
+        qp_dprintf("qp_clear: fail (could not start comms)\n");
+        return false;
+    }
+
+    bool ret = driver->driver_vtable->clear(device);
+    qp_comms_stop(device);
+    qp_dprintf("qp_clear: %s\n", ret ? "ok" : "fail");
+    return ret;
 }
 
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
+    qp_dprintf("qp_viewport: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_viewport: fail (validation_ok == false)\n");
         return false;
     }
 
-    return driver->driver_vtable->viewport(device, left, top, right, bottom);
+    if (!qp_comms_start(device)) {
+        qp_dprintf("qp_viewport: fail (could not start comms)\n");
+        return false;
+    }
+
+    bool ret = driver->driver_vtable->viewport(device, left, top, right, bottom);
+    qp_dprintf("qp_viewport: %s\n", ret ? "ok" : "fail");
+    qp_comms_stop(device);
+    return ret;
 }
 
 bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
+    qp_dprintf("qp_pixdata: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_pixdata: fail (validation_ok == false)\n");
         return false;
     }
 
-    return driver->driver_vtable->pixdata(device, pixel_data, native_pixel_count);
+    if (!qp_comms_start(device)) {
+        qp_dprintf("qp_pixdata: fail (could not start comms)\n");
+        return false;
+    }
+
+    bool ret = driver->driver_vtable->pixdata(device, pixel_data, native_pixel_count);
+    qp_dprintf("qp_pixdata: %s\n", ret ? "ok" : "fail");
+    qp_comms_stop(device);
+    return ret;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -81,11 +140,26 @@ bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native
 bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image) { return qp_drawimage_recolor(device, x, y, image, 0, 0, 255); }
 
 bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue, uint8_t sat, uint8_t val) {
+    qp_dprintf("qp_drawimage_recolor: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->TEMP_vtable && driver->TEMP_vtable->drawimage) {
-        return driver->TEMP_vtable->drawimage(device, x, y, image, hue, sat, val);
+    if (!driver->validate_ok) {
+        qp_dprintf("qp_drawimage_recolor: fail (validation_ok == false)\n");
+        return false;
     }
-    return false;
+
+    if (!qp_comms_start(device)) {
+        qp_dprintf("qp_drawimage_recolor: fail (could not start comms)\n");
+        return false;
+    }
+
+    bool ret = false;
+    if (driver->TEMP_vtable && driver->TEMP_vtable->drawimage) {
+        ret = driver->TEMP_vtable->drawimage(device, x, y, image, hue, sat, val);
+    }
+
+    qp_dprintf("qp_drawimage_recolor: %s\n", ret ? "ok" : "fail");
+    qp_comms_stop(device);
+    return ret;
 }
 
 int16_t qp_textwidth(painter_font_t font, const char *str) {
@@ -127,9 +201,24 @@ int16_t qp_textwidth(painter_font_t font, const char *str) {
 int16_t qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str) { return qp_drawtext_recolor(device, x, y, font, str, 0, 0, 255, 0, 0, 0); }
 
 int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+    qp_dprintf("qp_drawtext_recolor: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (driver->TEMP_vtable && driver->TEMP_vtable->drawtext) {
-        return driver->TEMP_vtable->drawtext(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+    if (!driver->validate_ok) {
+        qp_dprintf("qp_drawtext_recolor: fail (validation_ok == false)\n");
+        return false;
     }
-    return 0;
+
+    if (!qp_comms_start(device)) {
+        qp_dprintf("qp_drawtext_recolor: fail (could not start comms)\n");
+        return false;
+    }
+
+    bool ret = false;
+    if (driver->TEMP_vtable && driver->TEMP_vtable->drawtext) {
+        ret = driver->TEMP_vtable->drawtext(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
+    }
+
+    qp_dprintf("qp_drawtext_recolor: %s\n", ret ? "ok" : "fail");
+    qp_comms_stop(device);
+    return ret;
 }

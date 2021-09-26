@@ -15,6 +15,7 @@
  */
 
 #include <qp_internal.h>
+#include <qp_comms.h>
 #include <qp_draw.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,8 +74,10 @@ bool qp_ellipse_helper_impl(painter_device_t device, uint16_t centerx, uint16_t 
 
 // Fallback implementation for drawing ellipses
 bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+    qp_dprintf("qp_ellipse: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_ellipse: fail (validation_ok == false)\n");
         return false;
     }
 
@@ -88,9 +91,16 @@ bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex,
 
     qp_fill_pixdata(device, QP_MAX(sizex, sizey), hue, sat, val);
 
+    if (!qp_comms_start(device)) {
+        qp_dprintf("qp_ellipse: fail (could not start comms)\n");
+        return false;
+    }
+
+    bool ret = true;
     for (int16_t delta = (2 * bb) + (aa * (1 - (2 * sizey))); bb * dx <= aa * dy; dx++) {
         if (!qp_ellipse_helper_impl(device, x, y, dx, dy, filled)) {
-            return false;
+            ret = false;
+            break;
         }
         if (delta >= 0) {
             delta += fa * (1 - dy);
@@ -104,7 +114,8 @@ bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex,
 
     for (int16_t delta = (2 * aa) + (bb * (1 - (2 * sizex))); aa * dy <= bb * dx; dy++) {
         if (!qp_ellipse_helper_impl(device, x, y, dx, dy, filled)) {
-            return false;
+            ret = false;
+            break;
         }
         if (delta >= 0) {
             delta += fb * (1 - dx);
@@ -113,5 +124,7 @@ bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex,
         delta += aa * (4 * dy + 6);
     }
 
-    return true;
+    qp_dprintf("qp_ellipse: %s\n", ret ? "ok" : "fail");
+    qp_comms_stop(device);
+    return ret;
 }

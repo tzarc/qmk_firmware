@@ -19,6 +19,7 @@
 bool qp_comms_init(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_comms_init: fail (validation_ok == false)\n");
         return false;
     }
 
@@ -28,6 +29,7 @@ bool qp_comms_init(painter_device_t device) {
 bool qp_comms_start(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_comms_start: fail (validation_ok == false)\n");
         return false;
     }
 
@@ -37,6 +39,7 @@ bool qp_comms_start(painter_device_t device) {
 void qp_comms_stop(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_comms_stop: fail (validation_ok == false)\n");
         return;
     }
 
@@ -46,7 +49,8 @@ void qp_comms_stop(painter_device_t device) {
 uint32_t qp_comms_send(painter_device_t device, const void *data, uint32_t byte_count) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
-        return 0;
+        qp_dprintf("qp_comms_send: fail (validation_ok == false)\n");
+        return false;
     }
 
     return driver->comms_vtable->comms_send(device, data, byte_count);

@@ -66,24 +66,6 @@ uint32_t qp_ili9xxx_cmd8_databuf(painter_device_t device, uint8_t cmd, const voi
     return qp_comms_send(device, data, byte_count);
 }
 
-// Set the drawing viewport area
-void qp_ili9xxx_internal_lcd_viewport(painter_device_t device, uint16_t xbegin, uint16_t ybegin, uint16_t xend, uint16_t yend) {
-    // Set up the x-window
-    uint8_t xbuf[4] = {xbegin >> 8, xbegin & 0xFF, xend >> 8, xend & 0xFF};
-    qp_ili9xxx_cmd8_databuf(device,
-                            0x2A,  // column address set
-                            xbuf, sizeof(xbuf));
-
-    // Set up the y-window
-    uint8_t ybuf[4] = {ybegin >> 8, ybegin & 0xFF, yend >> 8, yend & 0xFF};
-    qp_ili9xxx_cmd8_databuf(device,
-                            0x2B,  // page (row) address set
-                            ybuf, sizeof(ybuf));
-
-    // Lock in the window
-    qp_ili9xxx_cmd8(device, 0x2C);  // enable memory writes
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Native pixel format conversion
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,35 +88,39 @@ static inline rgb565_t hsv_to_ili9xxx(uint8_t hue, uint8_t sat, uint8_t val) {
 
 // Power control
 bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
-    qp_comms_start(device);
     qp_ili9xxx_cmd8(device, power_on ? ILI9XXX_CMD_DISPLAY_ON : ILI9XXX_CMD_DISPLAY_OFF);
-    qp_comms_stop(device);
     return true;
 }
 
 // Screen clear
 bool qp_ili9xxx_clear(painter_device_t device) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-
-    // Re-init the LCD
-    qp_init(device, lcd->rotation);
-
+    lcd->qp_driver.driver_vtable->init(device, lcd->rotation);  // Re-init the LCD
     return true;
 }
 
 // Viewport to draw to
 bool qp_ili9xxx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
-    qp_comms_start(device);
-    qp_ili9xxx_internal_lcd_viewport(device, left, top, right, bottom);
-    qp_comms_stop(device);
+    // Set up the x-window
+    uint8_t xbuf[4] = {left >> 8, left & 0xFF, right >> 8, right & 0xFF};
+    qp_ili9xxx_cmd8_databuf(device,
+                            0x2A,  // column address set
+                            xbuf, sizeof(xbuf));
+
+    // Set up the y-window
+    uint8_t ybuf[4] = {top >> 8, top & 0xFF, bottom >> 8, bottom & 0xFF};
+    qp_ili9xxx_cmd8_databuf(device,
+                            0x2B,  // page (row) address set
+                            ybuf, sizeof(ybuf));
+
+    // Lock in the window
+    qp_ili9xxx_cmd8(device, 0x2C);  // enable memory writes
     return true;
 }
 
 // Stream pixel data to the current write position in GRAM
 bool qp_ili9xxx_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
-    qp_comms_start(device);
     qp_comms_send(device, pixel_data, native_pixel_count * sizeof(uint16_t));
-    qp_comms_stop(device);
     return true;
 }
 
@@ -274,7 +260,7 @@ bool qp_ili9xxx_drawimage(painter_device_t device, uint16_t x, uint16_t y, const
     qp_comms_start(device);
 
     // Configure where we're going to be rendering to
-    qp_ili9xxx_internal_lcd_viewport(lcd, x, y, x + image->width - 1, y + image->height - 1);
+    qp_ili9xxx_viewport(lcd, x, y, x + image->width - 1, y + image->height - 1);
 
     bool ret = false;
     if (image->compression == IMAGE_UNCOMPRESSED) {
@@ -320,7 +306,7 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
 #endif  // UNICODE_ENABLE
                     }
 
-                    qp_ili9xxx_internal_lcd_viewport(lcd, x, y, x + glyph_desc->width - 1, y + font->glyph_height - 1);
+                    qp_ili9xxx_viewport(lcd, x, y, x + glyph_desc->width - 1, y + font->glyph_height - 1);
                     drawimage_uncompressed_impl(lcd, font->image_format, font->image_bpp, &fdesc->image_data[glyph_desc->offset], byte_count, glyph_desc->width, font->glyph_height, fdesc->image_palette, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
                     x += glyph_desc->width;
                 }
@@ -333,7 +319,7 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
                         const painter_font_unicode_glyph_offset_t *glyph_desc = &fdesc->unicode_glyph_definitions[index];
                         if (glyph_desc->unicode_glyph == code_point) {
                             uint16_t byte_count = (index == fdesc->unicode_glyph_count - 1) ? (fdesc->byte_count - glyph_desc->offset) : ((glyph_desc + 1)->offset - glyph_desc->offset);
-                            qp_ili9xxx_internal_lcd_viewport(lcd, x, y, x + glyph_desc->width - 1, y + font->glyph_height - 1);
+                            qp_ili9xxx_viewport(lcd, x, y, x + glyph_desc->width - 1, y + font->glyph_height - 1);
                             drawimage_uncompressed_impl(lcd, font->image_format, font->image_bpp, &fdesc->image_data[glyph_desc->offset], byte_count, glyph_desc->width, font->glyph_height, fdesc->image_palette, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
                             x += glyph_desc->width;
                         }

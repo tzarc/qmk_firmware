@@ -35,8 +35,6 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     lcd->rotation                 = rotation;
 
-    qp_comms_init(device);
-
     // Set up D/C as output low, if specified
     setPinOutput(lcd->dc_pin);
     writePinLow(lcd->dc_pin);
@@ -47,9 +45,6 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     wait_ms(20);
     writePinHigh(lcd->reset_pin);
     wait_ms(20);
-
-    // Enable the comms to the LCD
-    qp_comms_start(device);
 
     // Configure power control
     static const uint8_t power_ctl_a[] = {0x39, 0x2C, 0x00, 0x34, 0x02};
@@ -90,7 +85,7 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     qp_ili9xxx_cmd8_databuf(device, ILI9XXX_SET_FUNCTION_CTL, function_ctl, sizeof(function_ctl));
 
     // Set the default viewport to be fullscreen
-    qp_ili9xxx_internal_lcd_viewport(lcd, 0, 0, 239, 319);
+    qp_ili9xxx_viewport(lcd, 0, 0, 239, 319);
 
     // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
     switch (rotation) {
@@ -112,9 +107,6 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     // Disable sleep mode
     qp_ili9xxx_cmd8(device, ILI9XXX_CMD_SLEEP_OFF);
     wait_ms(20);
-
-    // Disable the comms to the LCD
-    qp_comms_stop(device);
 
     return true;
 }

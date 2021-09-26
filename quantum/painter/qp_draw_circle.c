@@ -16,6 +16,7 @@
 
 #include <qp.h>
 #include <qp_internal.h>
+#include <qp_comms.h>
 #include <qp_draw.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,8 +139,10 @@ bool qp_circle_helper_impl(painter_device_t device, uint16_t centerx, uint16_t c
 }
 
 bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+    qp_dprintf("qp_circle: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_circle: fail (validation_ok == false)\n");
         return false;
     }
 
@@ -150,17 +153,33 @@ bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius,
 
     qp_fill_pixdata(device, (radius * 2) + 1, hue, sat, val);
 
-    qp_circle_helper_impl(device, x, y, xcalc, ycalc, filled);
-    while (xcalc < ycalc) {
-        xcalc++;
-        if (err < 0) {
-            err += (xcalc << 1) + 1;
-        } else {
-            ycalc--;
-            err += ((xcalc - ycalc) << 1) + 1;
-        }
-        qp_circle_helper_impl(device, x, y, xcalc, ycalc, filled);
+    if (!qp_comms_start(device)) {
+        qp_dprintf("qp_circle: fail (could not start comms)\n");
+        return false;
     }
 
-    return true;
+    bool ret = true;
+    if (!qp_circle_helper_impl(device, x, y, xcalc, ycalc, filled)) {
+        ret = false;
+    }
+
+    if (ret) {
+        while (xcalc < ycalc) {
+            xcalc++;
+            if (err < 0) {
+                err += (xcalc << 1) + 1;
+            } else {
+                ycalc--;
+                err += ((xcalc - ycalc) << 1) + 1;
+            }
+            if (!qp_circle_helper_impl(device, x, y, xcalc, ycalc, filled)) {
+                ret = false;
+                break;
+            }
+        }
+    }
+
+    qp_dprintf("qp_circle: %s\n", ret ? "ok" : "fail");
+    qp_comms_stop(device);
+    return ret;
 }

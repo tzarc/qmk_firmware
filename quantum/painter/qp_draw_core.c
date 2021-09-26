@@ -15,6 +15,7 @@
  */
 
 #include <qp_internal.h>
+#include <qp_comms.h>
 #include <qp_draw.h>
 
 _Static_assert((QP_PIXDATA_BUFFER_SIZE > 0) && (QP_PIXDATA_BUFFER_SIZE % 16) == 0, "QP_PIXDATA_BUFFER_SIZE needs to be a non-zero multiple of 16");
@@ -43,7 +44,10 @@ uint32_t qp_num_pixels_in_buffer(painter_device_t device) {
 }
 
 // qp_setpixel internal implementation, but accepts a buffer with pre-converted native pixel. Only the first pixel is used.
-bool qp_setpixel_impl(painter_device_t device, uint16_t x, uint16_t y) { return qp_viewport(device, x, y, x, y) && qp_pixdata(device, qp_global_pixdata_buffer, 1); }
+bool qp_setpixel_impl(painter_device_t device, uint16_t x, uint16_t y) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    return driver->driver_vtable->viewport(device, x, y, x, y) && driver->driver_vtable->pixdata(device, qp_global_pixdata_buffer, 1);
+}
 
 // Fills the global native pixel buffer with equivalent pixels matching the supplied HSV
 void qp_fill_pixdata(painter_device_t device, uint32_t num_pixels, uint8_t hue, uint8_t sat, uint8_t val) {
@@ -69,10 +73,20 @@ void qp_fill_pixdata(painter_device_t device, uint32_t num_pixels, uint8_t hue, 
 bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_setpixel: fail (validation_ok == false)\n");
         return false;
     }
+
+    if (!qp_comms_start(device)) {
+        qp_dprintf("Failed to start comms in qp_setpixel\n");
+        return false;
+    }
+
     qp_fill_pixdata(device, 1, hue, sat, val);
-    return qp_setpixel_impl(device, x, y);
+    bool ret = qp_setpixel_impl(device, x, y);
+    qp_comms_stop(device);
+    qp_dprintf("qp_setpixel: %s\n", ret ? "ok" : "fail");
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,50 +94,62 @@ bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, u
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val) {
-    if (x0 == x1) {
-        return qp_rect(device, x0, y0, x0, y1, hue, sat, val, true);
-    } else if (y0 == y1) {
-        return qp_rect(device, x0, y0, x1, y0, hue, sat, val, true);
-    } else {
-        struct painter_driver_t *driver = (struct painter_driver_t *)device;
-        if (!driver->validate_ok) {
-            return false;
-        }
-
-        qp_fill_pixdata(device, 1, hue, sat, val);
-
-        // draw angled line using Bresenham's algo
-        int16_t x      = ((int16_t)x0);
-        int16_t y      = ((int16_t)y0);
-        int16_t slopex = ((int16_t)x0) < ((int16_t)x1) ? 1 : -1;
-        int16_t slopey = ((int16_t)y0) < ((int16_t)y1) ? 1 : -1;
-        int16_t dx     = abs(((int16_t)x1) - ((int16_t)x0));
-        int16_t dy     = -abs(((int16_t)y1) - ((int16_t)y0));
-
-        int16_t e  = dx + dy;
-        int16_t e2 = 2 * e;
-
-        while (x != x1 || y != y1) {
-            if (!qp_setpixel_impl(device, x, y)) {
-                return false;
-            }
-            e2 = 2 * e;
-            if (e2 >= dy) {
-                e += dy;
-                x += slopex;
-            }
-            if (e2 <= dx) {
-                e += dx;
-                y += slopey;
-            }
-        }
-        // draw the last pixel
-        if (!qp_setpixel_impl(device, x, y)) {
-            return false;
-        }
+    if (x0 == x1 || y0 == y1) {
+        qp_dprintf("qp_line(%d, %d, %d, %d): entry (deferring to qp_rect)\n", (int)x0, (int)y0, (int)x1, (int)y1);
+        bool ret = qp_rect(device, x0, y0, x1, y1, hue, sat, val, true);
+        qp_dprintf("qp_line(%d, %d, %d, %d): %s (deferred to qp_rect)\n", (int)x0, (int)y0, (int)x1, (int)y1, ret ? "ok" : "fail");
+        return ret;
     }
 
-    return true;
+    qp_dprintf("qp_line(%d, %d, %d, %d): entry\n", (int)x0, (int)y0, (int)x1, (int)y1);
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (!driver->validate_ok) {
+        qp_dprintf("qp_line: fail (validation_ok == false)\n");
+        return false;
+    }
+
+    if (!qp_comms_start(device)) {
+        qp_dprintf("Failed to start comms in qp_line\n");
+        return false;
+    }
+
+    qp_fill_pixdata(device, 1, hue, sat, val);
+
+    // draw angled line using Bresenham's algo
+    int16_t x      = ((int16_t)x0);
+    int16_t y      = ((int16_t)y0);
+    int16_t slopex = ((int16_t)x0) < ((int16_t)x1) ? 1 : -1;
+    int16_t slopey = ((int16_t)y0) < ((int16_t)y1) ? 1 : -1;
+    int16_t dx     = abs(((int16_t)x1) - ((int16_t)x0));
+    int16_t dy     = -abs(((int16_t)y1) - ((int16_t)y0));
+
+    int16_t e  = dx + dy;
+    int16_t e2 = 2 * e;
+
+    bool ret = true;
+    while (x != x1 || y != y1) {
+        if (!qp_setpixel_impl(device, x, y)) {
+            ret = false;
+            break;
+        }
+        e2 = 2 * e;
+        if (e2 >= dy) {
+            e += dy;
+            x += slopex;
+        }
+        if (e2 <= dx) {
+            e += dx;
+            y += slopey;
+        }
+    }
+    // draw the last pixel
+    if (!qp_setpixel_impl(device, x, y)) {
+        ret = false;
+    }
+
+    qp_comms_stop(device);
+    qp_dprintf("qp_line(%d, %d, %d, %d): %s\n", (int)x0, (int)y0, (int)x1, (int)y1, ret ? "ok" : "fail");
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +157,8 @@ bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uin
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool qp_fillrect_helper_impl(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
-    uint32_t pixels_in_pixdata = qp_num_pixels_in_buffer(device);
+    uint32_t                 pixels_in_pixdata = qp_num_pixels_in_buffer(device);
+    struct painter_driver_t *driver            = (struct painter_driver_t *)device;
 
     uint16_t l = QP_MIN(left, right);
     uint16_t r = QP_MAX(left, right);
@@ -141,10 +168,10 @@ bool qp_fillrect_helper_impl(painter_device_t device, uint16_t left, uint16_t to
     uint16_t h = b - t + 1;
 
     uint32_t remaining = w * h;
-    qp_viewport(device, l, t, r, b);
+    driver->driver_vtable->viewport(device, l, t, r, b);
     while (remaining > 0) {
         uint32_t transmit = QP_MIN(remaining, pixels_in_pixdata);
-        if (!qp_pixdata(device, qp_global_pixdata_buffer, transmit)) {
+        if (!driver->driver_vtable->pixdata(device, qp_global_pixdata_buffer, transmit)) {
             return false;
         }
         remaining -= transmit;
@@ -153,8 +180,10 @@ bool qp_fillrect_helper_impl(painter_device_t device, uint16_t left, uint16_t to
 }
 
 bool qp_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
+    qp_dprintf("qp_rect(%d, %d, %d, %d): entry\n", (int)left, (int)top, (int)right, (int)bottom);
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
+        qp_dprintf("qp_rect: fail (validation_ok == false)\n");
         return false;
     }
 
@@ -166,22 +195,29 @@ bool qp_rect(painter_device_t device, uint16_t left, uint16_t top, uint16_t righ
     uint16_t w = r - l + 1;
     uint16_t h = b - t + 1;
 
+    bool ret = true;
+    if (!qp_comms_start(device)) {
+        qp_dprintf("Failed to start comms in qp_rect\n");
+        return false;
+    }
+
     if (filled) {
         // Fill up the pixdata buffer with the required number of native pixels
         qp_fill_pixdata(device, w * h, hue, sat, val);
 
         // Perform the draw
-        return qp_fillrect_helper_impl(device, l, t, r, b);
+        ret = qp_fillrect_helper_impl(device, l, t, r, b);
     } else {
         // Fill up the pixdata buffer with the required number of native pixels
         qp_fill_pixdata(device, QP_MAX(w, h), hue, sat, val);
 
-        // Draw 4x filled rects to create an outline
-        if (!qp_fillrect_helper_impl(device, l, t, r, t)) return false;
-        if (!qp_fillrect_helper_impl(device, l, b, r, b)) return false;
-        if (!qp_fillrect_helper_impl(device, l, t + 1, l, b - 1)) return false;
-        if (!qp_fillrect_helper_impl(device, r, t + 1, r, b - 1)) return false;
+        // Draw 4x filled single-width rects to create an outline
+        if (!qp_fillrect_helper_impl(device, l, t, r, t) || !qp_fillrect_helper_impl(device, l, b, r, b) || !qp_fillrect_helper_impl(device, l, t + 1, l, b - 1) || !qp_fillrect_helper_impl(device, r, t + 1, r, b - 1)) {
+            ret = false;
+        }
     }
 
-    return true;
+    qp_comms_stop(device);
+    qp_dprintf("qp_rect(%d, %d, %d, %d): %s\n", (int)l, (int)t, (int)r, (int)b, ret ? "ok" : "fail");
+    return ret;
 }

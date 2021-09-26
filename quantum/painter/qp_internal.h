@@ -26,6 +26,16 @@
 #define QP_MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define QP_MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
+#ifdef QUANTUM_PAINTER_DEBUG
+#    include <debug.h>
+#    include <print.h>
+#    define qp_dprintf(...) dprintf(__VA_ARGS__)
+#else
+#    define qp_dprintf(...) \
+        do {                \
+        } while (0)
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Cater for AVR address space
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
