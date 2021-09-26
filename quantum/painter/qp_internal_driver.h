@@ -25,6 +25,7 @@
 typedef bool (*painter_driver_init_func)(painter_device_t device, painter_rotation_t rotation);
 typedef bool (*painter_driver_power_func)(painter_device_t device, bool power_on);
 typedef bool (*painter_driver_clear_func)(painter_device_t device);
+typedef bool (*painter_driver_flush_func)(painter_device_t device);
 typedef bool (*painter_driver_viewport_func)(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
 typedef bool (*painter_driver_pixdata_func)(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count);
 typedef void (*painter_driver_convert_palette_func)(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette);
@@ -35,6 +36,7 @@ struct painter_driver_vtable_t {
     painter_driver_init_func            init;
     painter_driver_power_func           power;
     painter_driver_clear_func           clear;
+    painter_driver_flush_func           flush;
     painter_driver_viewport_func        viewport;
     painter_driver_pixdata_func         pixdata;
     painter_driver_convert_palette_func palette_convert;

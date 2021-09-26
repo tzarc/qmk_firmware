@@ -78,7 +78,10 @@ bool qp_power(painter_device_t device, bool power_on);
 // Clear's a device's screen
 bool qp_clear(painter_device_t device);
 
-// Set the viewport that pixdata is to get streamed into
+// Transmits any outstanding data to the screen in order to persist all changes to the display -- some drivers without internal framebuffers will ignore this API.
+bool qp_flush(painter_device_t device);
+
+// Set the viewport that native pixel data is to get streamed into
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
 
 // Stream pixel data in the device's native format into the previously-set viewport

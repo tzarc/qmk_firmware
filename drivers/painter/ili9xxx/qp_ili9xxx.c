@@ -99,6 +99,13 @@ bool qp_ili9xxx_clear(painter_device_t device) {
     return true;
 }
 
+// Screen flush
+bool qp_ili9xxx_flush(painter_device_t device) {
+    // No-op, as there's no framebuffer in RAM for this device.
+    (void)device;
+    return true;
+}
+
 // Viewport to draw to
 bool qp_ili9xxx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     // Set up the x-window

@@ -119,6 +119,7 @@ const struct painter_driver_vtable_t QP_RESIDENT_FLASH ili9341_driver_vtable = {
     .init            = qp_ili9341_init,
     .power           = qp_ili9xxx_power,
     .clear           = qp_ili9xxx_clear,
+    .flush           = qp_ili9xxx_flush,
     .pixdata         = qp_ili9xxx_pixdata,
     .viewport        = qp_ili9xxx_viewport,
     .palette_convert = qp_ili9xxx_palette_convert,

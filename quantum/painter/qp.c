@@ -97,6 +97,25 @@ bool qp_clear(painter_device_t device) {
     return ret;
 }
 
+bool qp_flush(painter_device_t device) {
+    qp_dprintf("qp_flush: entry\n");
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    if (!driver->validate_ok) {
+        qp_dprintf("qp_flush: fail (validation_ok == false)\n");
+        return false;
+    }
+
+    if (!qp_comms_start(device)) {
+        qp_dprintf("qp_flush: fail (could not start comms)\n");
+        return false;
+    }
+
+    bool ret = driver->driver_vtable->flush(device);
+    qp_comms_stop(device);
+    qp_dprintf("qp_flush: %s\n", ret ? "ok" : "fail");
+    return ret;
+}
+
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     qp_dprintf("qp_viewport: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
