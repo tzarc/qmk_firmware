@@ -135,11 +135,32 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
             ret                        = qp_decode_recolor(device, image->width * image->height, image->image_bpp, raw_image_desc->image_data, fg_hsv888, bg_hsv888, qp_drawimage_pixel_appender, &state);
 
             // Any leftovers need transmission as well.
-            if (state.pixel_write_pos > 0) {
-                driver->driver_vtable->pixdata(device, qp_global_pixdata_buffer, state.pixel_write_pos);
+            if (ret && state.pixel_write_pos > 0) {
+                ret &= driver->driver_vtable->pixdata(device, qp_global_pixdata_buffer, state.pixel_write_pos);
             }
         } else if (image->image_format == IMAGE_FORMAT_PALETTE) {
-            //!!NB -- TODO
+            // Read the palette entries
+            const uint8_t* rgb_palette     = raw_image_desc->image_palette;
+            uint16_t       palette_entries = 1 << image->image_bpp;
+            for (uint16_t i = 0; i < palette_entries; ++i) {
+                qp_global_pixel_lookup_table[i] = (qp_pixel_color_t){.hsv888 = {.h = rgb_palette[i * 3 + 0], .s = rgb_palette[i * 3 + 1], .v = rgb_palette[i * 3 + 2]}};
+            }
+
+            // Convert the palette to native format
+            if (!driver->driver_vtable->palette_convert(device, palette_entries, qp_global_pixel_lookup_table)) {
+                qp_dprintf("qp_drawimage_recolor: fail (could not set viewport)\n");
+                qp_comms_stop(device);
+                return false;
+            }
+
+            // Decode the pixel data
+            struct decoder_state state = {.device = device, .pixel_write_pos = 0, .max_pixels = qp_num_pixels_in_buffer(device)};
+            ret                        = qp_decode_palette(device, image->width * image->height, image->image_bpp, raw_image_desc->image_data, qp_global_pixel_lookup_table, qp_drawimage_pixel_appender, &state);
+
+            // Any leftovers need transmission as well.
+            if (ret && state.pixel_write_pos > 0) {
+                ret &= driver->driver_vtable->pixdata(device, qp_global_pixdata_buffer, state.pixel_write_pos);
+            }
         }
     }
 
