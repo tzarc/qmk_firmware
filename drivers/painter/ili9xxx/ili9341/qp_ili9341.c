@@ -35,17 +35,6 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     lcd->rotation                 = rotation;
 
-    // Set up D/C as output low, if specified
-    setPinOutput(lcd->dc_pin);
-    writePinLow(lcd->dc_pin);
-
-    // Set up reset as output, if specified, and perform a reset
-    setPinOutput(lcd->reset_pin);
-    writePinLow(lcd->reset_pin);
-    wait_ms(20);
-    writePinHigh(lcd->reset_pin);
-    wait_ms(20);
-
     // Configure power control
     static const uint8_t power_ctl_a[] = {0x39, 0x2C, 0x00, 0x34, 0x02};
     qp_ili9xxx_cmd8_databuf(device, ILI9XXX_POWER_CTL_A, power_ctl_a, sizeof(power_ctl_a));

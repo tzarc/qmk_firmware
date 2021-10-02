@@ -28,26 +28,6 @@
 #define BYTE_SWAP(x) (((((uint16_t)(x)) >> 8) & 0x00FF) | ((((uint16_t)(x)) << 8) & 0xFF00))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// SPI control functions
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef QUANTUM_PAINTER_ILI9XXX_SPI_ENABLE
-
-void qp_ili9xxx_spi_cmd8(painter_device_t device, uint8_t cmd) {
-    struct ili9xxx_painter_device_t *lcd = (struct ili9xxx_painter_device_t *)device;
-    writePinLow(lcd->dc_pin);
-    spi_write(cmd);
-}
-
-uint32_t qp_ili9xxx_spi_send_data_dc_pin(painter_device_t device, const void *data, uint32_t byte_count) {
-    struct ili9xxx_painter_device_t *lcd = (struct ili9xxx_painter_device_t *)device;
-    writePinHigh(lcd->dc_pin);
-    return qp_comms_spi_send_data(device, data, byte_count);
-}
-
-#endif  // QUANTUM_PAINTER_ILI9XXX_SPI_ENABLE
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Low-level LCD control functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -182,9 +162,9 @@ struct pixdata_state {
     uint16_t         write_pos;
 };
 
-static inline void lcd_append_pixel(qp_pixel_color_t color, void *cb_arg) {
+static inline void lcd_append_pixel(qp_pixel_color_t *palette, uint8_t index, void *cb_arg) {
     struct pixdata_state *state              = (struct pixdata_state *)cb_arg;
-    pixdata_transmit_buf[state->write_pos++] = color.rgb565;
+    pixdata_transmit_buf[state->write_pos++] = palette[index].rgb565;
 
     // If we've hit the transmit limit, send out the entire buffer and reset
     if (state->write_pos == ILI9XXX_PIXDATA_BUFSIZE) {
@@ -201,7 +181,7 @@ static inline void lcd_decode_send_pixdata(painter_device_t device, uint8_t bits
     };
 
     // Decode and transmit each block of pixels
-    qp_decode_palette(pixel_count, bits_per_pixel, pixel_data, hsv_lookup_table, lcd_append_pixel, &state);
+    qp_decode_palette(device, pixel_count, bits_per_pixel, pixel_data, hsv_lookup_table, lcd_append_pixel, &state);
 
     // If we have a partial decode, send any remaining pixels
     if (state.write_pos > 0) {
@@ -227,17 +207,9 @@ static inline void lcd_send_mono_pixdata_recolor(painter_device_t device, uint8_
     qp_pixel_color_t          fg_hsv888 = {.hsv888 = {.h = hue_fg, .s = sat_fg, .v = val_fg}};
     qp_pixel_color_t          bg_hsv888 = {.hsv888 = {.h = hue_bg, .s = sat_bg, .v = val_bg}};
 
-    static uint8_t          last_bpp       = 255;
-    static qp_pixel_color_t last_fg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
-    static qp_pixel_color_t last_bg_hsv888 = {.hsv888 = {.h = 0x01, .s = 0x02, .v = 0x03}};  // unlikely color
-    if (last_bpp != bits_per_pixel || memcmp(&fg_hsv888.hsv888, &last_fg_hsv888.hsv888, sizeof(fg_hsv888.hsv888)) || memcmp(&bg_hsv888.hsv888, &last_bg_hsv888.hsv888, sizeof(bg_hsv888.hsv888))) {
-        uint16_t items = 1 << bits_per_pixel;  // number of items we need to interpolate
-        qp_interpolate_palette(hsv_lookup_table, items, fg_hsv888, bg_hsv888);
-        last_fg_hsv888 = fg_hsv888;
-        last_bg_hsv888 = bg_hsv888;
-        last_bpp       = bits_per_pixel;
-
-        qp_ili9xxx_palette_convert((painter_device_t)lcd, items, hsv_lookup_table);
+    int16_t steps = 1 << bits_per_pixel;  // number of items we need to interpolate
+    if (qp_interpolate_palette(fg_hsv888, bg_hsv888, steps)) {
+        qp_ili9xxx_palette_convert((painter_device_t)lcd, steps, qp_global_pixel_lookup_table);
     }
 
     lcd_decode_send_pixdata(lcd, bits_per_pixel, pixel_count, pixel_data);

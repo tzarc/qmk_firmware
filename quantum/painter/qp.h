@@ -30,6 +30,24 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Cater for AVR address space
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define QP_PACKED __attribute__((packed))
+
+#ifdef __FLASH
+#    define QP_RESIDENT_FLASH __flash
+#else
+#    define QP_RESIDENT_FLASH
+#endif
+
+#ifdef __MEMX
+#    define QP_RESIDENT_FLASH_OR_RAM __memx
+#else
+#    define QP_RESIDENT_FLASH_OR_RAM
+#endif
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter types
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +72,7 @@ typedef struct painter_image_descriptor_t {
     const uint16_t               width;
     const uint16_t               height;
 } painter_image_descriptor_t;
-typedef const painter_image_descriptor_t *painter_image_t;
+typedef const painter_image_descriptor_t QP_RESIDENT_FLASH_OR_RAM *painter_image_t;
 
 // Font types -- handled by `qmk painter-convert-font-image`
 typedef struct painter_font_descriptor_t {
@@ -63,7 +81,7 @@ typedef struct painter_font_descriptor_t {
     const painter_compression_t  compression;
     const uint8_t                glyph_height;
 } painter_font_descriptor_t;
-typedef const painter_font_descriptor_t *painter_font_t;
+typedef const painter_font_descriptor_t QP_RESIDENT_FLASH_OR_RAM *painter_font_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter API
@@ -104,7 +122,7 @@ bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex,
 
 // Draw an image on the device
 bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image);
-bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue, uint8_t sat, uint8_t val);
+bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
 
 // Draw text to the display
 int16_t qp_textwidth(painter_font_t font, const char *str);

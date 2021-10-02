@@ -37,11 +37,9 @@ typedef struct ili9xxx_painter_device_t {
     const struct ili9xxx_painter_device_vtable_t QP_RESIDENT_FLASH *ili9xxx_vtable;
 
     union {
-        struct qp_comms_spi_config_t spi_config;
+        struct qp_comms_spi_dc_reset_config_t spi_dc_reset_config;
         // TODO: I2C/parallel etc.
     };
-    pin_t              dc_pin;
-    pin_t              reset_pin;
     painter_rotation_t rotation;
 } ili9xxx_painter_device_t;
 

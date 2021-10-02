@@ -156,31 +156,6 @@ bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image) { return qp_drawimage_recolor(device, x, y, image, 0, 0, 255); }
-
-bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue, uint8_t sat, uint8_t val) {
-    qp_dprintf("qp_drawimage_recolor: entry\n");
-    struct painter_driver_t *driver = (struct painter_driver_t *)device;
-    if (!driver->validate_ok) {
-        qp_dprintf("qp_drawimage_recolor: fail (validation_ok == false)\n");
-        return false;
-    }
-
-    if (!qp_comms_start(device)) {
-        qp_dprintf("qp_drawimage_recolor: fail (could not start comms)\n");
-        return false;
-    }
-
-    bool ret = false;
-    if (driver->TEMP_vtable && driver->TEMP_vtable->drawimage) {
-        ret = driver->TEMP_vtable->drawimage(device, x, y, image, hue, sat, val);
-    }
-
-    qp_dprintf("qp_drawimage_recolor: %s\n", ret ? "ok" : "fail");
-    qp_comms_stop(device);
-    return ret;
-}
-
 int16_t qp_textwidth(painter_font_t font, const char *str) {
     const painter_raw_font_descriptor_t *fdesc = (const painter_raw_font_descriptor_t *)font;
     const char *                         c     = str;

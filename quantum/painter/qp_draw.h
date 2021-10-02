@@ -38,11 +38,23 @@ bool qp_setpixel_impl(painter_device_t device, uint16_t x, uint16_t y);
 // qp_rect internal implementation, but uses the global pixdata buffer with pre-converted native pixels.
 bool qp_fillrect_helper_impl(painter_device_t device, uint16_t l, uint16_t t, uint16_t r, uint16_t b);
 
-// Generates a color-interpolated lookup table based off the number of items, from foreground to background, for use with monochrome image rendering
-void qp_interpolate_palette(qp_pixel_color_t* lookup_table, int16_t items, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888);
-
 // Convert from input pixel data + palette to equivalent pixels
-typedef void (*pixel_output_callback)(qp_pixel_color_t color, void* cb_arg);
-void qp_decode_palette(uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg);
-void qp_decode_grayscale(uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, pixel_output_callback output_callback, void* cb_arg);
-void qp_decode_recolor(uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* cb_arg);
+typedef void (*pixel_output_callback)(qp_pixel_color_t* palette, uint8_t index, void* cb_arg);
+void qp_decode_palette(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg);
+void qp_decode_grayscale(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, pixel_output_callback output_callback, void* cb_arg);
+void qp_decode_recolor(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* cb_arg);
+
+// Global variable used for interpolated pixel lookup table.
+#if QUANTUM_PAINTER_SUPPORTS_256_PALETTE
+extern qp_pixel_color_t qp_global_pixel_lookup_table[256];
+#else
+extern qp_pixel_color_t qp_global_pixel_lookup_table[16];
+#endif
+
+// Generates a color-interpolated lookup table based off the number of items, from foreground to background, for use with monochrome image rendering.
+// Returns true if a palette was created, false if the palette is reused.
+// As this uses a global, this may present a problem if using the same parameters but a different screen converts pixels -- use qp_invalidate_palette() below to reset.
+bool qp_interpolate_palette(qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, int16_t steps);
+
+// Resets the global palette so that it can be regenerated. Only needed if the colors are identical, but a different display is used with a different internal pixel format.
+void qp_invalidate_palette(void);

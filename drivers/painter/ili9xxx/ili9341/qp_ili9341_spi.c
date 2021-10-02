@@ -26,20 +26,13 @@
 // Device creation
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_vtable = {
-    .comms_init  = qp_comms_spi_init,
-    .comms_start = qp_comms_spi_start,
-    .comms_send  = qp_ili9xxx_spi_send_data_dc_pin,
-    .comms_stop  = qp_comms_spi_stop,
-};
-
 static const struct painter_driver_TEMP_FUNC_vtable_t QP_RESIDENT_FLASH TEMP_vtable = {
     .drawimage = qp_ili9xxx_drawimage,
     .drawtext  = qp_ili9xxx_drawtext,
 };
 
 static const struct ili9xxx_painter_device_vtable_t QP_RESIDENT_FLASH spi_ili9xxx_vtable = {
-    .send_cmd8 = qp_ili9xxx_spi_cmd8,
+    .send_cmd8 = qp_comms_spi_dc_reset_command,
 };
 
 // Factory function for creating a handle to the ILI9341 device
@@ -48,19 +41,19 @@ painter_device_t qp_ili9341_make_spi_device(pin_t chip_select_pin, pin_t dc_pin,
         ili9xxx_painter_device_t *driver = &ili9341_drivers[i];
         if (!driver->qp_driver.driver_vtable) {
             driver->qp_driver.driver_vtable         = &ili9341_driver_vtable;
-            driver->qp_driver.comms_vtable          = &spi_comms_vtable;
+            driver->qp_driver.comms_vtable          = &spi_comms_with_dc_vtable;
             driver->qp_driver.TEMP_vtable           = &TEMP_vtable;
             driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
             driver->ili9xxx_vtable                  = &spi_ili9xxx_vtable;
 
             // SPI and other pin configuration
-            driver->qp_driver.comms_config     = &driver->spi_config;
-            driver->spi_config.chip_select_pin = chip_select_pin;
-            driver->spi_config.divisor         = spi_divisor;
-            driver->spi_config.lsb_first       = false;
-            driver->spi_config.mode            = 0;
-            driver->dc_pin                     = dc_pin;
-            driver->reset_pin                  = reset_pin;
+            driver->qp_driver.comms_config                         = &driver->spi_dc_reset_config;
+            driver->spi_dc_reset_config.spi_config.chip_select_pin = chip_select_pin;
+            driver->spi_dc_reset_config.spi_config.divisor         = spi_divisor;
+            driver->spi_dc_reset_config.spi_config.lsb_first       = false;
+            driver->spi_dc_reset_config.spi_config.mode            = 0;
+            driver->spi_dc_reset_config.dc_pin                     = dc_pin;
+            driver->spi_dc_reset_config.reset_pin                  = reset_pin;
             return (painter_device_t)driver;
         }
     }

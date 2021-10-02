@@ -24,6 +24,10 @@
 
 #    include <qp_internal.h>
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Base SPI support
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 struct qp_comms_spi_config_t {
     pin_t    chip_select_pin;
     uint16_t divisor;
@@ -31,9 +35,26 @@ struct qp_comms_spi_config_t {
     int8_t   mode;
 };
 
-bool   qp_comms_spi_init(painter_device_t device);
-bool   qp_comms_spi_start(painter_device_t device);
-size_t qp_comms_spi_send_data(painter_device_t device, const void *data, size_t byte_count);
-void   qp_comms_spi_stop(painter_device_t device);
+bool     qp_comms_spi_init(painter_device_t device);
+bool     qp_comms_spi_start(painter_device_t device);
+uint32_t qp_comms_spi_send_data(painter_device_t device, const void *data, uint32_t byte_count);
+void     qp_comms_spi_stop(painter_device_t device);
+
+extern const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_vtable;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SPI with D/C and RST pins
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct qp_comms_spi_dc_reset_config_t {
+    struct qp_comms_spi_config_t spi_config;
+    pin_t                        dc_pin;
+    pin_t                        reset_pin;
+};
+
+void     qp_comms_spi_dc_reset_command(painter_device_t device, uint8_t cmd);
+uint32_t qp_comms_spi_dc_reset_send_data(painter_device_t device, const void *data, uint32_t byte_count);
+
+extern const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_with_dc_vtable;
 
 #endif  // QUANTUM_PAINTER_SPI_ENABLE
