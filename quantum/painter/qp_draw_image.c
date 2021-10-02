@@ -121,18 +121,18 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
     bool ret = false;
     if (image->compression == IMAGE_UNCOMPRESSED) {
         const painter_raw_image_descriptor_t QP_RESIDENT_FLASH_OR_RAM* raw_image_desc = (const painter_raw_image_descriptor_t QP_RESIDENT_FLASH_OR_RAM*)image;
+        struct decoder_state                                           state          = {.device = device, .pixel_write_pos = 0, .max_pixels = qp_num_pixels_in_buffer(device)};
         // Stream data to the LCD
         if (image->image_format == IMAGE_FORMAT_RAW) {
             // Stream out the data.
-            ret = driver->driver_vtable->pixdata(device, raw_image_desc->image_data, image->width * image->height);
+            ret = driver->driver_vtable->pixdata(device, raw_image_desc->image_data, ((uint32_t)image->width) * image->height);
         } else if (image->image_format == IMAGE_FORMAT_GRAYSCALE) {
             // Specify the fg/bg
             qp_pixel_color_t fg_hsv888 = {.hsv888 = {.h = hue_fg, .s = sat_fg, .v = val_fg}};
             qp_pixel_color_t bg_hsv888 = {.hsv888 = {.h = hue_bg, .s = sat_bg, .v = val_bg}};
 
             // Decode the pixel data
-            struct decoder_state state = {.device = device, .pixel_write_pos = 0, .max_pixels = qp_num_pixels_in_buffer(device)};
-            ret                        = qp_decode_recolor(device, image->width * image->height, image->image_bpp, raw_image_desc->image_data, fg_hsv888, bg_hsv888, qp_drawimage_pixel_appender, &state);
+            ret = qp_decode_recolor(device, ((uint32_t)image->width) * image->height, image->image_bpp, raw_image_desc->image_data, fg_hsv888, bg_hsv888, qp_drawimage_pixel_appender, &state);
 
             // Any leftovers need transmission as well.
             if (ret && state.pixel_write_pos > 0) {
@@ -140,8 +140,8 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
             }
         } else if (image->image_format == IMAGE_FORMAT_PALETTE) {
             // Read the palette entries
-            const uint8_t* rgb_palette     = raw_image_desc->image_palette;
-            uint16_t       palette_entries = 1 << image->image_bpp;
+            const uint8_t QP_RESIDENT_FLASH_OR_RAM* rgb_palette     = raw_image_desc->image_palette;
+            uint16_t                                palette_entries = 1 << image->image_bpp;
             for (uint16_t i = 0; i < palette_entries; ++i) {
                 qp_global_pixel_lookup_table[i] = (qp_pixel_color_t){.hsv888 = {.h = rgb_palette[i * 3 + 0], .s = rgb_palette[i * 3 + 1], .v = rgb_palette[i * 3 + 2]}};
             }
@@ -154,8 +154,7 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
             }
 
             // Decode the pixel data
-            struct decoder_state state = {.device = device, .pixel_write_pos = 0, .max_pixels = qp_num_pixels_in_buffer(device)};
-            ret                        = qp_decode_palette(device, image->width * image->height, image->image_bpp, raw_image_desc->image_data, qp_global_pixel_lookup_table, qp_drawimage_pixel_appender, &state);
+            ret = qp_decode_palette(device, ((uint32_t)image->width) * image->height, image->image_bpp, raw_image_desc->image_data, qp_global_pixel_lookup_table, qp_drawimage_pixel_appender, &state);
 
             // Any leftovers need transmission as well.
             if (ret && state.pixel_write_pos > 0) {

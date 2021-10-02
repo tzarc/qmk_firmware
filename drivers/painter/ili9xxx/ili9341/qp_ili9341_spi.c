@@ -27,12 +27,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static const struct painter_driver_TEMP_FUNC_vtable_t QP_RESIDENT_FLASH TEMP_vtable = {
-    .drawimage = qp_ili9xxx_drawimage,
-    .drawtext  = qp_ili9xxx_drawtext,
+    .drawtext = qp_ili9xxx_drawtext,
 };
 
 static const struct ili9xxx_painter_device_vtable_t QP_RESIDENT_FLASH spi_ili9xxx_vtable = {
-    .send_cmd8 = qp_comms_spi_dc_reset_command,
+    .send_cmd8 = qp_comms_spi_dc_reset_send_command,
 };
 
 // Factory function for creating a handle to the ILI9341 device

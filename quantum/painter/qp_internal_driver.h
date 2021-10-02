@@ -63,13 +63,11 @@ struct painter_comms_vtable_t {
 // OLD TEMPORARY callbacks
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef bool (*painter_driver_drawimage_func)(painter_device_t device, uint16_t x, uint16_t y, const painter_image_descriptor_t *image, uint8_t hue, uint8_t sat, uint8_t val);
 typedef int16_t (*painter_driver_drawtext_func)(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
 
 // Temporary vtable definition for APIs currently in transition
 struct painter_driver_TEMP_FUNC_vtable_t {
-    painter_driver_drawimage_func drawimage;
-    painter_driver_drawtext_func  drawtext;
+    painter_driver_drawtext_func drawtext;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

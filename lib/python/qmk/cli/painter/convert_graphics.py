@@ -7,6 +7,7 @@ import qmk.painter
 from string import Template
 from PIL import Image
 from milc import cli
+from colorsys import rgb_to_hsv
 
 license_template = """\
 /* Copyright ${year} QMK
@@ -37,24 +38,23 @@ ${license}
 
 #include <qp.h>
 
-extern painter_image_t gfx_${sane_name} PROGMEM;
+extern painter_image_t gfx_${sane_name} QP_RESIDENT_FLASH;
 """
 
 palette_template = """\
-static const uint8_t gfx_${sane_name}_palette[${palette_byte_size}] PROGMEM = {
+static const uint8_t gfx_${sane_name}_palette[${palette_byte_size}] QP_RESIDENT_FLASH = {
 ${palette_lines}
 };
 
 """
 
 palette_line_template = """\
-    0x${r}, 0x${g}, 0x${b}, // #${r}${g}${b} - ${idx}
+    0x${h255}, 0x${s255}, 0x${v255}, // ${idx} - #${r}${g}${b} - H: ${h360}°, S: ${s100}%, V: ${v100}%
 """
 
 uncompressed_source_file_template = """\
 ${license}
 
-#include <progmem.h>
 #include <stdint.h>
 #include <qp.h>
 #include <qp_internal.h>
@@ -63,11 +63,11 @@ ${license}
 
 ${palette}
 
-static const uint8_t gfx_${sane_name}_data[${byte_count}] PROGMEM = {
+static const uint8_t gfx_${sane_name}_data[${byte_count}] QP_RESIDENT_FLASH = {
 ${bytes_lines}
 };
 
-static const painter_raw_image_descriptor_t gfx_${sane_name}_raw PROGMEM = {
+static const painter_raw_image_descriptor_t gfx_${sane_name}_raw QP_RESIDENT_FLASH = {
     .base = {
         .image_format = ${image_format},
         .image_bpp    = ${image_bpp},
@@ -80,7 +80,7 @@ static const painter_raw_image_descriptor_t gfx_${sane_name}_raw PROGMEM = {
     .image_data    = gfx_${sane_name}_data,
 };
 
-painter_image_t gfx_${sane_name} PROGMEM = (painter_image_t)&gfx_${sane_name}_raw;
+painter_image_t gfx_${sane_name} QP_RESIDENT_FLASH = (painter_image_t)&gfx_${sane_name}_raw;
 
 // clang-format on
 """
@@ -101,7 +101,19 @@ def render_palette(palette, subs):
     palette_line_src = Template(palette_line_template)
     for n in range(len(palette)):
         rgb = palette[n]
-        palette_lines = palette_lines + palette_line_src.substitute({'r': '{0:02X}'.format(rgb[0]), 'g': '{0:02X}'.format(rgb[1]), 'b': '{0:02X}'.format(rgb[2]), 'idx': n})
+        hsv = rgb_to_hsv(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0)
+        palette_lines = palette_lines + palette_line_src.substitute({
+            'r': '{0:02X}'.format(rgb[0]),
+            'g': '{0:02X}'.format(rgb[1]),
+            'b': '{0:02X}'.format(rgb[2]),
+            'h255': '{0:02X}'.format(int(hsv[0] * 255.0)),
+            's255': '{0:02X}'.format(int(hsv[1] * 255.0)),
+            'v255': '{0:02X}'.format(int(hsv[2] * 255.0)),
+            'h360': '{0:3d}'.format(int(hsv[0] * 360.0)),
+            's100': '{0:3d}'.format(int(hsv[1] * 100.0)),
+            'v100': '{0:3d}'.format(int(hsv[2] * 100.0)),
+            'idx': '{0:3d}'.format(n)
+            })
     palette_src = Template(palette_template)
     subs.update({'palette_byte_size': len(palette) * 3, 'palette_lines': palette_lines.rstrip()})
     return palette_src.substitute(subs).rstrip()

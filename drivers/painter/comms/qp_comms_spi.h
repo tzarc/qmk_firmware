@@ -52,7 +52,7 @@ struct qp_comms_spi_dc_reset_config_t {
     pin_t                        reset_pin;
 };
 
-void     qp_comms_spi_dc_reset_command(painter_device_t device, uint8_t cmd);
+void     qp_comms_spi_dc_reset_send_command(painter_device_t device, uint8_t cmd);
 uint32_t qp_comms_spi_dc_reset_send_data(painter_device_t device, const void *data, uint32_t byte_count);
 
 extern const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_with_dc_vtable;

@@ -96,7 +96,7 @@ bool qp_comms_spi_dc_reset_init(painter_device_t device) {
     return true;
 }
 
-void qp_comms_spi_dc_reset_command(painter_device_t device, uint8_t cmd) {
+void qp_comms_spi_dc_reset_send_command(painter_device_t device, uint8_t cmd) {
     struct painter_driver_t *              driver       = (struct painter_driver_t *)device;
     struct qp_comms_spi_dc_reset_config_t *comms_config = (struct qp_comms_spi_dc_reset_config_t *)driver->comms_config;
     writePinLow(comms_config->dc_pin);
