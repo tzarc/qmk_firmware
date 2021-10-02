@@ -61,7 +61,7 @@ typedef uint16_t rgb565_t;
 typedef enum { QP_ROTATION_0, QP_ROTATION_90, QP_ROTATION_180, QP_ROTATION_270 } painter_rotation_t;
 
 // Image format internal flags
-typedef enum { IMAGE_FORMAT_RAW, IMAGE_FORMAT_RGB565, IMAGE_FORMAT_GRAYSCALE, IMAGE_FORMAT_PALETTE } painter_image_format_t;
+typedef enum { IMAGE_FORMAT_RAW, IMAGE_FORMAT_GRAYSCALE, IMAGE_FORMAT_PALETTE } painter_image_format_t;
 typedef enum { IMAGE_UNCOMPRESSED } painter_compression_t;
 
 // Image types -- handled by `qmk convert-image`

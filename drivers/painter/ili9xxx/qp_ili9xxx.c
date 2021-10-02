@@ -111,17 +111,19 @@ bool qp_ili9xxx_pixdata(painter_device_t device, const void *pixel_data, uint32_
     return true;
 }
 
-void qp_ili9xxx_palette_convert(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette) {
+bool qp_ili9xxx_palette_convert(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette) {
     for (int16_t i = 0; i < palette_size; ++i) {
         palette[i].rgb565 = hsv_to_ili9xxx(palette[i].hsv888.h, palette[i].hsv888.s, palette[i].hsv888.v);
     }
+    return true;
 }
 
-void qp_ili9xxx_append_pixels(painter_device_t device, uint8_t *target_buffer, qp_pixel_color_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices) {
+bool qp_ili9xxx_append_pixels(painter_device_t device, uint8_t *target_buffer, qp_pixel_color_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices) {
     uint16_t *buf = (uint16_t *)target_buffer;
     for (uint32_t i = 0; i < pixel_count; ++i) {
         buf[pixel_offset + i] = palette[palette_indices[i]].rgb565;
     }
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +164,7 @@ struct pixdata_state {
     uint16_t         write_pos;
 };
 
-static inline void lcd_append_pixel(qp_pixel_color_t *palette, uint8_t index, void *cb_arg) {
+static inline bool lcd_append_pixel(qp_pixel_color_t *palette, uint8_t index, void *cb_arg) {
     struct pixdata_state *state              = (struct pixdata_state *)cb_arg;
     pixdata_transmit_buf[state->write_pos++] = palette[index].rgb565;
 
@@ -171,6 +173,8 @@ static inline void lcd_append_pixel(qp_pixel_color_t *palette, uint8_t index, vo
         qp_comms_send(state->device, pixdata_transmit_buf, ILI9XXX_PIXDATA_BUFSIZE * sizeof(rgb565_t));
         state->write_pos = 0;
     }
+
+    return true;
 }
 
 static inline void lcd_decode_send_pixdata(painter_device_t device, uint8_t bits_per_pixel, uint32_t pixel_count, const void *const pixel_data) {
@@ -219,7 +223,7 @@ static inline void lcd_send_mono_pixdata_recolor(painter_device_t device, uint8_
 static bool drawimage_uncompressed_impl(painter_device_t device, painter_image_format_t image_format, uint8_t image_bpp, const uint8_t *pixel_data, uint32_t byte_count, int32_t width, int32_t height, const uint8_t *palette_data, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     // Stream data to the LCD
-    if (image_format == IMAGE_FORMAT_RAW || image_format == IMAGE_FORMAT_RGB565) {
+    if (image_format == IMAGE_FORMAT_RAW) {
         // The pixel data is in the correct format already -- send it directly to the device
         qp_comms_send(device, pixel_data, width * height * sizeof(rgb565_t));
     } else if (image_format == IMAGE_FORMAT_GRAYSCALE) {

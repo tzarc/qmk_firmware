@@ -25,7 +25,7 @@
 // Palette / Monochrome-format decoder
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void qp_decode_palette(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg) {
+bool qp_decode_palette(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg) {
     const uint8_t  pixel_bitmask    = (1 << bits_per_pixel) - 1;
     const uint8_t  pixels_per_byte  = 8 / bits_per_pixel;
     const uint8_t* pixdata          = (const uint8_t*)src_data;
@@ -34,28 +34,33 @@ void qp_decode_palette(painter_device_t device, uint32_t pixel_count, uint8_t bi
         uint8_t pixval      = *pixdata;
         uint8_t loop_pixels = remaining_pixels < pixels_per_byte ? remaining_pixels : pixels_per_byte;
         for (uint8_t q = 0; q < loop_pixels; ++q) {
-            output_callback(palette, pixval & pixel_bitmask, cb_arg);
+            if (!output_callback(palette, pixval & pixel_bitmask, cb_arg)) {
+                return false;
+            }
             pixval >>= bits_per_pixel;
         }
         ++pixdata;
         remaining_pixels -= loop_pixels;
     }
+    return true;
 }
 
-void qp_decode_grayscale(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, pixel_output_callback output_callback, void* cb_arg) {
+bool qp_decode_grayscale(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, pixel_output_callback output_callback, void* cb_arg) {
     qp_pixel_color_t white = {.hsv888 = {.h = 0, .s = 0, .v = 255}};
     qp_pixel_color_t black = {.hsv888 = {.h = 0, .s = 0, .v = 0}};
-    qp_decode_recolor(device, pixel_count, bits_per_pixel, src_data, white, black, output_callback, cb_arg);
+    return qp_decode_recolor(device, pixel_count, bits_per_pixel, src_data, white, black, output_callback, cb_arg);
 }
 
-void qp_decode_recolor(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* cb_arg) {
+bool qp_decode_recolor(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* cb_arg) {
     struct painter_driver_t* driver = (struct painter_driver_t*)device;
     int16_t                  steps  = 1 << bits_per_pixel;  // number of items we need to interpolate
     if (qp_interpolate_palette(fg_hsv888, bg_hsv888, steps)) {
-        driver->driver_vtable->palette_convert(device, steps, qp_global_pixel_lookup_table);
+        if (!driver->driver_vtable->palette_convert(device, steps, qp_global_pixel_lookup_table)) {
+            return false;
+        }
     }
 
-    qp_decode_palette(device, pixel_count, bits_per_pixel, src_data, qp_global_pixel_lookup_table, output_callback, cb_arg);
+    return qp_decode_palette(device, pixel_count, bits_per_pixel, src_data, qp_global_pixel_lookup_table, output_callback, cb_arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,20 +69,27 @@ void qp_decode_recolor(painter_device_t device, uint32_t pixel_count, uint8_t bi
 
 struct decoder_state {
     painter_device_t device;
-    uint16_t         write_pos;
+    uint32_t         pixel_write_pos;
+    uint32_t         max_pixels;
 };
 
-static inline void qp_drawimage_append_pixel(qp_pixel_color_t* palette, uint8_t index, void* cb_arg) {
+static inline bool qp_drawimage_pixel_appender(qp_pixel_color_t* palette, uint8_t index, void* cb_arg) {
     struct decoder_state*    state  = (struct decoder_state*)cb_arg;
     struct painter_driver_t* driver = (struct painter_driver_t*)state->device;
 
-    driver->driver_vtable->append_pixels(state->device, qp_global_pixdata_buffer, palette, state->write_pos++, 1, &index);
-
-    // If we've hit the transmit limit, send out the entire buffer and reset
-    if (state->write_pos == qp_num_pixels_in_buffer(state->device)) {
-        driver->driver_vtable->pixdata(state->device, qp_global_pixdata_buffer, state->write_pos);
-        state->write_pos = 0;
+    if (!driver->driver_vtable->append_pixels(state->device, qp_global_pixdata_buffer, palette, state->pixel_write_pos++, 1, &index)) {
+        return false;
     }
+
+    // If we've hit the transmit limit, send out the entire buffer and reset the write position
+    if (state->pixel_write_pos == state->max_pixels) {
+        if (!driver->driver_vtable->pixdata(state->device, qp_global_pixdata_buffer, state->pixel_write_pos)) {
+            return false;
+        }
+        state->pixel_write_pos = 0;
+    }
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,17 +122,24 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
     if (image->compression == IMAGE_UNCOMPRESSED) {
         const painter_raw_image_descriptor_t QP_RESIDENT_FLASH_OR_RAM* raw_image_desc = (const painter_raw_image_descriptor_t QP_RESIDENT_FLASH_OR_RAM*)image;
         // Stream data to the LCD
-        if (image->image_format == IMAGE_FORMAT_RGB565) {
-            ret = driver->driver_vtable->pixdata(device, raw_image_desc->image_data, raw_image_desc->byte_count / sizeof(uint16_t));
+        if (image->image_format == IMAGE_FORMAT_RAW) {
+            // Stream out the data.
+            ret = driver->driver_vtable->pixdata(device, raw_image_desc->image_data, image->width * image->height);
         } else if (image->image_format == IMAGE_FORMAT_GRAYSCALE) {
-            qp_pixel_color_t     fg_hsv888 = {.hsv888 = {.h = hue_fg, .s = sat_fg, .v = val_fg}};
-            qp_pixel_color_t     bg_hsv888 = {.hsv888 = {.h = hue_bg, .s = sat_bg, .v = val_bg}};
-            struct decoder_state state     = {.device = device, .write_pos = 0};
-            qp_decode_recolor(device, image->width * image->height, image->image_bpp, raw_image_desc->image_data, fg_hsv888, bg_hsv888, qp_drawimage_append_pixel, &state);
-            if (state.write_pos > 0) {
-                driver->driver_vtable->pixdata(device, qp_global_pixdata_buffer, state.write_pos);
+            // Specify the fg/bg
+            qp_pixel_color_t fg_hsv888 = {.hsv888 = {.h = hue_fg, .s = sat_fg, .v = val_fg}};
+            qp_pixel_color_t bg_hsv888 = {.hsv888 = {.h = hue_bg, .s = sat_bg, .v = val_bg}};
+
+            // Decode the pixel data
+            struct decoder_state state = {.device = device, .pixel_write_pos = 0, .max_pixels = qp_num_pixels_in_buffer(device)};
+            ret                        = qp_decode_recolor(device, image->width * image->height, image->image_bpp, raw_image_desc->image_data, fg_hsv888, bg_hsv888, qp_drawimage_pixel_appender, &state);
+
+            // Any leftovers need transmission as well.
+            if (state.pixel_write_pos > 0) {
+                driver->driver_vtable->pixdata(device, qp_global_pixdata_buffer, state.pixel_write_pos);
             }
         } else if (image->image_format == IMAGE_FORMAT_PALETTE) {
+            //!!NB -- TODO
         }
     }
 

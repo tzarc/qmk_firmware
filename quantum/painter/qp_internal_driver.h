@@ -28,8 +28,8 @@ typedef bool (*painter_driver_clear_func)(painter_device_t device);
 typedef bool (*painter_driver_flush_func)(painter_device_t device);
 typedef bool (*painter_driver_viewport_func)(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
 typedef bool (*painter_driver_pixdata_func)(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count);
-typedef void (*painter_driver_convert_palette_func)(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette);
-typedef void (*painter_driver_append_pixels)(painter_device_t device, uint8_t *target_buffer, qp_pixel_color_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices);
+typedef bool (*painter_driver_convert_palette_func)(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette);
+typedef bool (*painter_driver_append_pixels)(painter_device_t device, uint8_t *target_buffer, qp_pixel_color_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices);
 
 // Driver vtable definition
 struct painter_driver_vtable_t {

@@ -39,10 +39,10 @@ bool qp_setpixel_impl(painter_device_t device, uint16_t x, uint16_t y);
 bool qp_fillrect_helper_impl(painter_device_t device, uint16_t l, uint16_t t, uint16_t r, uint16_t b);
 
 // Convert from input pixel data + palette to equivalent pixels
-typedef void (*pixel_output_callback)(qp_pixel_color_t* palette, uint8_t index, void* cb_arg);
-void qp_decode_palette(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg);
-void qp_decode_grayscale(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, pixel_output_callback output_callback, void* cb_arg);
-void qp_decode_recolor(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* cb_arg);
+typedef bool (*pixel_output_callback)(qp_pixel_color_t* palette, uint8_t index, void* cb_arg);
+bool qp_decode_palette(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* cb_arg);
+bool qp_decode_grayscale(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, pixel_output_callback output_callback, void* cb_arg);
+bool qp_decode_recolor(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, const void* src_data, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* cb_arg);
 
 // Global variable used for interpolated pixel lookup table.
 #if QUANTUM_PAINTER_SUPPORTS_256_PALETTE
