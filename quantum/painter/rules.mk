@@ -52,6 +52,7 @@ define handle_quantum_painter_driver
         SRC += \
             $(DRIVER_PATH)/painter/st77xx/qp_st77xx.c \
             $(DRIVER_PATH)/painter/st77xx/st7789/qp_st7789.c
+            $(DRIVER_PATH)/painter/st77xx/st7789/qp_st7789_spi.c
 
     endif
 endef
