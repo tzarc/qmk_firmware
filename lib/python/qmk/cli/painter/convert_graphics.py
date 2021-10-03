@@ -183,7 +183,6 @@ def painter_convert_graphics(cli):
     graphic_data = qmk.painter.convert_image_bytes(graphic_image, format)
     palette = graphic_data[0]
     image_data = graphic_data[1] if not cli.args.rle else qmk.painter.compress_bytes_qmk_rle(graphic_data[1])
-    compression = 'IMAGE_UNCOMPRESSED' if not cli.args.rle else 'IMAGE_COMPRESSED_RLE'
 
     subs = {
         'year': datetime.date.today().strftime("%Y"),
@@ -194,7 +193,7 @@ def painter_convert_graphics(cli):
         'image_bpp': format['bpp'],
         'image_width': width,
         'image_height': height,
-        'compression': compression,
+        'compression': 'IMAGE_UNCOMPRESSED' if not cli.args.rle else 'IMAGE_COMPRESSED_RLE',
     }
 
     subs.update({

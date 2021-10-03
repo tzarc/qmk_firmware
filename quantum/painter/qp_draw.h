@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <qp.h>
 #include <qp_internal.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,3 +58,36 @@ bool qp_interpolate_palette(qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv8
 
 // Resets the global palette so that it can be regenerated. Only needed if the colors are identical, but a different display is used with a different internal pixel format.
 void qp_invalidate_palette(void);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter codec functions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+enum rle_mode_t {
+    MARKER_BYTE,
+    REPEATING_RUN,
+    NON_REPEATING_RUN,
+};
+
+struct byte_input_state {
+    painter_device_t device;
+    const uint8_t QP_RESIDENT_FLASH_OR_RAM* src_data;
+
+    union {
+        // RLE-specific
+        struct {
+            enum rle_mode_t mode;
+            uint8_t         remain;  // number of bytes remaining in the current mode
+        } rle;
+    };
+};
+
+struct pixel_output_state {
+    painter_device_t device;
+    uint32_t         pixel_write_pos;
+    uint32_t         max_pixels;
+};
+
+int16_t qp_drawimage_byte_uncompressed_decoder(void* cb_arg);
+int16_t qp_drawimage_byte_rle_decoder(void* cb_arg);
+bool    qp_drawimage_pixel_appender(qp_pixel_color_t* palette, uint8_t index, void* cb_arg);

@@ -55,18 +55,10 @@ bool qp_ili9xxx_pixdata(painter_device_t device, const void *pixel_data, uint32_
 bool qp_ili9xxx_palette_convert(painter_device_t driver, int16_t palette_size, qp_pixel_color_t *pixels);
 bool qp_ili9xxx_append_pixels(painter_device_t device, uint8_t *target_buffer, qp_pixel_color_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices);
 
-// Old APIs
-int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Helpers
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef QUANTUM_PAINTER_ILI9XXX_SPI_ENABLE
-uint32_t qp_ili9xxx_spi_send_data_dc_pin(painter_device_t device, const void *data, uint32_t byte_count);
-void     qp_ili9xxx_spi_cmd8(painter_device_t device, uint8_t cmd);
-#endif  // QUANTUM_PAINTER_ILI9XXX_SPI_ENABLE
-
-void     qp_ili9xxx_cmd8(painter_device_t device, uint8_t cmd);
-void     qp_ili9xxx_cmd8_data8(painter_device_t device, uint8_t cmd, uint8_t data);
-uint32_t qp_ili9xxx_cmd8_databuf(painter_device_t device, uint8_t cmd, const void *data, uint32_t byte_count);
+void     qp_ili9xxx_command(painter_device_t device, uint8_t cmd);
+void     qp_ili9xxx_command_databyte(painter_device_t device, uint8_t cmd, uint8_t data);
+uint32_t qp_ili9xxx_command_databuf(painter_device_t device, uint8_t cmd, const void *data, uint32_t byte_count);

@@ -39,22 +39,22 @@ ${license}
 
 #include <qp.h>
 
-extern painter_font_t font_${sane_name} PROGMEM;
+extern painter_font_t font_${sane_name} QP_RESIDENT_FLASH;
 """
 
 palette_template = """\
-static const uint8_t font_${sane_name}_palette[${palette_byte_size}] PROGMEM = {
+static const uint8_t font_${sane_name}_palette[${palette_byte_size}] QP_RESIDENT_FLASH = {
 ${palette_lines}
 };
 
 """
 
 palette_line_template = """\
-    0x${r}, 0x${g}, 0x${b}, // #${r}${g}${b} - ${idx}
+    0x${h255}, 0x${s255}, 0x${v255}, // ${idx} - #${r}${g}${b} - H: ${h360}°, S: ${s100}%, V: ${v100}%
 """
 
 ascii_defs_template = """\
-static const painter_font_ascii_glyph_offset_t font_${sane_name}_ascii_defs[${glyph_count}] PROGMEM = {
+static const painter_font_ascii_glyph_offset_t font_${sane_name}_ascii_defs[${glyph_count}] QP_RESIDENT_FLASH = {
 ${ascii_defs_lines}
 };
 
@@ -66,7 +66,7 @@ ascii_defs_line_template = """\
 
 unicode_defs_template = """\
 #ifdef UNICODE_ENABLE
-static const painter_font_unicode_glyph_offset_t font_${sane_name}_unicode_defs[${glyph_count}] PROGMEM = {
+static const painter_font_unicode_glyph_offset_t font_${sane_name}_unicode_defs[${glyph_count}] QP_RESIDENT_FLASH = {
 ${unicode_defs_lines}
 };
 #endif // UNICODE_ENABLE
@@ -79,7 +79,6 @@ unicode_defs_line_template = """\
 uncompressed_source_file_template = """\
 ${license}
 
-#include <progmem.h>
 #include <stdint.h>
 #include <qp.h>
 #include <qp_internal.h>
@@ -88,7 +87,7 @@ ${license}
 
 ${palette}
 
-static const uint8_t font_${sane_name}_data[${byte_count}] PROGMEM = {
+static const uint8_t font_${sane_name}_data[${byte_count}] QP_RESIDENT_FLASH = {
 ${bytes_lines}
 };
 
@@ -96,11 +95,11 @@ ${ascii_glyphs}
 
 ${unicode_glyphs}
 
-static const painter_raw_font_descriptor_t font_${sane_name}_raw PROGMEM = {
+static const painter_raw_font_descriptor_t font_${sane_name}_raw QP_RESIDENT_FLASH = {
     .base = {
         .image_format = ${image_format},
         .image_bpp    = ${image_bpp},
-        .compression  = IMAGE_UNCOMPRESSED,
+        .compression  = ${compression},
         .glyph_height = ${glyph_height},
     },
     .image_palette             = ${palette_ptr},
@@ -113,7 +112,7 @@ static const painter_raw_font_descriptor_t font_${sane_name}_raw PROGMEM = {
 #endif // UNICODE_ENABLE
 };
 
-painter_font_t font_${sane_name} PROGMEM = (painter_font_t)&font_${sane_name}_raw;
+painter_font_t font_${sane_name} QP_RESIDENT_FLASH = (painter_font_t)&font_${sane_name}_raw;
 
 // clang-format on
 """
@@ -134,7 +133,19 @@ def render_palette(palette, subs):
     palette_line_src = Template(palette_line_template)
     for n in range(len(palette)):
         rgb = palette[n]
-        palette_lines = palette_lines + palette_line_src.substitute({'r': '{0:02X}'.format(rgb[0]), 'g': '{0:02X}'.format(rgb[1]), 'b': '{0:02X}'.format(rgb[2]), 'idx': n})
+        hsv = rgb_to_hsv(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0)
+        palette_lines = palette_lines + palette_line_src.substitute({
+            'r': '{0:02X}'.format(rgb[0]),
+            'g': '{0:02X}'.format(rgb[1]),
+            'b': '{0:02X}'.format(rgb[2]),
+            'h255': '{0:02X}'.format(int(hsv[0] * 255.0)),
+            's255': '{0:02X}'.format(int(hsv[1] * 255.0)),
+            'v255': '{0:02X}'.format(int(hsv[2] * 255.0)),
+            'h360': '{0:3d}'.format(int(hsv[0] * 360.0)),
+            's100': '{0:3d}'.format(int(hsv[1] * 100.0)),
+            'v100': '{0:3d}'.format(int(hsv[2] * 100.0)),
+            'idx': '{0:3d}'.format(n)
+            })
     palette_src = Template(palette_template)
     subs.update({'palette_byte_size': len(palette) * 3, 'palette_lines': palette_lines.rstrip()})
     return palette_src.substitute(subs).rstrip()
@@ -275,6 +286,7 @@ def painter_make_font_image(cli):
 @cli.argument('-n', '--no-ascii', arg_only=True, action='store_true', help='Disables output of the full ASCII character set (0x20..0x7F), exporting only the glyphs specified.')
 @cli.argument('-u', '--unicode-glyphs', default='', help='Also generate the specified unicode glyphs.')
 @cli.argument('-f', '--format', required=True, help='Output format, valid types: %s' % (', '.join(qmk.painter.valid_formats.keys())))
+@cli.argument('-r', '--rle', arg_only=True, action='store_true', help='Uses RLE to minimise converted image size.')
 @cli.subcommand('Converts an input font image to something QMK firmware understands')
 def painter_convert_font_image(cli):
 
@@ -330,7 +342,13 @@ def painter_convert_font_image(cli):
     for n in range(len(glyph_pixel_offsets)):
         this_glyph_image = converted_img.crop((glyph_pixel_offsets[n], 0, glyph_pixel_offsets[n] + glyph_pixel_widths[n], height))
         (this_glyph_image_palette, this_glyph_image_bytes) = qmk.painter.convert_image_bytes(this_glyph_image, format)
-        glyph_data.append({"idx": n, "glyph": glyphs[n], "width": glyph_pixel_widths[n], "image_bytes": this_glyph_image_bytes})
+        this_glyph_data = this_glyph_image_bytes if not cli.args.rle else qmk.painter.compress_bytes_qmk_rle(this_glyph_image_bytes)
+        glyph_data.append({
+            "idx": n,
+            "glyph": glyphs[n],
+            "width": glyph_pixel_widths[n],
+            "image_bytes": this_glyph_data
+        })
 
     sane_name = re.sub(r"[^a-zA-Z0-9]", "_", cli.args.input.stem)
 
@@ -342,6 +360,7 @@ def painter_convert_font_image(cli):
         'image_format': format['image_format'],
         'image_bpp': format['bpp'],
         'glyph_height': glyph_height,
+        'compression': 'IMAGE_UNCOMPRESSED' if not cli.args.rle else 'IMAGE_COMPRESSED_RLE',
     }
 
     subs.update({

@@ -224,7 +224,7 @@ def compress_bytes_qmk_rle(bytearray):
                 temp = [temp[-1]]
                 repeat = False
         else:
-            if temp[-1] == temp[-2]:
+            if len(temp) >= 2 and temp[-1] == temp[-2]:
                 repeat = True
                 if len(temp) > 2:
                     append_range(temp[0:(len(temp)-2)])
