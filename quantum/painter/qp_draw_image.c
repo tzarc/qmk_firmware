@@ -114,6 +114,12 @@ static inline int16_t qp_drawimage_byte_rle_decoder(void* cb_arg) {
     // Decrement the counter of the bytes remaining
     state->rle_remain--;
     if (state->rle_remain == 0) {
+        // Advance the position if we're in a repeated run
+        if (state->rle_mode == REPEATING_RUN) {
+            state->src_data++;
+        }
+
+        // Swap back to querying the marker byte
         state->rle_mode = MARKER_BYTE;
     }
 
