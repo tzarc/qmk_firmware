@@ -208,9 +208,11 @@ int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, pai
     }
 
     bool ret = false;
+    /*
     if (driver->TEMP_vtable && driver->TEMP_vtable->drawtext) {
         ret = driver->TEMP_vtable->drawtext(device, x, y, font, str, hue_fg, sat_fg, val_fg, hue_bg, sat_bg, val_bg);
     }
+    */
 
     qp_dprintf("qp_drawtext_recolor: %s\n", ret ? "ok" : "fail");
     qp_comms_stop(device);

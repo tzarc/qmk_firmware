@@ -26,10 +26,6 @@
 // Device creation
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static const struct painter_driver_TEMP_FUNC_vtable_t QP_RESIDENT_FLASH TEMP_vtable = {
-    .drawtext = qp_ili9xxx_drawtext,
-};
-
 static const struct ili9xxx_painter_device_vtable_t QP_RESIDENT_FLASH spi_ili9xxx_vtable = {
     .send_cmd8 = qp_comms_spi_dc_reset_send_command,
 };
@@ -41,7 +37,6 @@ painter_device_t qp_ili9341_make_spi_device(pin_t chip_select_pin, pin_t dc_pin,
         if (!driver->qp_driver.driver_vtable) {
             driver->qp_driver.driver_vtable         = &ili9341_driver_vtable;
             driver->qp_driver.comms_vtable          = &spi_comms_with_dc_vtable;
-            driver->qp_driver.TEMP_vtable           = &TEMP_vtable;
             driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
             driver->ili9xxx_vtable                  = &spi_ili9xxx_vtable;
 

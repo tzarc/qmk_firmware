@@ -126,6 +126,7 @@ bool qp_ili9xxx_append_pixels(painter_device_t device, uint8_t *target_buffer, q
     return true;
 }
 
+#if 0
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -146,11 +147,11 @@ bool qp_ili9xxx_append_pixels(painter_device_t device, uint8_t *target_buffer, q
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Static buffer to contain a generated color palette
-#if QUANTUM_PAINTER_SUPPORTS_256_PALETTE
+#    if QUANTUM_PAINTER_SUPPORTS_256_PALETTE
 static qp_pixel_color_t hsv_lookup_table[256];
-#else
+#    else
 static qp_pixel_color_t hsv_lookup_table[16];
-#endif
+#    endif
 
 // Static buffer used for transmitting image data
 static rgb565_t pixdata_transmit_buf[ILI9XXX_PIXDATA_BUFSIZE];
@@ -277,16 +278,16 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
                     if (code_point < 0x7E) {
                         byte_count = (glyph_desc + 1)->offset - glyph_desc->offset;
                     } else if (code_point == 0x7E) {
-#ifdef UNICODE_ENABLE
+#    ifdef UNICODE_ENABLE
                         // Unicode glyphs directly follow ascii glyphs, so we take the first's offset
                         if (fdesc->unicode_glyph_count > 0) {
                             byte_count = fdesc->unicode_glyph_definitions[0].offset - glyph_desc->offset;
                         } else {
                             byte_count = fdesc->byte_count - glyph_desc->offset;
                         }
-#else   // UNICODE_ENABLE
+#    else   // UNICODE_ENABLE
                         byte_count = fdesc->byte_count - glyph_desc->offset;
-#endif  // UNICODE_ENABLE
+#    endif  // UNICODE_ENABLE
                     }
 
                     qp_ili9xxx_viewport(lcd, x, y, x + glyph_desc->width - 1, y + font->glyph_height - 1);
@@ -294,7 +295,7 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
                     x += glyph_desc->width;
                 }
             }
-#ifdef UNICODE_ENABLE
+#    ifdef UNICODE_ENABLE
             else {
                 // Search the font's unicode table
                 if (fdesc->unicode_glyph_definitions != NULL) {
@@ -309,7 +310,7 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
                     }
                 }
             }
-#endif  // UNICODE_ENABLE
+#    endif  // UNICODE_ENABLE
         }
     }
 
@@ -317,3 +318,4 @@ int16_t qp_ili9xxx_drawtext(painter_device_t device, uint16_t x, uint16_t y, pai
 
     return (int16_t)x;
 }
+#endif      // 0

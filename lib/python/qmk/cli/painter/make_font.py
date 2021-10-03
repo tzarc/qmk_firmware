@@ -143,7 +143,7 @@ def render_palette(palette, subs):
 def render_bytes(bytes, subs):
     lines = ''
     for n in range(len(bytes)):
-        if n % 32 == 0 and n > 0 and n != len(bytes):
+        if n % 16 == 0 and n > 0 and n != len(bytes):
             lines = lines + "\n   "
         elif n == 0:
             lines = lines + "   "
