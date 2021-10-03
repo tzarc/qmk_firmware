@@ -5,11 +5,6 @@ import re
 from PIL import Image, ImageOps
 
 valid_formats = {
-    'rgb565': {
-        'image_format': 'IMAGE_FORMAT_RGB565',
-        'bpp': 16,
-        'num_colors': 65536,
-    },
     'pal256': {
         'image_format': 'IMAGE_FORMAT_PALETTE',
         'bpp': 8,
@@ -191,3 +186,52 @@ def generate_font_glyphs_list(no_ascii, unicode_glyphs):
         glyphs[c] = True
 
     return sorted(glyphs.keys())
+
+def compress_bytes_qmk_rle(bytearray):
+    debug_dump = False
+    output = []
+    temp = []
+    repeat = False
+
+    def append_byte(c):
+        if debug_dump:
+            print('Appending byte:', '0x{0:02X}'.format(int(c)), '=', c)
+        output.append(c)
+
+    def append_range(r):
+        append_byte(127 + len(r))
+        if debug_dump:
+            print('Appending {0} byte(s):'.format(len(r)), '[', ', '.join(['{0:02X}'.format(e) for e in r]), ']')
+        output.extend(r)
+
+    for n in range(0, len(bytearray)+1):
+        end = True if n == len(bytearray) else False
+        if not end:
+            c = bytearray[n]
+            temp.append(c)
+            if len(temp) <= 1:
+                continue
+
+        if debug_dump:
+            print('Temp buffer state {0:3d} bytes:'.format(len(temp)), '[', ', '.join(['{0:02X}'.format(e) for e in temp]), ']')
+
+        if repeat:
+            if temp[-1] != temp[-2]:
+                repeat = False
+            if not repeat or len(temp) == 128 or end:
+                append_byte(len(temp) if end else len(temp)-1)
+                append_byte(temp[0])
+                temp = [temp[-1]]
+                repeat = False
+        else:
+            if temp[-1] == temp[-2]:
+                repeat = True
+                if len(temp) > 2:
+                    append_range(temp[0:(len(temp)-2)])
+                    temp = [temp[-1], temp[-1]]
+                continue
+            if len(temp) == 128 or end:
+                append_range(temp)
+                temp = []
+                repeat = False
+    return output

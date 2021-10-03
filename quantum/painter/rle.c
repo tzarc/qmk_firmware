@@ -90,9 +90,6 @@ bool rle_encode(stream_t *in_stream, stream_t *out_stream) {
                 continue;
             }
             if (len == 128 || end) {
-                if (end) {
-                    int fg = 0;
-                }
                 if (!rle_append_bytes(out_stream, buf, len)) return false;
                 len    = 0;
                 repeat = false;

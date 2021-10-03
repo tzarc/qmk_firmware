@@ -62,7 +62,7 @@ typedef enum { QP_ROTATION_0, QP_ROTATION_90, QP_ROTATION_180, QP_ROTATION_270 }
 
 // Image format internal flags
 typedef enum { IMAGE_FORMAT_RAW, IMAGE_FORMAT_GRAYSCALE, IMAGE_FORMAT_PALETTE } painter_image_format_t;
-typedef enum { IMAGE_UNCOMPRESSED } painter_compression_t;
+typedef enum { IMAGE_UNCOMPRESSED, IMAGE_COMPRESSED_RLE } painter_compression_t;
 
 // Image types -- handled by `qmk convert-image`
 typedef struct painter_image_descriptor_t {

@@ -71,7 +71,7 @@ static const painter_raw_image_descriptor_t gfx_${sane_name}_raw QP_RESIDENT_FLA
     .base = {
         .image_format = ${image_format},
         .image_bpp    = ${image_bpp},
-        .compression  = IMAGE_UNCOMPRESSED,
+        .compression  = ${compression},
         .width        = ${image_width},
         .height       = ${image_height}
     },
@@ -147,6 +147,7 @@ def render_source(format, palette, image_data, width, height, subs):
 @cli.argument('-i', '--input', required=True, help='Specify input graphic file.')
 @cli.argument('-o', '--output', default='', help='Specify output directory. Defaults to same directory as input.')
 @cli.argument('-f', '--format', required=True, help='Output format, valid types: %s' % (', '.join(qmk.painter.valid_formats.keys())))
+@cli.argument('-r', '--rle', arg_only=True, action='store_true', help='Uses RLE to minimise converted image size.')
 @cli.subcommand('Converts an input image to something QMK understands')
 def painter_convert_graphics(cli):
     """Converts an image file to a format that Quantum Painter understands.
@@ -181,7 +182,8 @@ def painter_convert_graphics(cli):
     (width, height) = graphic_image.size
     graphic_data = qmk.painter.convert_image_bytes(graphic_image, format)
     palette = graphic_data[0]
-    image_data = graphic_data[1]
+    image_data = graphic_data[1] if not cli.args.rle else qmk.painter.compress_bytes_qmk_rle(graphic_data[1])
+    compression = 'IMAGE_UNCOMPRESSED' if not cli.args.rle else 'IMAGE_COMPRESSED_RLE'
 
     subs = {
         'year': datetime.date.today().strftime("%Y"),
@@ -192,6 +194,7 @@ def painter_convert_graphics(cli):
         'image_bpp': format['bpp'],
         'image_width': width,
         'image_height': height,
+        'compression': compression,
     }
 
     subs.update({
