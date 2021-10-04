@@ -34,6 +34,7 @@ static inline bool qp_font_get_ascii_glyph(painter_font_t font, int32_t code_poi
     return false;
 }
 
+#ifdef UNICODE_ENABLE
 static inline bool qp_font_get_unicode_glyph(painter_font_t font, int32_t code_point, const painter_font_unicode_glyph_offset_t **glyph) {
     const painter_raw_font_descriptor_t *fdesc = (const painter_raw_font_descriptor_t *)font;
     if (fdesc->unicode_glyph_definitions != NULL) {
@@ -47,6 +48,7 @@ static inline bool qp_font_get_unicode_glyph(painter_font_t font, int32_t code_p
     }
     return false;
 }
+#endif  // UNICODE_ENABLE
 
 typedef bool (*code_point_handler)(painter_font_t font, uint32_t code_point, uint8_t width, uint8_t height, uint32_t offset, void *cb_arg);
 
