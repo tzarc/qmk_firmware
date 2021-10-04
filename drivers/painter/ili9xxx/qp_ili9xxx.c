@@ -87,17 +87,17 @@ bool qp_ili9xxx_viewport(painter_device_t device, uint16_t left, uint16_t top, u
     // Set up the x-window
     uint8_t xbuf[4] = {left >> 8, left & 0xFF, right >> 8, right & 0xFF};
     qp_ili9xxx_command_databuf(device,
-                               0x2A,  // column address set
+                               ILI9XXX_SET_COL_ADDR,  // column address set
                                xbuf, sizeof(xbuf));
 
     // Set up the y-window
     uint8_t ybuf[4] = {top >> 8, top & 0xFF, bottom >> 8, bottom & 0xFF};
     qp_ili9xxx_command_databuf(device,
-                               0x2B,  // page (row) address set
+                               ILI9XXX_SET_PAGE_ADDR,  // page (row) address set
                                ybuf, sizeof(ybuf));
 
     // Lock in the window
-    qp_ili9xxx_command(device, 0x2C);  // enable memory writes
+    qp_ili9xxx_command(device, ILI9XXX_SET_MEM);  // enable memory writes
     return true;
 }
 

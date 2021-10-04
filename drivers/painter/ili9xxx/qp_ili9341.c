@@ -22,7 +22,7 @@
 #include <qp_ili9xxx_opcodes.h>
 
 #ifdef QUANTUM_PAINTER_ILI9341_SPI_ENABLE
-#include <qp_comms_spi.h>
+#    include <qp_comms_spi.h>
 #endif  // QUANTUM_PAINTER_ILI9341_SPI_ENABLE
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

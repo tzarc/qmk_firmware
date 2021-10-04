@@ -55,12 +55,10 @@ define handle_quantum_painter_driver
         QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
         OPT_DEFS += -DQUANTUM_PAINTER_ST7789_ENABLE -DQUANTUM_PAINTER_ST7XXX_SPI_ENABLE -DQUANTUM_PAINTER_ST7789_SPI_ENABLE
         COMMON_VPATH += \
-            $(DRIVER_PATH)/painter/st77xx \
-            $(DRIVER_PATH)/painter/st77xx/st7789
+            $(DRIVER_PATH)/painter/st77xx
         SRC += \
             $(DRIVER_PATH)/painter/st77xx/qp_st77xx.c \
-            $(DRIVER_PATH)/painter/st77xx/st7789/qp_st7789.c
-            $(DRIVER_PATH)/painter/st77xx/st7789/qp_st7789_spi.c
+            $(DRIVER_PATH)/painter/st77xx/qp_st7789.c
 
     endif
 endef

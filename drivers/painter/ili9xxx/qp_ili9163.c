@@ -22,7 +22,7 @@
 #include <qp_ili9xxx_opcodes.h>
 
 #ifdef QUANTUM_PAINTER_ILI9163_SPI_ENABLE
-#include <qp_comms_spi.h>
+#    include <qp_comms_spi.h>
 #endif  // QUANTUM_PAINTER_ILI9163_SPI_ENABLE
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,9 +46,9 @@ bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
     static const uint8_t function_ctl[] = {0b11111111, 0b00000110};
     qp_ili9xxx_command_databuf(device, ILI9XXX_SET_FUNCTION_CTL, function_ctl, sizeof(function_ctl));
 
-    static const uint8_t pgamma[] = {0x36,0x29,0x12,0x22,0x1C,0x15,0x42,0xB7,0x2F,0x13,0x12,0x0A,0x11,0x0B,0x06};
+    static const uint8_t pgamma[] = {0x36, 0x29, 0x12, 0x22, 0x1C, 0x15, 0x42, 0xB7, 0x2F, 0x13, 0x12, 0x0A, 0x11, 0x0B, 0x06};
     qp_ili9xxx_command_databuf(device, ILI9XXX_SET_PGAMMA, pgamma, sizeof(pgamma));
-    static const uint8_t ngamma[] = {0x09,0x16,0x2D,0x0D,0x13,0x15,0x40,0x48,0x53,0x0C,0x1D,0x25,0x2E,0x34,0x39};
+    static const uint8_t ngamma[] = {0x09, 0x16, 0x2D, 0x0D, 0x13, 0x15, 0x40, 0x48, 0x53, 0x0C, 0x1D, 0x25, 0x2E, 0x34, 0x39};
     qp_ili9xxx_command_databuf(device, ILI9XXX_SET_NGAMMA, ngamma, sizeof(ngamma));
 
     static const uint8_t frame_ctl_normal[] = {0x08, 0x02};

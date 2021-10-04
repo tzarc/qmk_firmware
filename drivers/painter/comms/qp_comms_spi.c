@@ -57,7 +57,12 @@ uint32_t qp_comms_spi_send_data(painter_device_t device, const void *data, uint3
     return byte_count - bytes_remaining;
 }
 
-void qp_comms_spi_stop(painter_device_t device) { spi_stop(); }
+void qp_comms_spi_stop(painter_device_t device) {
+    struct painter_driver_t *     driver       = (struct painter_driver_t *)device;
+    struct qp_comms_spi_config_t *comms_config = (struct qp_comms_spi_config_t *)driver->comms_config;
+    spi_stop();
+    writePinHigh(comms_config->chip_select_pin);
+}
 
 const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_vtable = {
     .comms_init  = qp_comms_spi_init,

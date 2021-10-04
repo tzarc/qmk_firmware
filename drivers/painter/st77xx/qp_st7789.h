@@ -1,4 +1,4 @@
-/* Copyright 2021 Nick Brassel (@tzarc)
+/* Copyright 2021 Paul Cotter (@gr1mr3aver), Nick Brassel (@tzarc)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,19 +20,19 @@
 #include <qp_internal.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter ILI9163 configurables
+// Quantum Painter ST7789 configurables
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// The number of ILI9163 devices we're going to be talking to
-#ifndef ILI9163_NUM_DEVICES
-#    define ILI9163_NUM_DEVICES 1
+// The number of ST7789 devices we're going to be talking to
+#ifndef ST7789_NUM_DEVICES
+#    define ST7789_NUM_DEVICES 1
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter ILI9163 device factory
+// Quantum Painter ST7789 device factory
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Factory method for an ILI9163 device
-#ifdef QUANTUM_PAINTER_ILI9163_SPI_ENABLE
-painter_device_t qp_ili9163_make_spi_device(pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor);
-#endif  // QUANTUM_PAINTER_ILI9163_SPI_ENABLE
+// Factory method for an ST7789 device
+#ifdef QUANTUM_PAINTER_ST7789_SPI_ENABLE
+painter_device_t qp_st7789_make_spi_device(pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor);
+#endif  // QUANTUM_PAINTER_ST7789_SPI_ENABLE
