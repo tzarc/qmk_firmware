@@ -18,6 +18,6 @@ AUDIO_ENABLE = no           # Audio output on port C6
 FAUXCLICKY_ENABLE = no      # Use buzzer to emulate clicky switches
 
 QUANTUM_PAINTER_ENABLE = yes
-QUANTUM_PAINTER_DRIVERS = ili9341_spi
+QUANTUM_PAINTER_DRIVERS = ili9163_spi ili9341_spi
 
 SRC += spi_master.c

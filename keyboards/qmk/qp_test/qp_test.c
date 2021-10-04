@@ -15,9 +15,32 @@
  */
 
 #include <quantum.h>
+#include <qp.h>
+#include <qp_ili9163.h>
+#include "thintel15.c"
+
+painter_device_t ili9163;
 
 void keyboard_post_init_kb(void) {
     debug_enable   = true;
     debug_matrix   = true;
     debug_keyboard = true;
+
+    ili9163 = qp_ili9163_make_spi_device(DISPLAY_CS_PIN_1_44_INCH_LCD_ILI9163, DISPLAY_DC_PIN, DISPLAY_RST_PIN, 8);
+    qp_init(ili9163, QP_ROTATION_270);
+}
+
+void matrix_scan_kb(void) {
+    static uint32_t last_scan = 0;
+    if (timer_elapsed32(last_scan) > 5000) {
+        last_scan = timer_read32();
+
+        char buf[32] = {0};
+        sprintf(buf, "Current time: %dms", (int)last_scan);
+
+        qp_rect(ili9163, 0, 0, 128, 128, 0, 0, 0, true);
+        qp_drawtext(ili9163, 0, 0, font_thintel15, "QMK on ILI9163!");
+        qp_drawtext(ili9163, 0, font_thintel15->glyph_height, font_thintel15, buf);
+        qp_flush(ili9163);
+    }
 }

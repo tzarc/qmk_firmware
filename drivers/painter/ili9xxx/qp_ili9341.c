@@ -20,17 +20,19 @@
 #include <qp_ili9341.h>
 #include <qp_ili9xxx_internal.h>
 #include <qp_ili9xxx_opcodes.h>
-#include <qp_ili9341_internal.h>
+
+#ifdef QUANTUM_PAINTER_ILI9341_SPI_ENABLE
+#include <qp_comms_spi.h>
+#endif  // QUANTUM_PAINTER_ILI9341_SPI_ENABLE
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Common
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // Driver storage
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 ili9xxx_painter_device_t ili9341_drivers[ILI9341_NUM_DEVICES] = {0};
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialization
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     lcd->rotation                 = rotation;
@@ -100,10 +102,7 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Driver vtable
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 const struct painter_driver_vtable_t QP_RESIDENT_FLASH ili9341_driver_vtable = {
     .init            = qp_ili9341_init,
     .power           = qp_ili9xxx_power,
@@ -114,3 +113,39 @@ const struct painter_driver_vtable_t QP_RESIDENT_FLASH ili9341_driver_vtable = {
     .palette_convert = qp_ili9xxx_palette_convert,
     .append_pixels   = qp_ili9xxx_append_pixels,
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SPI
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef QUANTUM_PAINTER_ILI9341_SPI_ENABLE
+
+static const struct ili9xxx_painter_device_vtable_t QP_RESIDENT_FLASH spi_ili9xxx_vtable = {
+    .send_cmd8 = qp_comms_spi_dc_reset_send_command,
+};
+
+// Factory function for creating a handle to the ILI9341 device
+painter_device_t qp_ili9341_make_spi_device(pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor) {
+    for (uint32_t i = 0; i < ILI9341_NUM_DEVICES; ++i) {
+        ili9xxx_painter_device_t *driver = &ili9341_drivers[i];
+        if (!driver->qp_driver.driver_vtable) {
+            driver->qp_driver.driver_vtable         = &ili9341_driver_vtable;
+            driver->qp_driver.comms_vtable          = &spi_comms_with_dc_vtable;
+            driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
+            driver->ili9xxx_vtable                  = &spi_ili9xxx_vtable;
+
+            // SPI and other pin configuration
+            driver->qp_driver.comms_config                         = &driver->spi_dc_reset_config;
+            driver->spi_dc_reset_config.spi_config.chip_select_pin = chip_select_pin;
+            driver->spi_dc_reset_config.spi_config.divisor         = spi_divisor;
+            driver->spi_dc_reset_config.spi_config.lsb_first       = false;
+            driver->spi_dc_reset_config.spi_config.mode            = 0;
+            driver->spi_dc_reset_config.dc_pin                     = dc_pin;
+            driver->spi_dc_reset_config.reset_pin                  = reset_pin;
+            return (painter_device_t)driver;
+        }
+    }
+    return NULL;
+}
+
+#endif  // QUANTUM_PAINTER_ILI9341_SPI_ENABLE

@@ -83,7 +83,6 @@ bool qp_interpolate_palette(qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv8
     // This may present a problem if using the same parameters but a different screen converts pixels -- use qp_invalidate_palette() to reset.
     if (generated_palette == true && generated_steps == steps && memcmp(&interpolated_fg_hsv888, &fg_hsv888, sizeof(fg_hsv888)) == 0 && memcmp(&interpolated_bg_hsv888, &bg_hsv888, sizeof(bg_hsv888)) == 0) {
         // We already have the correct palette, no point regenerating it.
-        qp_dprintf("qp_interpolate_palette: identical parameters, skipping palette generation.\n");
         return false;
     }
 
@@ -116,7 +115,10 @@ bool qp_interpolate_palette(qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv8
 }
 
 // Resets the global palette so that it can be regenerated. Only needed if the colors are identical, but a different display is used with a different internal pixel format.
-void qp_invalidate_palette(void) { generated_palette = false; }
+void qp_invalidate_palette(void) {
+    generated_palette = false;
+    generated_steps   = -1;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter External API: qp_setpixel

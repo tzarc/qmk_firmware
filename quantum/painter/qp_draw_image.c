@@ -89,10 +89,11 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
         }
     } else if (image->image_format == IMAGE_FORMAT_PALETTE) {
         // Read the palette entries
-        const uint8_t QP_RESIDENT_FLASH_OR_RAM* rgb_palette     = raw_image_desc->image_palette;
+        const uint8_t QP_RESIDENT_FLASH_OR_RAM* hsv_palette     = raw_image_desc->image_palette;
         uint16_t                                palette_entries = 1 << image->image_bpp;
+        qp_invalidate_palette();
         for (uint16_t i = 0; i < palette_entries; ++i) {
-            qp_global_pixel_lookup_table[i] = (qp_pixel_color_t){.hsv888 = {.h = rgb_palette[i * 3 + 0], .s = rgb_palette[i * 3 + 1], .v = rgb_palette[i * 3 + 2]}};
+            qp_global_pixel_lookup_table[i] = (qp_pixel_color_t){.hsv888 = {.h = hsv_palette[i * 3 + 0], .s = hsv_palette[i * 3 + 1], .v = hsv_palette[i * 3 + 2]}};
         }
 
         // Convert the palette to native format

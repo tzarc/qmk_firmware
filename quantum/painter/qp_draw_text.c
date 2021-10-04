@@ -99,6 +99,7 @@ bool qp_font_code_point_handler_drawglyph(painter_font_t font, uint32_t code_poi
     if (ret && state->output_state->pixel_write_pos > 0) {
         ret &= driver->driver_vtable->pixdata(state->device, qp_global_pixdata_buffer, state->output_state->pixel_write_pos);
     }
+
     return ret;
 }
 
@@ -107,10 +108,13 @@ bool qp_iterate_code_points(painter_font_t font, const char *str, code_point_han
     int32_t code_point = 0;
     while (*str) {
         str = decode_utf8(str, &code_point);
-        if (code_point >= 0) {
+        if (ret && code_point >= 0) {
             const painter_font_ascii_glyph_offset_t *ascii_glyph;
             if (qp_font_get_ascii_glyph(font, code_point, &ascii_glyph)) {
-                handler(font, code_point, ascii_glyph->width, font->glyph_height, ascii_glyph->offset, cb_arg);
+                ret = handler(font, code_point, ascii_glyph->width, font->glyph_height, ascii_glyph->offset, cb_arg);
+                if (!ret) {
+                    break;
+                }
             }
 #ifndef UNICODE_ENABLE
             // No unicode, missing glyph means failure
@@ -123,7 +127,10 @@ bool qp_iterate_code_points(painter_font_t font, const char *str, code_point_han
             else {
                 const painter_font_unicode_glyph_offset_t *unicode_glyph;
                 if (qp_font_get_unicode_glyph(font, code_point, &unicode_glyph)) {
-                    handler(font, code_point, unicode_glyph->width, font->glyph_height, unicode_glyph->offset, cb_arg);
+                    ret = handler(font, code_point, unicode_glyph->width, font->glyph_height, unicode_glyph->offset, cb_arg);
+                    if (!ret) {
+                        break;
+                    }
                 } else {
                     ret = false;
                     break;
