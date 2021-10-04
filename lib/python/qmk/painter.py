@@ -122,9 +122,9 @@ def convert_image_bytes(im, format):
         # Convert 24-bit RGB to 16-bit rgb565
         bytearray = []
         for x in range(int(image_bytes_len / 3)):
-            r = image_bytes[x * 3 + 0]
-            g = image_bytes[x * 3 + 1]
-            b = image_bytes[x * 3 + 2]
+            r = image_bytes[x*3 + 0]
+            g = image_bytes[x*3 + 1]
+            b = image_bytes[x*3 + 2]
             rgb565 = rgb888_to_rgb565(r, g, b)
             bytearray.append((rgb565 >> 8) & 0xFF)
             bytearray.append(rgb565 & 0xFF)
@@ -141,7 +141,7 @@ def convert_image_bytes(im, format):
         for x in range(int(image_bytes_len / pixels_per_byte)):
             byte = 0
             for n in range(pixels_per_byte):
-                byte_offset = x * pixels_per_byte + n
+                byte_offset = x*pixels_per_byte + n
                 if byte_offset < image_bytes_len:
                     # If mono, each input byte is a grayscale [0,255] pixel -- rescale to the range we want then pack together
                     byte = byte | (rescale_byte(image_bytes[byte_offset], ncolors - 1) << int(n * shifter))
@@ -162,7 +162,7 @@ def convert_image_bytes(im, format):
         for x in range(int(image_bytes_len / pixels_per_byte)):
             byte = 0
             for n in range(pixels_per_byte):
-                byte_offset = x * pixels_per_byte + n
+                byte_offset = x*pixels_per_byte + n
                 if byte_offset < image_bytes_len:
                     # If color, each input byte is the index into the color palette -- pack them together
                     byte = byte | ((image_bytes[byte_offset] & (ncolors - 1)) << int(n * shifter))
@@ -187,6 +187,7 @@ def generate_font_glyphs_list(no_ascii, unicode_glyphs):
 
     return sorted(glyphs.keys())
 
+
 def compress_bytes_qmk_rle(bytearray):
     debug_dump = False
     output = []
@@ -204,7 +205,7 @@ def compress_bytes_qmk_rle(bytearray):
             print('Appending {0} byte(s):'.format(len(r)), '[', ', '.join(['{0:02X}'.format(e) for e in r]), ']')
         output.extend(r)
 
-    for n in range(0, len(bytearray)+1):
+    for n in range(0, len(bytearray) + 1):
         end = True if n == len(bytearray) else False
         if not end:
             c = bytearray[n]
@@ -219,7 +220,7 @@ def compress_bytes_qmk_rle(bytearray):
             if temp[-1] != temp[-2]:
                 repeat = False
             if not repeat or len(temp) == 128 or end:
-                append_byte(len(temp) if end else len(temp)-1)
+                append_byte(len(temp) if end else len(temp) - 1)
                 append_byte(temp[0])
                 temp = [temp[-1]]
                 repeat = False
@@ -227,7 +228,7 @@ def compress_bytes_qmk_rle(bytearray):
             if len(temp) >= 2 and temp[-1] == temp[-2]:
                 repeat = True
                 if len(temp) > 2:
-                    append_range(temp[0:(len(temp)-2)])
+                    append_range(temp[0:(len(temp) - 2)])
                     temp = [temp[-1], temp[-1]]
                 continue
             if len(temp) == 128 or end:

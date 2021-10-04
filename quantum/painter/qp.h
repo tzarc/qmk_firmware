@@ -61,11 +61,13 @@ typedef uint16_t rgb565_t;
 typedef enum { QP_ROTATION_0, QP_ROTATION_90, QP_ROTATION_180, QP_ROTATION_270 } painter_rotation_t;
 
 // Image format internal flags
+typedef enum { IMAGE_TYPE_LOCATION_FLASH } painter_image_type_t;
 typedef enum { IMAGE_FORMAT_RAW, IMAGE_FORMAT_GRAYSCALE, IMAGE_FORMAT_PALETTE } painter_image_format_t;
 typedef enum { IMAGE_UNCOMPRESSED, IMAGE_COMPRESSED_RLE } painter_compression_t;
 
 // Image types -- handled by `qmk convert-image`
 typedef struct painter_image_descriptor_t {
+    const painter_image_type_t   image_type;
     const painter_image_format_t image_format;
     const uint8_t                image_bpp;
     const painter_compression_t  compression;
@@ -76,6 +78,7 @@ typedef const painter_image_descriptor_t QP_RESIDENT_FLASH_OR_RAM *painter_image
 
 // Font types -- handled by `qmk painter-convert-font-image`
 typedef struct painter_font_descriptor_t {
+    const painter_image_type_t   image_type;
     const painter_image_format_t image_format;
     const uint8_t                image_bpp;
     const painter_compression_t  compression;

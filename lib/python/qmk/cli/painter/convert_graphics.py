@@ -69,6 +69,7 @@ ${bytes_lines}
 
 static const painter_raw_image_descriptor_t gfx_${sane_name}_raw QP_RESIDENT_FLASH = {
     .base = {
+        .image_type   = IMAGE_TYPE_LOCATION_FLASH,
         .image_format = ${image_format},
         .image_bpp    = ${image_bpp},
         .compression  = ${compression},
@@ -101,7 +102,7 @@ def render_palette(palette, subs):
     palette_line_src = Template(palette_line_template)
     for n in range(len(palette)):
         rgb = palette[n]
-        hsv = rgb_to_hsv(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0)
+        hsv = rgb_to_hsv(rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
         palette_lines = palette_lines + palette_line_src.substitute({
             'r': '{0:02X}'.format(rgb[0]),
             'g': '{0:02X}'.format(rgb[1]),
@@ -113,7 +114,7 @@ def render_palette(palette, subs):
             's100': '{0:3d}'.format(int(hsv[1] * 100.0)),
             'v100': '{0:3d}'.format(int(hsv[2] * 100.0)),
             'idx': '{0:3d}'.format(n)
-            })
+        })
     palette_src = Template(palette_template)
     subs.update({'palette_byte_size': len(palette) * 3, 'palette_lines': palette_lines.rstrip()})
     return palette_src.substitute(subs).rstrip()

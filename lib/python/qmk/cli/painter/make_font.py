@@ -97,6 +97,7 @@ ${unicode_glyphs}
 
 static const painter_raw_font_descriptor_t font_${sane_name}_raw QP_RESIDENT_FLASH = {
     .base = {
+        .image_type   = IMAGE_TYPE_LOCATION_FLASH,
         .image_format = ${image_format},
         .image_bpp    = ${image_bpp},
         .compression  = ${compression},
@@ -133,7 +134,7 @@ def render_palette(palette, subs):
     palette_line_src = Template(palette_line_template)
     for n in range(len(palette)):
         rgb = palette[n]
-        hsv = rgb_to_hsv(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0)
+        hsv = rgb_to_hsv(rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
         palette_lines = palette_lines + palette_line_src.substitute({
             'r': '{0:02X}'.format(rgb[0]),
             'g': '{0:02X}'.format(rgb[1]),
@@ -145,7 +146,7 @@ def render_palette(palette, subs):
             's100': '{0:3d}'.format(int(hsv[1] * 100.0)),
             'v100': '{0:3d}'.format(int(hsv[2] * 100.0)),
             'idx': '{0:3d}'.format(n)
-            })
+        })
     palette_src = Template(palette_template)
     subs.update({'palette_byte_size': len(palette) * 3, 'palette_lines': palette_lines.rstrip()})
     return palette_src.substitute(subs).rstrip()
@@ -250,7 +251,7 @@ def painter_make_font_image(cli):
 
     # Create a new black-filled image with the specified geometry, but wider than required as we'll crop it once all the glyphs have been drawn
     # Note that the height is increased by 1 -- this allows for the first row to be used as markers for widths of each glyph
-    img = Image.new("RGB", (int(1.5 * (ls_r - ls_l)), ls_b - ls_t + 1), (0, 0, 0, 255))
+    img = Image.new("RGB", (int(1.5 * (ls_r-ls_l)), ls_b - ls_t + 1), (0, 0, 0, 255))
     draw = ImageDraw.Draw(img)
 
     # Keep track of the drawing position, each glyph's pixel offset, and each glyph's width
@@ -343,12 +344,7 @@ def painter_convert_font_image(cli):
         this_glyph_image = converted_img.crop((glyph_pixel_offsets[n], 0, glyph_pixel_offsets[n] + glyph_pixel_widths[n], height))
         (this_glyph_image_palette, this_glyph_image_bytes) = qmk.painter.convert_image_bytes(this_glyph_image, format)
         this_glyph_data = this_glyph_image_bytes if not cli.args.rle else qmk.painter.compress_bytes_qmk_rle(this_glyph_image_bytes)
-        glyph_data.append({
-            "idx": n,
-            "glyph": glyphs[n],
-            "width": glyph_pixel_widths[n],
-            "image_bytes": this_glyph_data
-        })
+        glyph_data.append({"idx": n, "glyph": glyphs[n], "width": glyph_pixel_widths[n], "image_bytes": this_glyph_data})
 
     sane_name = re.sub(r"[^a-zA-Z0-9]", "_", cli.args.input.stem)
 
