@@ -34,5 +34,5 @@
 
 // Factory method for an ST7789 device
 #ifdef QUANTUM_PAINTER_ST7789_SPI_ENABLE
-painter_device_t qp_st7789_make_spi_device(pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor);
+painter_device_t qp_st7789_make_spi_device(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, int spi_mode);
 #endif  // QUANTUM_PAINTER_ST7789_SPI_ENABLE

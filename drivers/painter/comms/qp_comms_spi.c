@@ -112,7 +112,9 @@ uint32_t qp_comms_spi_dc_reset_send_data(painter_device_t device, const void *da
     struct painter_driver_t *              driver       = (struct painter_driver_t *)device;
     struct qp_comms_spi_dc_reset_config_t *comms_config = (struct qp_comms_spi_dc_reset_config_t *)driver->comms_config;
     writePinHigh(comms_config->dc_pin);
-    return qp_comms_spi_send_data(device, data, byte_count);
+    bool ret = qp_comms_spi_send_data(device, data, byte_count);
+    writePinLow(comms_config->dc_pin);
+    return ret;
 }
 
 const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_with_dc_vtable = {

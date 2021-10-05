@@ -55,3 +55,14 @@
 #define ST77XX_GET_ID1 0xDA           // Get ID1
 #define ST77XX_GET_ID2 0xDB           // Get ID2
 #define ST77XX_GET_ID3 0xDC           // Get ID3
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MADCTL Flags
+
+#define ST77XX_MADCTL_MY 0b10000000
+#define ST77XX_MADCTL_MX 0b01000000
+#define ST77XX_MADCTL_MV 0b00100000
+#define ST77XX_MADCTL_ML 0b00010000
+#define ST77XX_MADCTL_RGB 0b00000000
+#define ST77XX_MADCTL_BGR 0b00001000
+#define ST77XX_MADCTL_MH 0b00000100

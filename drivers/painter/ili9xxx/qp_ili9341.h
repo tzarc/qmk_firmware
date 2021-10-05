@@ -34,5 +34,5 @@
 
 // Factory method for an ILI9341 device
 #ifdef QUANTUM_PAINTER_ILI9341_SPI_ENABLE
-painter_device_t qp_ili9341_make_spi_device(pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor);
+painter_device_t qp_ili9341_make_spi_device(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, int spi_mode);
 #endif  // QUANTUM_PAINTER_ILI9341_SPI_ENABLE

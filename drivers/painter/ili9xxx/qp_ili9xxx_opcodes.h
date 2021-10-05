@@ -103,3 +103,14 @@
 #define ILI9XXX_ENABLE_3_GAMMA 0xF2          // Enable 3 gamma
 #define ILI9XXX_SET_IF_CTL 0xF6              // Set interface control
 #define ILI9XXX_SET_PUMP_RATIO_CTL 0xF7      // Set pump ratio control
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MADCTL Flags
+
+#define ILI9XXX_MADCTL_MY 0b10000000
+#define ILI9XXX_MADCTL_MX 0b01000000
+#define ILI9XXX_MADCTL_MV 0b00100000
+#define ILI9XXX_MADCTL_ML 0b00010000
+#define ILI9XXX_MADCTL_RGB 0b00000000
+#define ILI9XXX_MADCTL_BGR 0b00001000
+#define ILI9XXX_MADCTL_MH 0b00000100

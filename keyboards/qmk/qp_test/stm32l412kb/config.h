@@ -18,7 +18,7 @@
 
 // General config
 
-#define QUANTUM_PAINTER_DEBUG
+//#define QUANTUM_PAINTER_DEBUG
 #define DEBUG_EEPROM_OUTPUT
 #define EEPROM_I2C_24LC128
 

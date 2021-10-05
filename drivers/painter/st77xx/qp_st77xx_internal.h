@@ -41,6 +41,8 @@ typedef struct st77xx_painter_device_t {
         // TODO: I2C/parallel etc.
     };
     painter_rotation_t rotation;
+    uint16_t           x_offset;
+    uint16_t           y_offset;
 } st77xx_painter_device_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

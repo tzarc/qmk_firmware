@@ -67,7 +67,7 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     qp_ili9xxx_command_databuf(device, ILI9XXX_SET_NGAMMA, ngamma, sizeof(ngamma));
 
     // Set the pixel format
-    qp_ili9xxx_command_databyte(device, ILI9XXX_SET_PIX_FMT, 0x55);
+    qp_ili9xxx_command_databyte(device, ILI9XXX_SET_PIX_FMT, 0x05);
 
     // Frame and function control
     static const uint8_t frame_ctl_normal[] = {0x00, 0x1B};
@@ -82,16 +82,16 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     switch (rotation) {
         default:
         case QP_ROTATION_0:
-            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, 0b00001000);
+            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR);
             break;
         case QP_ROTATION_90:
-            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, 0b10101000);
+            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MV);
             break;
         case QP_ROTATION_180:
-            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, 0b11001000);
+            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MY);
             break;
         case QP_ROTATION_270:
-            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, 0b01101000);
+            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MV | ILI9XXX_MADCTL_MY);
             break;
     }
 
@@ -125,12 +125,14 @@ static const struct ili9xxx_painter_device_vtable_t QP_RESIDENT_FLASH spi_ili9xx
 };
 
 // Factory function for creating a handle to the ILI9341 device
-painter_device_t qp_ili9341_make_spi_device(pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor) {
+painter_device_t qp_ili9341_make_spi_device(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, int spi_mode) {
     for (uint32_t i = 0; i < ILI9341_NUM_DEVICES; ++i) {
         ili9xxx_painter_device_t *driver = &ili9341_drivers[i];
         if (!driver->qp_driver.driver_vtable) {
             driver->qp_driver.driver_vtable         = &ili9341_driver_vtable;
             driver->qp_driver.comms_vtable          = &spi_comms_with_dc_vtable;
+            driver->qp_driver.screen_width          = screen_width;
+            driver->qp_driver.screen_height         = screen_height;
             driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
             driver->ili9xxx_vtable                  = &spi_ili9xxx_vtable;
 
@@ -139,7 +141,7 @@ painter_device_t qp_ili9341_make_spi_device(pin_t chip_select_pin, pin_t dc_pin,
             driver->spi_dc_reset_config.spi_config.chip_select_pin = chip_select_pin;
             driver->spi_dc_reset_config.spi_config.divisor         = spi_divisor;
             driver->spi_dc_reset_config.spi_config.lsb_first       = false;
-            driver->spi_dc_reset_config.spi_config.mode            = 0;
+            driver->spi_dc_reset_config.spi_config.mode            = spi_mode;
             driver->spi_dc_reset_config.dc_pin                     = dc_pin;
             driver->spi_dc_reset_config.reset_pin                  = reset_pin;
             return (painter_device_t)driver;

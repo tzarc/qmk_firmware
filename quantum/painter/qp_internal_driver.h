@@ -67,6 +67,10 @@ struct painter_driver_t {
     const struct painter_driver_vtable_t QP_RESIDENT_FLASH *driver_vtable;
     const struct painter_comms_vtable_t QP_RESIDENT_FLASH *comms_vtable;
 
+    // Panel geometry
+    uint16_t screen_width;
+    uint16_t screen_height;
+
     // Number of bits per pixel, used for determining how many pixels can be sent during a transmission of the pixdata buffer
     uint8_t native_bits_per_pixel;
 
