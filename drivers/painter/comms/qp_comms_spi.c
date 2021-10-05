@@ -1,18 +1,5 @@
-/* Copyright 2021 Nick Brassel (@tzarc)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// Copyright 2021 Nick Brassel (@tzarc)
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifdef QUANTUM_PAINTER_SPI_ENABLE
 
@@ -101,13 +88,6 @@ bool qp_comms_spi_dc_reset_init(painter_device_t device) {
     return true;
 }
 
-void qp_comms_spi_dc_reset_send_command(painter_device_t device, uint8_t cmd) {
-    struct painter_driver_t *              driver       = (struct painter_driver_t *)device;
-    struct qp_comms_spi_dc_reset_config_t *comms_config = (struct qp_comms_spi_dc_reset_config_t *)driver->comms_config;
-    writePinLow(comms_config->dc_pin);
-    spi_write(cmd);
-}
-
 uint32_t qp_comms_spi_dc_reset_send_data(painter_device_t device, const void *data, uint32_t byte_count) {
     struct painter_driver_t *              driver       = (struct painter_driver_t *)device;
     struct qp_comms_spi_dc_reset_config_t *comms_config = (struct qp_comms_spi_dc_reset_config_t *)driver->comms_config;
@@ -115,11 +95,39 @@ uint32_t qp_comms_spi_dc_reset_send_data(painter_device_t device, const void *da
     return qp_comms_spi_send_data(device, data, byte_count);
 }
 
-const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_with_dc_vtable = {
-    .comms_init  = qp_comms_spi_dc_reset_init,
-    .comms_start = qp_comms_spi_start,
-    .comms_send  = qp_comms_spi_dc_reset_send_data,
-    .comms_stop  = qp_comms_spi_stop,
+void qp_comms_spi_dc_reset_send_command(painter_device_t device, uint8_t cmd) {
+    struct painter_driver_t *              driver       = (struct painter_driver_t *)device;
+    struct qp_comms_spi_dc_reset_config_t *comms_config = (struct qp_comms_spi_dc_reset_config_t *)driver->comms_config;
+    writePinLow(comms_config->dc_pin);
+    spi_write(cmd);
+}
+
+void qp_comms_spi_dc_reset_bulk_command_sequence(painter_device_t device, const uint8_t *sequence, size_t sequence_len) {
+    for (size_t i = 0; i < sequence_len;) {
+        uint8_t command   = sequence[i];
+        uint8_t delay     = sequence[i + 1];
+        uint8_t num_bytes = sequence[i + 2];
+        qp_comms_spi_dc_reset_send_command(device, command);
+        if (num_bytes > 0) {
+            qp_comms_spi_dc_reset_send_data(device, &sequence[i + 3], num_bytes);
+        }
+        if (delay > 0) {
+            wait_ms(delay);
+        }
+        i += (3 + num_bytes);
+    }
+}
+
+const struct painter_comms_with_command_vtable_t QP_RESIDENT_FLASH spi_comms_with_dc_vtable = {
+    .base =
+        {
+            .comms_init  = qp_comms_spi_dc_reset_init,
+            .comms_start = qp_comms_spi_start,
+            .comms_send  = qp_comms_spi_dc_reset_send_data,
+            .comms_stop  = qp_comms_spi_stop,
+        },
+    .send_command          = qp_comms_spi_dc_reset_send_command,
+    .bulk_command_sequence = qp_comms_spi_dc_reset_bulk_command_sequence,
 };
 
 #endif  // QUANTUM_PAINTER_SPI_ENABLE

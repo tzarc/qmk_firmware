@@ -1,18 +1,5 @@
-/* Copyright 2021 Nick Brassel (@tzarc)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// Copyright 2021 Nick Brassel (@tzarc)
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <wait.h>
 #include <qp_internal.h>
@@ -58,7 +45,7 @@ bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
     };
     // clang-format on
 
-    qp_ili9xxx_bulk_command(device, ili9163_init_sequence, sizeof(ili9163_init_sequence));
+    qp_comms_bulk_command_sequence(device, ili9163_init_sequence, sizeof(ili9163_init_sequence));
 
     // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
     uint8_t madctl[] QP_RESIDENT_FLASH = {
@@ -68,7 +55,7 @@ bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
         [QP_ROTATION_270] = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MV | ILI9XXX_MADCTL_MY,
     };
 
-    qp_ili9xxx_command_databuf(device, ILI9XXX_SET_MEM_ACS_CTL, &madctl[rotation], sizeof(uint8_t));
+    qp_comms_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, madctl[rotation]);
 
     return true;
 }
@@ -91,21 +78,16 @@ const struct painter_driver_vtable_t QP_RESIDENT_FLASH ili9163_driver_vtable = {
 
 #ifdef QUANTUM_PAINTER_ILI9163_SPI_ENABLE
 
-static const struct ili9xxx_painter_device_vtable_t QP_RESIDENT_FLASH spi_ili9xxx_vtable = {
-    .send_cmd8 = qp_comms_spi_dc_reset_send_command,
-};
-
 // Factory function for creating a handle to the ILI9163 device
 painter_device_t qp_ili9163_make_spi_device(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, int spi_mode) {
     for (uint32_t i = 0; i < ILI9163_NUM_DEVICES; ++i) {
         ili9xxx_painter_device_t *driver = &ili9163_drivers[i];
         if (!driver->qp_driver.driver_vtable) {
             driver->qp_driver.driver_vtable         = &ili9163_driver_vtable;
-            driver->qp_driver.comms_vtable          = &spi_comms_with_dc_vtable;
+            driver->qp_driver.comms_vtable          = (struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
             driver->qp_driver.screen_width          = screen_width;
             driver->qp_driver.screen_height         = screen_height;
             driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
-            driver->ili9xxx_vtable                  = &spi_ili9xxx_vtable;
 
             // SPI and other pin configuration
             driver->qp_driver.comms_config                         = &driver->spi_dc_reset_config;

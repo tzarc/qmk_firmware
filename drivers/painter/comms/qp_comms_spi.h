@@ -1,18 +1,5 @@
-/* Copyright 2021 Nick Brassel (@tzarc)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// Copyright 2021 Nick Brassel (@tzarc)
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
 
@@ -54,7 +41,8 @@ struct qp_comms_spi_dc_reset_config_t {
 
 void     qp_comms_spi_dc_reset_send_command(painter_device_t device, uint8_t cmd);
 uint32_t qp_comms_spi_dc_reset_send_data(painter_device_t device, const void *data, uint32_t byte_count);
+void     qp_comms_spi_dc_reset_bulk_command_sequence(painter_device_t device, const uint8_t *sequence, size_t sequence_len);
 
-extern const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_with_dc_vtable;
+extern const struct painter_comms_with_command_vtable_t QP_RESIDENT_FLASH spi_comms_with_dc_vtable;
 
 #endif  // QUANTUM_PAINTER_SPI_ENABLE

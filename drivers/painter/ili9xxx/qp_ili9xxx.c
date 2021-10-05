@@ -1,18 +1,5 @@
-/* Copyright 2021 Nick Brassel (@tzarc)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// Copyright 2021 Nick Brassel (@tzarc)
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <color.h>
 #include <qp_internal.h>
@@ -22,42 +9,6 @@
 #include <qp_ili9xxx_opcodes.h>
 
 #define BYTE_SWAP(x) (((((uint16_t)(x)) >> 8) & 0x00FF) | ((((uint16_t)(x)) << 8) & 0xFF00))
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Low-level LCD control functions
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void qp_ili9xxx_command(painter_device_t device, uint8_t cmd) {
-    struct ili9xxx_painter_device_t *lcd = (struct ili9xxx_painter_device_t *)device;
-    lcd->ili9xxx_vtable->send_cmd8(device, cmd);
-}
-
-void qp_ili9xxx_command_databyte(painter_device_t device, uint8_t cmd, uint8_t data) {
-    qp_ili9xxx_command(device, cmd);
-    qp_comms_send(device, &data, sizeof(data));
-}
-
-uint32_t qp_ili9xxx_command_databuf(painter_device_t device, uint8_t cmd, const void *data, uint32_t byte_count) {
-    qp_ili9xxx_command(device, cmd);
-    return qp_comms_send(device, data, byte_count);
-}
-
-void qp_ili9xxx_bulk_command(painter_device_t device, const uint8_t *sequence, size_t sequence_len) {
-    for (size_t i = 0; i < sequence_len;) {
-        uint8_t command   = sequence[i];
-        uint8_t delay     = sequence[i + 1];
-        uint8_t num_bytes = sequence[i + 2];
-        if (num_bytes == 0) {
-            qp_ili9xxx_command(device, command);
-        } else {
-            qp_ili9xxx_command_databuf(device, command, &sequence[i + 3], num_bytes);
-        }
-        if(delay > 0) {
-            wait_ms(delay);
-        }
-        i += (3 + num_bytes);
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Native pixel format conversion
@@ -81,7 +32,7 @@ static inline rgb565_t hsv_to_ili9xxx(uint8_t hue, uint8_t sat, uint8_t val) {
 
 // Power control
 bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
-    qp_ili9xxx_command(device, power_on ? ILI9XXX_CMD_DISPLAY_ON : ILI9XXX_CMD_DISPLAY_OFF);
+    qp_comms_command(device, power_on ? ILI9XXX_CMD_DISPLAY_ON : ILI9XXX_CMD_DISPLAY_OFF);
     return true;
 }
 
@@ -103,18 +54,18 @@ bool qp_ili9xxx_flush(painter_device_t device) {
 bool qp_ili9xxx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     // Set up the x-window
     uint8_t xbuf[4] = {left >> 8, left & 0xFF, right >> 8, right & 0xFF};
-    qp_ili9xxx_command_databuf(device,
-                               ILI9XXX_SET_COL_ADDR,  // column address set
-                               xbuf, sizeof(xbuf));
+    qp_comms_command_databuf(device,
+                             ILI9XXX_SET_COL_ADDR,  // column address set
+                             xbuf, sizeof(xbuf));
 
     // Set up the y-window
     uint8_t ybuf[4] = {top >> 8, top & 0xFF, bottom >> 8, bottom & 0xFF};
-    qp_ili9xxx_command_databuf(device,
-                               ILI9XXX_SET_PAGE_ADDR,  // page (row) address set
-                               ybuf, sizeof(ybuf));
+    qp_comms_command_databuf(device,
+                             ILI9XXX_SET_PAGE_ADDR,  // page (row) address set
+                             ybuf, sizeof(ybuf));
 
     // Lock in the window
-    qp_ili9xxx_command(device, ILI9XXX_SET_MEM);  // enable memory writes
+    qp_comms_command(device, ILI9XXX_SET_MEM);  // enable memory writes
     return true;
 }
 

@@ -1,18 +1,5 @@
-/* Copyright 2021 Nick Brassel (@tzarc)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// Copyright 2021 Nick Brassel (@tzarc)
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <quantum.h>
 #include <qp.h>
@@ -21,7 +8,7 @@
 
 // Test assets
 #include "thintel15.c"
-#include "dh-test.c"
+#include "test-image.c"
 
 painter_device_t ili9163;
 painter_device_t st7789;
@@ -56,7 +43,7 @@ void draw_test(painter_device_t device, const char *name, uint32_t now) {
     qp_rect(device, xpos, 1 * font_thintel15->glyph_height, width - 1, 2 * font_thintel15->glyph_height, 0, 0, 0, true);
     xpos = qp_drawtext_recolor(device, 0, 2 * font_thintel15->glyph_height, font_thintel15, buf3, hue, 255, 255, hue, 255, 0);
     qp_rect(device, xpos, 2 * font_thintel15->glyph_height, width - 1, 3 * font_thintel15->glyph_height, 0, 0, 0, true);
-    qp_drawimage(device, 0, 3 * font_thintel15->glyph_height, gfx_dh_test);
+    qp_drawimage_recolor(device, 0, 3 * font_thintel15->glyph_height, gfx_test_image, hue, 255, 255, hue, 255, 0);
     qp_flush(device);
 }
 
