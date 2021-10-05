@@ -33,15 +33,6 @@ define handle_quantum_painter_driver
         COMMON_VPATH += $(DRIVER_PATH)/painter/qmk_oled_wrapper
         SRC += $(DRIVER_PATH)/painter/qmk_oled_wrapper/qp_qmk_oled_wrapper.c
 
-    else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341_spi)
-        QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
-        OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE -DQUANTUM_PAINTER_ILI9XXX_SPI_ENABLE -DQUANTUM_PAINTER_ILI9341_SPI_ENABLE
-        COMMON_VPATH += \
-            $(DRIVER_PATH)/painter/ili9xxx
-        SRC += \
-            $(DRIVER_PATH)/painter/ili9xxx/qp_ili9xxx.c \
-            $(DRIVER_PATH)/painter/ili9xxx/qp_ili9341.c \
-
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9163_spi)
         QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
         OPT_DEFS += -DQUANTUM_PAINTER_ILI9163_ENABLE -DQUANTUM_PAINTER_ILI9XXX_SPI_ENABLE -DQUANTUM_PAINTER_ILI9163_SPI_ENABLE
@@ -50,6 +41,15 @@ define handle_quantum_painter_driver
         SRC += \
             $(DRIVER_PATH)/painter/ili9xxx/qp_ili9xxx.c \
             $(DRIVER_PATH)/painter/ili9xxx/qp_ili9163.c \
+
+    else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341_spi)
+        QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
+        OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE -DQUANTUM_PAINTER_ILI9XXX_SPI_ENABLE -DQUANTUM_PAINTER_ILI9341_SPI_ENABLE
+        COMMON_VPATH += \
+            $(DRIVER_PATH)/painter/ili9xxx
+        SRC += \
+            $(DRIVER_PATH)/painter/ili9xxx/qp_ili9xxx.c \
+            $(DRIVER_PATH)/painter/ili9xxx/qp_ili9341.c \
 
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),st7789_spi)
         QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes

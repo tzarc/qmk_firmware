@@ -116,6 +116,21 @@ bool qp_flush(painter_device_t device) {
     return ret;
 }
 
+void qp_geometry(painter_device_t device, uint16_t *width, uint16_t *height) {
+    qp_dprintf("qp_geometry: entry\n");
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+
+    if (width) {
+        *width = driver->screen_width;
+    }
+
+    if (height) {
+        *height = driver->screen_height;
+    }
+
+    qp_dprintf("qp_geometry: ok\n");
+}
+
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     qp_dprintf("qp_viewport: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;

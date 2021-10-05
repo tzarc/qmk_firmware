@@ -102,6 +102,9 @@ bool qp_clear(painter_device_t device);
 // Transmits any outstanding data to the screen in order to persist all changes to the display -- some drivers without framebuffers will likely ignore this API.
 bool qp_flush(painter_device_t device);
 
+// Gets the size of the display
+void qp_geometry(painter_device_t device, uint16_t *width, uint16_t *height);
+
 // Set the viewport that native pixel data is to get streamed into
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
 

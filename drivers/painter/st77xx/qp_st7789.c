@@ -84,9 +84,11 @@ bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
 
     // Invert the screen (apparently the pixel format is negated?)
     qp_st77xx_command(device, ST77XX_CMD_INVERT_ON);
+    wait_ms(20);
 
     // Disable sleep mode
     qp_st77xx_command(device, ST77XX_CMD_NORMAL_ON);
+    wait_ms(20);
 
     // Turn on display
     qp_st77xx_command(device, ST77XX_CMD_DISPLAY_ON);

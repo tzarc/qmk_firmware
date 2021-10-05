@@ -42,6 +42,23 @@ uint32_t qp_ili9xxx_command_databuf(painter_device_t device, uint8_t cmd, const 
     return qp_comms_send(device, data, byte_count);
 }
 
+void qp_ili9xxx_bulk_command(painter_device_t device, const uint8_t *sequence, size_t sequence_len) {
+    for (size_t i = 0; i < sequence_len;) {
+        uint8_t command   = sequence[i];
+        uint8_t delay     = sequence[i + 1];
+        uint8_t num_bytes = sequence[i + 2];
+        if (num_bytes == 0) {
+            qp_ili9xxx_command(device, command);
+        } else {
+            qp_ili9xxx_command_databuf(device, command, &sequence[i + 3], num_bytes);
+        }
+        if(delay > 0) {
+            wait_ms(delay);
+        }
+        i += (3 + num_bytes);
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Native pixel format conversion
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

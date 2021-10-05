@@ -37,59 +37,38 @@ bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
     ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
     lcd->rotation                 = rotation;
 
-    // Perform a software reset
-    qp_ili9xxx_command(device, ILI9XXX_CMD_RESET);
-    wait_ms(120);
+    // clang-format off
+    const uint8_t ili9163_init_sequence[] QP_RESIDENT_FLASH = {
+        // Command,                 Delay,  N, Data[N]
+        ILI9XXX_CMD_RESET,            120,  0,
+        ILI9XXX_CMD_SLEEP_OFF,          5,  0,
+        ILI9XXX_SET_PIX_FMT,            0,  1, 0x55,
+        ILI9XXX_SET_GAMMA,              0,  1, 0x04,
+        ILI9XXX_ENABLE_3_GAMMA,         0,  1, 0x01,
+        ILI9XXX_SET_FUNCTION_CTL,       0,  2, 0b11111111, 0b00000110,
+        ILI9XXX_SET_PGAMMA,             0, 15, 0x36, 0x29, 0x12, 0x22, 0x1C, 0x15, 0x42, 0xB7, 0x2F, 0x13, 0x12, 0x0A, 0x11, 0x0B, 0x06,
+        ILI9XXX_SET_NGAMMA,             0, 15, 0x09, 0x16, 0x2D, 0x0D, 0x13, 0x15, 0x40, 0x48, 0x53, 0x0C, 0x1D, 0x25, 0x2E, 0x34, 0x39,
+        ILI9XXX_SET_FRAME_CTL_NORMAL,   0,  2, 0x08, 0x02,
+        ILI9XXX_SET_POWER_CTL_1,        0,  2, 0x0A, 0x02,
+        ILI9XXX_SET_POWER_CTL_2,        0,  1, 0x02,
+        ILI9XXX_SET_VCOM_CTL_1,         0,  2, 0x50, 0x63,
+        ILI9XXX_SET_VCOM_CTL_2,         0,  1, 0x00,
+        ILI9XXX_CMD_PARTIAL_OFF,        0,  0,
+        ILI9XXX_CMD_DISPLAY_ON,        20,  0
+    };
+    // clang-format on
 
-    // Disable sleep mode
-    qp_ili9xxx_command(device, ILI9XXX_CMD_SLEEP_OFF);
-    wait_ms(5);
-
-    qp_ili9xxx_command_databyte(device, ILI9XXX_SET_PIX_FMT, 0x55);
-    qp_ili9xxx_command_databyte(device, ILI9XXX_SET_GAMMA, 0x04);
-    qp_ili9xxx_command_databyte(device, ILI9XXX_ENABLE_3_GAMMA, 0x01);
-    qp_ili9xxx_command(device, ILI9XXX_CMD_PARTIAL_OFF);
-
-    static const uint8_t function_ctl[] = {0b11111111, 0b00000110};
-    qp_ili9xxx_command_databuf(device, ILI9XXX_SET_FUNCTION_CTL, function_ctl, sizeof(function_ctl));
-
-    static const uint8_t pgamma[] = {0x36, 0x29, 0x12, 0x22, 0x1C, 0x15, 0x42, 0xB7, 0x2F, 0x13, 0x12, 0x0A, 0x11, 0x0B, 0x06};
-    qp_ili9xxx_command_databuf(device, ILI9XXX_SET_PGAMMA, pgamma, sizeof(pgamma));
-    static const uint8_t ngamma[] = {0x09, 0x16, 0x2D, 0x0D, 0x13, 0x15, 0x40, 0x48, 0x53, 0x0C, 0x1D, 0x25, 0x2E, 0x34, 0x39};
-    qp_ili9xxx_command_databuf(device, ILI9XXX_SET_NGAMMA, ngamma, sizeof(ngamma));
-
-    static const uint8_t frame_ctl_normal[] = {0x08, 0x02};
-    qp_ili9xxx_command_databuf(device, ILI9XXX_SET_FRAME_CTL_NORMAL, frame_ctl_normal, sizeof(frame_ctl_normal));
-
-    static const uint8_t power_ctl_1[] = {0x0A, 0x02};
-    qp_ili9xxx_command_databuf(device, ILI9XXX_SET_POWER_CTL_1, power_ctl_1, sizeof(power_ctl_1));
-    qp_ili9xxx_command_databyte(device, ILI9XXX_SET_POWER_CTL_2, 0x02);
-    static const uint8_t vcom_ctl_1[] = {0x50, 0x63};
-    qp_ili9xxx_command_databuf(device, ILI9XXX_SET_VCOM_CTL_1, vcom_ctl_1, sizeof(vcom_ctl_1));
-    qp_ili9xxx_command_databyte(device, ILI9XXX_SET_VCOM_CTL_2, 0);
-
-    qp_ili9xxx_command(device, ILI9XXX_CMD_DISPLAY_ON);
+    qp_ili9xxx_bulk_command(device, ili9163_init_sequence, sizeof(ili9163_init_sequence));
 
     // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
-    switch (rotation) {
-        default:
-        case QP_ROTATION_0:
-            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR);
-            break;
-        case QP_ROTATION_90:
-            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MV);
-            break;
-        case QP_ROTATION_180:
-            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MY);
-            break;
-        case QP_ROTATION_270:
-            qp_ili9xxx_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MV | ILI9XXX_MADCTL_MY);
-            break;
-    }
+    uint8_t madctl[] QP_RESIDENT_FLASH = {
+        [QP_ROTATION_0]   = ILI9XXX_MADCTL_BGR,
+        [QP_ROTATION_90]  = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MV,
+        [QP_ROTATION_180] = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MY,
+        [QP_ROTATION_270] = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MV | ILI9XXX_MADCTL_MY,
+    };
 
-    // Disable sleep mode
-    qp_ili9xxx_command(device, ILI9XXX_CMD_SLEEP_OFF);
-    wait_ms(20);
+    qp_ili9xxx_command_databuf(device, ILI9XXX_SET_MEM_ACS_CTL, &madctl[rotation], sizeof(uint8_t));
 
     return true;
 }

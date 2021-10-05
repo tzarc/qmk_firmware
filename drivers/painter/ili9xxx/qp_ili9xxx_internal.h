@@ -62,3 +62,4 @@ bool qp_ili9xxx_append_pixels(painter_device_t device, uint8_t *target_buffer, q
 void     qp_ili9xxx_command(painter_device_t device, uint8_t cmd);
 void     qp_ili9xxx_command_databyte(painter_device_t device, uint8_t cmd, uint8_t data);
 uint32_t qp_ili9xxx_command_databuf(painter_device_t device, uint8_t cmd, const void *data, uint32_t byte_count);
+void     qp_ili9xxx_bulk_command(painter_device_t device, const uint8_t *sequence, size_t sequence_len);
