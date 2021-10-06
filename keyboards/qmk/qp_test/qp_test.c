@@ -17,7 +17,7 @@ painter_device_t st7735;
 void init_and_clear(painter_device_t device, painter_rotation_t rotation) {
     uint16_t width;
     uint16_t height;
-    qp_geometry(device, &width, &height);
+    qp_get_geometry(device, &width, &height, NULL, NULL, NULL);
 
     qp_init(device, rotation);
     qp_rect(device, 0, 0, width - 1, height - 1, 0, 0, 0, true);
@@ -26,7 +26,7 @@ void init_and_clear(painter_device_t device, painter_rotation_t rotation) {
 void draw_test(painter_device_t device, const char *name, uint32_t now) {
     uint16_t width;
     uint16_t height;
-    qp_geometry(device, &width, &height);
+    qp_get_geometry(device, &width, &height, NULL, NULL, NULL);
 
     static uint8_t hue = 0;
     hue += 4;

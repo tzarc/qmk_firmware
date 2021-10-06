@@ -38,8 +38,8 @@ bool qp_ili9xxx_power(painter_device_t device, bool power_on) {
 
 // Screen clear
 bool qp_ili9xxx_clear(painter_device_t device) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    lcd->qp_driver.driver_vtable->init(device, lcd->rotation);  // Re-init the LCD
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    driver->driver_vtable->init(device, driver->rotation);  // Re-init the LCD
     return true;
 }
 
@@ -52,6 +52,14 @@ bool qp_ili9xxx_flush(painter_device_t device) {
 
 // Viewport to draw to
 bool qp_ili9xxx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+
+    // Fix up the drawing location if required
+    left += driver->offset_x;
+    right += driver->offset_x;
+    top += driver->offset_y;
+    bottom += driver->offset_y;
+
     // Set up the x-window
     uint8_t xbuf[4] = {left >> 8, left & 0xFF, right >> 8, right & 0xFF};
     qp_comms_command_databuf(device,

@@ -90,7 +90,10 @@ bool qp_clear(painter_device_t device);
 bool qp_flush(painter_device_t device);
 
 // Gets the size of the display
-void qp_geometry(painter_device_t device, uint16_t *width, uint16_t *height);
+void qp_get_geometry(painter_device_t device, uint16_t *width, uint16_t *height, painter_rotation_t *rotation, uint16_t *offset_x, uint16_t *offset_y);
+
+// Allows repositioning of the viewport if the panel geometry offsets are different to what's expected.
+void qp_override_offsets(painter_device_t device, uint16_t offset_x, uint16_t offset_y);
 
 // Set the viewport that native pixel data is to get streamed into
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);

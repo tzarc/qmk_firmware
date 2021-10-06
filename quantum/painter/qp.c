@@ -40,6 +40,10 @@ bool qp_init(painter_device_t device, painter_rotation_t rotation) {
         return false;
     }
 
+    // Set the rotation before init
+    driver->rotation = rotation;
+
+    // Invoke init
     bool ret = driver->driver_vtable->init(device, rotation);
     qp_comms_stop(device);
     qp_dprintf("qp_init: %s\n", ret ? "ok" : "fail");
@@ -103,7 +107,7 @@ bool qp_flush(painter_device_t device) {
     return ret;
 }
 
-void qp_geometry(painter_device_t device, uint16_t *width, uint16_t *height) {
+void qp_get_geometry(painter_device_t device, uint16_t *width, uint16_t *height, painter_rotation_t *rotation, uint16_t *offset_x, uint16_t *offset_y) {
     qp_dprintf("qp_geometry: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
 
@@ -115,7 +119,29 @@ void qp_geometry(painter_device_t device, uint16_t *width, uint16_t *height) {
         *height = driver->screen_height;
     }
 
+    if (rotation) {
+        *rotation = driver->rotation;
+    }
+
+    if (offset_x) {
+        *offset_x = driver->offset_x;
+    }
+
+    if (offset_y) {
+        *offset_y = driver->offset_y;
+    }
+
     qp_dprintf("qp_geometry: ok\n");
+}
+
+void qp_override_offsets(painter_device_t device, uint16_t offset_x, uint16_t offset_y) {
+    qp_dprintf("qp_override_offsets: entry\n");
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+
+    driver->offset_x = offset_x;
+    driver->offset_y = offset_y;
+
+    qp_dprintf("qp_override_offsets: ok\n");
 }
 
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
@@ -131,6 +157,7 @@ bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t 
         return false;
     }
 
+    // Set the viewport
     bool ret = driver->driver_vtable->viewport(device, left, top, right, bottom);
     qp_dprintf("qp_viewport: %s\n", ret ? "ok" : "fail");
     qp_comms_stop(device);

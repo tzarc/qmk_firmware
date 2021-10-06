@@ -19,9 +19,6 @@ typedef struct st77xx_painter_device_t {
         struct qp_comms_spi_dc_reset_config_t spi_dc_reset_config;
         // TODO: I2C/parallel etc.
     };
-    painter_rotation_t rotation;
-    uint16_t           x_offset;
-    uint16_t           y_offset;
 } st77xx_painter_device_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

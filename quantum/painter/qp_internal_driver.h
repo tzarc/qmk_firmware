@@ -67,6 +67,13 @@ struct painter_driver_t {
     uint16_t screen_width;
     uint16_t screen_height;
 
+    // Target drawing rotation
+    painter_rotation_t rotation;
+
+    // Automated offsets for setting viewport
+    uint16_t offset_x;
+    uint16_t offset_y;
+
     // Number of bits per pixel, used for determining how many pixels can be sent during a transmission of the pixdata buffer
     uint8_t native_bits_per_pixel;
 

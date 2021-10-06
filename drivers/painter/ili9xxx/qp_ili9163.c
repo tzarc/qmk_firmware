@@ -21,9 +21,6 @@ ili9xxx_painter_device_t ili9163_drivers[ILI9163_NUM_DEVICES] = {0};
 
 // Initialization
 bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    lcd->rotation                 = rotation;
-
     // clang-format off
     const uint8_t ili9163_init_sequence[] QP_RESIDENT_FLASH = {
         // Command,                 Delay,  N, Data[N]
@@ -48,7 +45,7 @@ bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
     qp_comms_bulk_command_sequence(device, ili9163_init_sequence, sizeof(ili9163_init_sequence));
 
     // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
-    uint8_t madctl[] QP_RESIDENT_FLASH = {
+    const uint8_t madctl[] QP_RESIDENT_FLASH = {
         [QP_ROTATION_0]   = ILI9XXX_MADCTL_BGR,
         [QP_ROTATION_90]  = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MV,
         [QP_ROTATION_180] = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MY,
@@ -87,6 +84,9 @@ painter_device_t qp_ili9163_make_spi_device(uint16_t screen_width, uint16_t scre
             driver->qp_driver.comms_vtable          = (struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
             driver->qp_driver.screen_width          = screen_width;
             driver->qp_driver.screen_height         = screen_height;
+            driver->qp_driver.rotation              = QP_ROTATION_0;
+            driver->qp_driver.offset_x              = 0;
+            driver->qp_driver.offset_y              = 0;
             driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
 
             // SPI and other pin configuration

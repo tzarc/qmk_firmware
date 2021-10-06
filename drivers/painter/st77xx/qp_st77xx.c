@@ -39,8 +39,8 @@ bool qp_st77xx_power(painter_device_t device, bool power_on) {
 
 // Screen clear
 bool qp_st77xx_clear(painter_device_t device) {
-    st77xx_painter_device_t *lcd = (st77xx_painter_device_t *)device;
-    lcd->qp_driver.driver_vtable->init(device, lcd->rotation);  // Re-init the LCD
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
+    driver->driver_vtable->init(device, driver->rotation);  // Re-init the LCD
     return true;
 }
 
@@ -53,13 +53,13 @@ bool qp_st77xx_flush(painter_device_t device) {
 
 // Viewport to draw to
 bool qp_st77xx_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
-    st77xx_painter_device_t *lcd = (st77xx_painter_device_t *)device;
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
 
     // Fix up the drawing location if required
-    left += lcd->x_offset;
-    right += lcd->x_offset;
-    top += lcd->y_offset;
-    bottom += lcd->y_offset;
+    left += driver->offset_x;
+    right += driver->offset_x;
+    top += driver->offset_y;
+    bottom += driver->offset_y;
 
     // Set up the x-window
     uint8_t xbuf[4] = {left >> 8, left & 0xFF, right >> 8, right & 0xFF};

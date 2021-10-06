@@ -23,64 +23,48 @@ st77xx_painter_device_t st7789_drivers[ST7789_NUM_DEVICES] = {0};
 
 // Initialization
 bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
-    st77xx_painter_device_t *lcd = (st77xx_painter_device_t *)device;
-    lcd->rotation                = rotation;
+    struct painter_driver_t *driver = (struct painter_driver_t *)device;
 
-    // Perform a software reset
-    qp_comms_command(device, ST77XX_CMD_RESET);
-    wait_ms(120);
+    // clang-format off
+    const uint8_t st7789_init_sequence[] QP_RESIDENT_FLASH = {
+        // Command,                 Delay,  N, Data[N]
+        ST77XX_CMD_RESET,            120,  0,
+        ST77XX_CMD_SLEEP_OFF,          5,  0,
+        ST77XX_SET_PIX_FMT,            0,  1, 0x55,
+        ST77XX_CMD_INVERT_ON,          0,  0,
+        ST77XX_CMD_NORMAL_ON,          0,  0,
+        ST77XX_CMD_DISPLAY_ON,        20,  0
+    };
+    // clang-format on
 
-    // Disable sleep mode
-    qp_comms_command(device, ST77XX_CMD_SLEEP_OFF);
-    wait_ms(5);
-
-    // Set the pixel format
-    qp_comms_command_databyte(device, ST77XX_SET_PIX_FMT, 0x55);
+    qp_comms_bulk_command_sequence(device, st7789_init_sequence, sizeof(st7789_init_sequence));
 
     // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
-    switch (rotation) {
-        default:
-        case QP_ROTATION_0:
-            qp_comms_command_databyte(device, ST77XX_SET_MADCTL, ST77XX_MADCTL_RGB);
-            if (lcd->qp_driver.screen_width == 240 && lcd->qp_driver.screen_height == 240) {
-                lcd->x_offset = 0;
-                lcd->y_offset = 0;
-            }
-            break;
-        case QP_ROTATION_90:
-            qp_comms_command_databyte(device, ST77XX_SET_MADCTL, ST77XX_MADCTL_RGB | ST77XX_MADCTL_MX | ST77XX_MADCTL_MV);
-            if (lcd->qp_driver.screen_width == 240 && lcd->qp_driver.screen_height == 240) {
-                lcd->x_offset = 0;
-                lcd->y_offset = 0;
-            }
-            break;
-        case QP_ROTATION_180:
-            qp_comms_command_databyte(device, ST77XX_SET_MADCTL, ST77XX_MADCTL_RGB | ST77XX_MADCTL_MX | ST77XX_MADCTL_MY);
-            if (lcd->qp_driver.screen_width == 240 && lcd->qp_driver.screen_height == 240) {
-                lcd->x_offset = 0;
-                lcd->y_offset = 80;
-            }
-            break;
-        case QP_ROTATION_270:
-            qp_comms_command_databyte(device, ST77XX_SET_MADCTL, ST77XX_MADCTL_RGB | ST77XX_MADCTL_MV | ST77XX_MADCTL_MY);
-            if (lcd->qp_driver.screen_width == 240 && lcd->qp_driver.screen_height == 240) {
-                lcd->x_offset = 80;
-                lcd->y_offset = 0;
-            }
-            break;
+    const uint8_t madctl[] QP_RESIDENT_FLASH = {
+        [QP_ROTATION_0]   = ST77XX_MADCTL_RGB,
+        [QP_ROTATION_90]  = ST77XX_MADCTL_RGB | ST77XX_MADCTL_MX | ST77XX_MADCTL_MV,
+        [QP_ROTATION_180] = ST77XX_MADCTL_RGB | ST77XX_MADCTL_MX | ST77XX_MADCTL_MY,
+        [QP_ROTATION_270] = ST77XX_MADCTL_RGB | ST77XX_MADCTL_MV | ST77XX_MADCTL_MY,
+    };
+
+    qp_comms_command_databyte(device, ST77XX_SET_MADCTL, madctl[rotation]);
+
+    // clang-format off
+    const struct {
+        uint16_t offset_x;
+        uint16_t offset_y;
+    } rotation_offsets_240x240[] QP_RESIDENT_FLASH = {
+        [QP_ROTATION_0]   = { .offset_x =  0, .offset_y =  0 },
+        [QP_ROTATION_90]  = { .offset_x =  0, .offset_y =  0 },
+        [QP_ROTATION_180] = { .offset_x =  0, .offset_y = 80 },
+        [QP_ROTATION_270] = { .offset_x = 80, .offset_y =  0 },
+    };
+    // clang-format on
+
+    if (driver->screen_width == 240 && driver->screen_height == 240) {
+        driver->offset_x = rotation_offsets_240x240[rotation].offset_x;
+        driver->offset_y = rotation_offsets_240x240[rotation].offset_y;
     }
-
-    // Invert the screen (apparently the pixel format is negated?)
-    qp_comms_command(device, ST77XX_CMD_INVERT_ON);
-    wait_ms(20);
-
-    // Disable sleep mode
-    qp_comms_command(device, ST77XX_CMD_NORMAL_ON);
-    wait_ms(20);
-
-    // Turn on display
-    qp_comms_command(device, ST77XX_CMD_DISPLAY_ON);
-    wait_ms(20);
 
     return true;
 }
@@ -112,6 +96,9 @@ painter_device_t qp_st7789_make_spi_device(uint16_t screen_width, uint16_t scree
             driver->qp_driver.comms_vtable          = (struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
             driver->qp_driver.screen_width          = screen_width;
             driver->qp_driver.screen_height         = screen_height;
+            driver->qp_driver.rotation              = QP_ROTATION_0;
+            driver->qp_driver.offset_x              = 0;
+            driver->qp_driver.offset_y              = 0;
             driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
 
             // SPI and other pin configuration

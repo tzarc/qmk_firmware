@@ -21,70 +21,45 @@ ili9xxx_painter_device_t ili9341_drivers[ILI9341_NUM_DEVICES] = {0};
 
 // Initialization
 bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
-    ili9xxx_painter_device_t *lcd = (ili9xxx_painter_device_t *)device;
-    lcd->rotation                 = rotation;
+    // clang-format off
+    const uint8_t ili9341_init_sequence[] QP_RESIDENT_FLASH = {
+        // Command,                 Delay,  N, Data[N]
+        ILI9XXX_CMD_RESET,            120,  0,
+        ILI9XXX_CMD_SLEEP_OFF,          5,  0,
+        ILI9XXX_POWER_CTL_A,            0,  5, 0x39, 0x2C, 0x00, 0x34, 0x02,
+        ILI9XXX_POWER_CTL_B,            0,  3, 0x00, 0xD9, 0x30,
+        ILI9XXX_POWER_ON_SEQ_CTL,       0,  4, 0x64, 0x03, 0x12, 0x81,
+        ILI9XXX_SET_PUMP_RATIO_CTL,     0,  1, 0x20,
+        ILI9XXX_SET_POWER_CTL_1,        0,  1, 0x26,
+        ILI9XXX_SET_POWER_CTL_2,        0,  1, 0x11,
+        ILI9XXX_SET_VCOM_CTL_1,         0,  2, 0x35, 0x3E,
+        ILI9XXX_SET_VCOM_CTL_2,         0,  1, 0xBE,
+        ILI9XXX_DRV_TIMING_CTL_A,       0,  3, 0x85, 0x10, 0x7A,
+        ILI9XXX_DRV_TIMING_CTL_B,       0,  2, 0x00, 0x00,
+        ILI9XXX_SET_BRIGHTNESS,         0,  1, 0xFF,
+        ILI9XXX_ENABLE_3_GAMMA,         0,  1, 0x00,
+        ILI9XXX_SET_GAMMA,              0,  1, 0x01,
+        ILI9XXX_SET_PGAMMA,             0, 15, 0x0F, 0x29, 0x24, 0x0C, 0x0E, 0x09, 0x4E, 0x78, 0x3C, 0x09, 0x13, 0x05, 0x17, 0x11, 0x00,
+        ILI9XXX_SET_NGAMMA,             0, 15, 0x00, 0x16, 0x1B, 0x04, 0x11, 0x07, 0x31, 0x33, 0x42, 0x05, 0x0C, 0x0A, 0x28, 0x2F, 0x0F,
+        ILI9XXX_SET_PIX_FMT,            0,  1, 0x05,
+        ILI9XXX_SET_FRAME_CTL_NORMAL,   0,  2, 0x00, 0x1B,
+        ILI9XXX_SET_FUNCTION_CTL,       0,  2, 0x0A, 0xA2,
+        ILI9XXX_CMD_PARTIAL_OFF,        0,  0,
+        ILI9XXX_CMD_DISPLAY_ON,        20,  0
+    };
+    // clang-format on
 
-    // Configure power control
-    static const uint8_t power_ctl_a[] = {0x39, 0x2C, 0x00, 0x34, 0x02};
-    qp_comms_command_databuf(device, ILI9XXX_POWER_CTL_A, power_ctl_a, sizeof(power_ctl_a));
-    static const uint8_t power_ctl_b[] = {0x00, 0xD9, 0x30};
-    qp_comms_command_databuf(device, ILI9XXX_POWER_CTL_B, power_ctl_b, sizeof(power_ctl_b));
-    static const uint8_t power_on_seq[] = {0x64, 0x03, 0x12, 0x81};
-    qp_comms_command_databuf(device, ILI9XXX_POWER_ON_SEQ_CTL, power_on_seq, sizeof(power_on_seq));
-    qp_comms_command_databyte(device, ILI9XXX_SET_PUMP_RATIO_CTL, 0x20);
-    qp_comms_command_databyte(device, ILI9XXX_SET_POWER_CTL_1, 0x26);
-    qp_comms_command_databyte(device, ILI9XXX_SET_POWER_CTL_2, 0x11);
-    static const uint8_t vcom_ctl_1[] = {0x35, 0x3E};
-    qp_comms_command_databuf(device, ILI9XXX_SET_VCOM_CTL_1, vcom_ctl_1, sizeof(vcom_ctl_1));
-    qp_comms_command_databyte(device, ILI9XXX_SET_VCOM_CTL_2, 0xBE);
-
-    // Configure timing control
-    static const uint8_t drv_timing_ctl_a[] = {0x85, 0x10, 0x7A};
-    qp_comms_command_databuf(device, ILI9XXX_DRV_TIMING_CTL_A, drv_timing_ctl_a, sizeof(drv_timing_ctl_a));
-    static const uint8_t drv_timing_ctl_b[] = {0x00, 0x00};
-    qp_comms_command_databuf(device, ILI9XXX_DRV_TIMING_CTL_B, drv_timing_ctl_b, sizeof(drv_timing_ctl_b));
-
-    // Configure brightness / gamma
-    qp_comms_command_databyte(device, ILI9XXX_SET_BRIGHTNESS, 0xFF);
-    qp_comms_command_databyte(device, ILI9XXX_ENABLE_3_GAMMA, 0x00);
-    qp_comms_command_databyte(device, ILI9XXX_SET_GAMMA, 0x01);
-    static const uint8_t pgamma[] = {0x0F, 0x29, 0x24, 0x0C, 0x0E, 0x09, 0x4E, 0x78, 0x3C, 0x09, 0x13, 0x05, 0x17, 0x11, 0x00};
-    qp_comms_command_databuf(device, ILI9XXX_SET_PGAMMA, pgamma, sizeof(pgamma));
-    static const uint8_t ngamma[] = {0x00, 0x16, 0x1B, 0x04, 0x11, 0x07, 0x31, 0x33, 0x42, 0x05, 0x0C, 0x0A, 0x28, 0x2F, 0x0F};
-    qp_comms_command_databuf(device, ILI9XXX_SET_NGAMMA, ngamma, sizeof(ngamma));
-
-    // Set the pixel format
-    qp_comms_command_databyte(device, ILI9XXX_SET_PIX_FMT, 0x05);
-
-    // Frame and function control
-    static const uint8_t frame_ctl_normal[] = {0x00, 0x1B};
-    qp_comms_command_databuf(device, ILI9XXX_SET_FRAME_CTL_NORMAL, frame_ctl_normal, sizeof(frame_ctl_normal));
-    static const uint8_t function_ctl[] = {0x0A, 0xA2};
-    qp_comms_command_databuf(device, ILI9XXX_SET_FUNCTION_CTL, function_ctl, sizeof(function_ctl));
-
-    // Set the default viewport to be fullscreen
-    qp_ili9xxx_viewport(lcd, 0, 0, 239, 319);
+    qp_comms_bulk_command_sequence(device, ili9341_init_sequence, sizeof(ili9341_init_sequence));
 
     // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
-    switch (rotation) {
-        default:
-        case QP_ROTATION_0:
-            qp_comms_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR);
-            break;
-        case QP_ROTATION_90:
-            qp_comms_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MV);
-            break;
-        case QP_ROTATION_180:
-            qp_comms_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MY);
-            break;
-        case QP_ROTATION_270:
-            qp_comms_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MV | ILI9XXX_MADCTL_MY);
-            break;
-    }
+    const uint8_t madctl[] QP_RESIDENT_FLASH = {
+        [QP_ROTATION_0]   = ILI9XXX_MADCTL_BGR,
+        [QP_ROTATION_90]  = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MV,
+        [QP_ROTATION_180] = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MY,
+        [QP_ROTATION_270] = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MV | ILI9XXX_MADCTL_MY,
+    };
 
-    // Disable sleep mode
-    qp_comms_command(device, ILI9XXX_CMD_SLEEP_OFF);
-    wait_ms(20);
+    qp_comms_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, madctl[rotation]);
 
     return true;
 }
@@ -116,6 +91,9 @@ painter_device_t qp_ili9341_make_spi_device(uint16_t screen_width, uint16_t scre
             driver->qp_driver.comms_vtable          = (struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
             driver->qp_driver.screen_width          = screen_width;
             driver->qp_driver.screen_height         = screen_height;
+            driver->qp_driver.rotation              = QP_ROTATION_0;
+            driver->qp_driver.offset_x              = 0;
+            driver->qp_driver.offset_y              = 0;
             driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
 
             // SPI and other pin configuration
