@@ -58,6 +58,8 @@ const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_vtable = {
     .comms_stop  = qp_comms_spi_stop,
 };
 
+#    ifdef QUANTUM_PAINTER_SPI_DC_RESET_ENABLE
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SPI with D/C and RST pins
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -129,5 +131,7 @@ const struct painter_comms_with_command_vtable_t QP_RESIDENT_FLASH spi_comms_wit
     .send_command          = qp_comms_spi_dc_reset_send_command,
     .bulk_command_sequence = qp_comms_spi_dc_reset_bulk_command_sequence,
 };
+
+#    endif  // QUANTUM_PAINTER_SPI_DC_RESET_ENABLE
 
 #endif  // QUANTUM_PAINTER_SPI_ENABLE

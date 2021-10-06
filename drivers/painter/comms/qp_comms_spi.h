@@ -33,6 +33,8 @@ extern const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_vtable;
 // SPI with D/C and RST pins
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#    ifdef QUANTUM_PAINTER_SPI_DC_RESET_ENABLE
+
 struct qp_comms_spi_dc_reset_config_t {
     struct qp_comms_spi_config_t spi_config;
     pin_t                        dc_pin;
@@ -44,5 +46,7 @@ uint32_t qp_comms_spi_dc_reset_send_data(painter_device_t device, const void *da
 void     qp_comms_spi_dc_reset_bulk_command_sequence(painter_device_t device, const uint8_t *sequence, size_t sequence_len);
 
 extern const struct painter_comms_with_command_vtable_t QP_RESIDENT_FLASH spi_comms_with_dc_vtable;
+
+#    endif  // QUANTUM_PAINTER_SPI_DC_RESET_ENABLE
 
 #endif  // QUANTUM_PAINTER_SPI_ENABLE

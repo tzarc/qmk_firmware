@@ -35,7 +35,8 @@ define handle_quantum_painter_driver
 
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9163_spi)
         QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
-        OPT_DEFS += -DQUANTUM_PAINTER_ILI9163_ENABLE -DQUANTUM_PAINTER_ILI9XXX_SPI_ENABLE -DQUANTUM_PAINTER_ILI9163_SPI_ENABLE
+        QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET = yes
+        OPT_DEFS += -DQUANTUM_PAINTER_ILI9163_ENABLE -DQUANTUM_PAINTER_ILI9163_SPI_ENABLE
         COMMON_VPATH += \
             $(DRIVER_PATH)/painter/ili9xxx
         SRC += \
@@ -44,7 +45,8 @@ define handle_quantum_painter_driver
 
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341_spi)
         QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
-        OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE -DQUANTUM_PAINTER_ILI9XXX_SPI_ENABLE -DQUANTUM_PAINTER_ILI9341_SPI_ENABLE
+        QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET = yes
+        OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE -DQUANTUM_PAINTER_ILI9341_SPI_ENABLE
         COMMON_VPATH += \
             $(DRIVER_PATH)/painter/ili9xxx
         SRC += \
@@ -53,7 +55,8 @@ define handle_quantum_painter_driver
 
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),st7789_spi)
         QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
-        OPT_DEFS += -DQUANTUM_PAINTER_ST7789_ENABLE -DQUANTUM_PAINTER_ST7XXX_SPI_ENABLE -DQUANTUM_PAINTER_ST7789_SPI_ENABLE
+        QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET = yes
+        OPT_DEFS += -DQUANTUM_PAINTER_ST7789_ENABLE -DQUANTUM_PAINTER_ST7789_SPI_ENABLE
         COMMON_VPATH += \
             $(DRIVER_PATH)/painter/st77xx
         SRC += \
@@ -74,6 +77,10 @@ ifeq ($(strip $(QUANTUM_PAINTER_NEEDS_COMMS_SPI)), yes)
     SRC += \
         $(QUANTUM_DIR)/painter/qp_comms.c \
         $(DRIVER_PATH)/painter/comms/qp_comms_spi.c
+
+    ifeq ($(strip $(QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET)), yes)
+        OPT_DEFS += -DQUANTUM_PAINTER_SPI_DC_RESET_ENABLE
+    endif
 endif
 
 # If I2C comms is needed, set up the required files
