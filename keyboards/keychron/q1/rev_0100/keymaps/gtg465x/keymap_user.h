@@ -1,4 +1,4 @@
-/* Copyright 2016 Jack Humbert
+/* Copyright 2021 @ Grayson Carr
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,13 @@
 
 #pragma once
 
-#include "api.h"
+// clang-format off
 
-#define API_SYSEX_MAX_SIZE 32
+enum layers {
+    MAC_BASE,
+    MAC_FN,
+    WIN_BASE,
+    WIN_FN
+};
 
-void send_bytes_sysex(uint8_t message_type, uint8_t data_type, uint8_t* bytes, uint16_t length);
-
-#define SEND_BYTES(mt, dt, b, l) send_bytes_sysex(mt, dt, b, l)
+// clang-format on
