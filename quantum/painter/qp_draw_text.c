@@ -163,7 +163,7 @@ int16_t qp_textwidth(painter_font_t font, const char QP_RESIDENT_FLASH_OR_RAM *s
 
 int16_t qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char QP_RESIDENT_FLASH_OR_RAM *str) {
     // Offload to the recolor variant, substituting fg=white bg=black.
-    // Traditional LCDs with those colours will need to manually invoke qp_drawtext_recolor with the colors reversed.
+    // Traditional LCDs with those colors will need to manually invoke qp_drawtext_recolor with the colors reversed.
     return qp_drawtext_recolor(device, x, y, font, str, 0, 0, 255, 0, 0, 0);
 }
 

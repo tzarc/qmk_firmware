@@ -2,7 +2,7 @@
 """
 import math
 import re
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, GifImagePlugin
 
 valid_formats = {
     'pal256': {
@@ -68,13 +68,6 @@ def rescale_byte(val, maxval):
     return int(round(val * maxval / 255.0))
 
 
-def rgb888_to_rgb565(r, g, b):
-    """Convert an rgb triplet to the equivalent rgb565 integer.
-    """
-    rgb565 = (rescale_byte(r, 31) << 11 | rescale_byte(g, 63) << 5 | rescale_byte(b, 31))
-    return rgb565
-
-
 def convert_requested_format(im, format):
     """Convert an image to the requested format.
     """
@@ -84,14 +77,11 @@ def convert_requested_format(im, format):
     image_format = format["image_format"]
 
     # Ensure we have a valid number of colors for the palette
-    if (ncolors <= 0 or ncolors > 256 or (ncolors & (ncolors - 1) != 0)) and image_format != 'IMAGE_FORMAT_RGB565':
+    if ncolors <= 0 or ncolors > 256 or (ncolors & (ncolors - 1) != 0):
         raise ValueError("Number of colors must be 2, 4, 16, or 256.")
 
     # Work out where we're getting the bytes from
-    if image_format == 'IMAGE_FORMAT_RGB565':
-        # If we want RGB565, make sure we've got an RGB image
-        im = im.convert("RGB")
-    elif image_format == 'IMAGE_FORMAT_GRAYSCALE':
+    if image_format == 'IMAGE_FORMAT_GRAYSCALE':
         # If mono, convert input to grayscale, then to RGB, then grab the raw bytes corresponding to the intensity of the red channel
         im = ImageOps.grayscale(im)
         im = im.convert("RGB")
@@ -113,23 +103,7 @@ def convert_image_bytes(im, format):
     shifter = int(math.log2(ncolors))
     pixels_per_byte = int(8 / math.log2(ncolors))
 
-    if image_format == 'IMAGE_FORMAT_RGB565':
-        # If we want RGB565, just get the RGB bytes
-        image_bytes = im.tobytes("raw", "RGB")
-        image_bytes_len = len(image_bytes)
-        palette = None
-
-        # Convert 24-bit RGB to 16-bit rgb565
-        bytearray = []
-        for x in range(int(image_bytes_len / 3)):
-            r = image_bytes[x*3 + 0]
-            g = image_bytes[x*3 + 1]
-            b = image_bytes[x*3 + 2]
-            rgb565 = rgb888_to_rgb565(r, g, b)
-            bytearray.append((rgb565 >> 8) & 0xFF)
-            bytearray.append(rgb565 & 0xFF)
-
-    elif image_format == 'IMAGE_FORMAT_GRAYSCALE':
+    if image_format == 'IMAGE_FORMAT_GRAYSCALE':
         # Take the red channel
         image_bytes = im.tobytes("raw", "R")
         image_bytes_len = len(image_bytes)

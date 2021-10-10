@@ -8,7 +8,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter pixel formats
 
-// Datatype containing a pixel's colour
+// Datatype containing a pixel's color. The internal member used is dependent on the external context.
 typedef union QP_PACKED qp_pixel_t {
     uint8_t mono;
     uint8_t palette_idx;
@@ -46,13 +46,20 @@ typedef enum qp_image_format_t {
     PALETTE_8BPP   = 0x07,
 } qp_image_format_t;
 
-// Uncompressed raw image descriptor
+// Raw image descriptor (matches version 0)
 typedef struct QP_PACKED painter_raw_image_descriptor_t {
     const painter_image_descriptor_t base;
-    const uint32_t                   byte_count;     // number of bytes in the image
-    const uint8_t *const             image_palette;  // pointer to the image palette
-    const uint8_t *const             image_data;     // pointer to the image data
+
+    const uint32_t byte_count;                             // number of bytes in the image
+    const uint8_t QP_RESIDENT_FLASH *const image_palette;  // pointer to the image palette
+    const uint8_t QP_RESIDENT_FLASH *const image_data;     // pointer to the image data
 } painter_raw_image_descriptor_t;
+
+// V1 image descriptor
+typedef struct QP_PACKED painter_v1_image_descriptor_t {
+    const painter_image_descriptor_t base;
+    // TBD, based off QGF
+} painter_v1_image_descriptor_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter font format
@@ -72,15 +79,15 @@ typedef struct QP_PACKED painter_font_unicode_glyph_offset_t {
 } painter_font_unicode_glyph_offset_t;
 #endif  // UNICODE_ENABLE
 
-// Uncompressed raw font descriptor
+// Raw font descriptor (matches version 0)
 typedef struct QP_PACKED painter_raw_font_descriptor_t {
-    const painter_font_descriptor_t                base;
-    const uint8_t *const                           image_palette;            // pointer to the image palette
-    const uint8_t *const                           image_data;               // pointer to the image data
-    const uint32_t                                 byte_count;               // number of bytes in the image
-    const painter_font_ascii_glyph_offset_t *const ascii_glyph_definitions;  // list of offsets/widths for ASCII, range 0x20..0x7E
+    const painter_font_descriptor_t base;
+    const uint8_t QP_RESIDENT_FLASH *const image_palette;                                      // pointer to the image palette
+    const uint8_t QP_RESIDENT_FLASH *const  image_data;                                        // pointer to the image data
+    const uint32_t                          byte_count;                                        // number of bytes in the image
+    const painter_font_ascii_glyph_offset_t QP_RESIDENT_FLASH *const ascii_glyph_definitions;  // list of offsets/widths for ASCII, range 0x20..0x7E
 #ifdef UNICODE_ENABLE
-    const painter_font_unicode_glyph_offset_t *const unicode_glyph_definitions;  // Unicode glyph descriptors for unicode rendering
-    const uint16_t                                   unicode_glyph_count;        // Number of unicode glyphs defined
-#endif                                                                           // UNICODE_ENABLE
+    const painter_font_unicode_glyph_offset_t QP_RESIDENT_FLASH *const unicode_glyph_definitions;  // Unicode glyph descriptors for unicode rendering
+    const uint16_t                                                     unicode_glyph_count;        // Number of unicode glyphs defined
+#endif                                                                                             // UNICODE_ENABLE
 } painter_raw_font_descriptor_t;
