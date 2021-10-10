@@ -17,7 +17,8 @@ SRC += \
     $(QUANTUM_DIR)/painter/qp_draw_circle.c \
     $(QUANTUM_DIR)/painter/qp_draw_ellipse.c \
     $(QUANTUM_DIR)/painter/qp_draw_image.c \
-    $(QUANTUM_DIR)/painter/qp_draw_text.c
+    $(QUANTUM_DIR)/painter/qp_draw_text.c \
+    $(QUANTUM_DIR)/painter/qgf.c
 
 # Handler for each driver
 define handle_quantum_painter_driver
