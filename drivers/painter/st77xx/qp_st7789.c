@@ -6,9 +6,9 @@
 #include <qp_internal.h>
 #include <qp_comms.h>
 #include <qp_st7789.h>
-#include <qp_st77xx_internal.h>
 #include <qp_st77xx_opcodes.h>
 #include <qp_st7789_opcodes.h>
+#include <qp_tft_panel.h>
 
 #ifdef QUANTUM_PAINTER_ST7789_SPI_ENABLE
 #    include <qp_comms_spi.h>
@@ -19,7 +19,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Driver storage
-st77xx_painter_device_t st7789_drivers[ST7789_NUM_DEVICES] = {0};
+tft_panel_dc_reset_painter_device_t st7789_drivers[ST7789_NUM_DEVICES] = {0};
 
 // Initialization
 bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
@@ -70,15 +70,27 @@ bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
 }
 
 // Driver vtable
-const struct painter_driver_vtable_t QP_RESIDENT_FLASH st7789_driver_vtable = {
-    .init            = qp_st7789_init,
-    .power           = qp_st77xx_power,
-    .clear           = qp_st77xx_clear,
-    .flush           = qp_st77xx_flush,
-    .pixdata         = qp_st77xx_pixdata,
-    .viewport        = qp_st77xx_viewport,
-    .palette_convert = qp_st77xx_palette_convert,
-    .append_pixels   = qp_st77xx_append_pixels,
+const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH st7789_driver_vtable = {
+    .base =
+        {
+            .init            = qp_st7789_init,
+            .power           = qp_tft_panel_power,
+            .clear           = qp_tft_panel_clear,
+            .flush           = qp_tft_panel_flush,
+            .pixdata         = qp_tft_panel_pixdata,
+            .viewport        = qp_tft_panel_viewport,
+            .palette_convert = qp_tft_panel_palette_convert,
+            .append_pixels   = qp_tft_panel_append_pixels,
+        },
+    .rgb888_to_native16bit = qp_rgb888_to_rgb565,
+    .opcodes =
+        {
+            .display_on         = ST77XX_CMD_DISPLAY_ON,
+            .display_off        = ST77XX_CMD_DISPLAY_OFF,
+            .set_column_address = ST77XX_SET_COL_ADDR,
+            .set_row_address    = ST77XX_SET_ROW_ADDR,
+            .enable_writes      = ST77XX_SET_MEM,
+        },
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,10 +102,10 @@ const struct painter_driver_vtable_t QP_RESIDENT_FLASH st7789_driver_vtable = {
 // Factory function for creating a handle to the ST7789 device
 painter_device_t qp_st7789_make_spi_device(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, int spi_mode) {
     for (uint32_t i = 0; i < ST7789_NUM_DEVICES; ++i) {
-        st77xx_painter_device_t *driver = &st7789_drivers[i];
+        tft_panel_dc_reset_painter_device_t *driver = &st7789_drivers[i];
         if (!driver->qp_driver.driver_vtable) {
-            driver->qp_driver.driver_vtable         = &st7789_driver_vtable;
-            driver->qp_driver.comms_vtable          = (struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
+            driver->qp_driver.driver_vtable         = (const struct painter_driver_vtable_t QP_RESIDENT_FLASH *)&st7789_driver_vtable;
+            driver->qp_driver.comms_vtable          = (const struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
             driver->qp_driver.screen_width          = screen_width;
             driver->qp_driver.screen_height         = screen_height;
             driver->qp_driver.rotation              = QP_ROTATION_0;

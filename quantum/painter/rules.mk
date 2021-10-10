@@ -1,5 +1,5 @@
 QUANTUM_PAINTER_ENABLE ?= no
-VALID_QUANTUM_PAINTER_DRIVERS := qmk_oled_wrapper ili9163_spi ili9341_spi st7789_spi
+VALID_QUANTUM_PAINTER_DRIVERS := ili9163_spi ili9341_spi st7789_spi
 QUANTUM_PAINTER_DRIVERS ?=
 
 QUANTUM_PAINTER_NEEDS_COMMS_SPI ?= no
@@ -26,21 +26,15 @@ define handle_quantum_painter_driver
     ifeq ($$(filter $$(strip $$(CURRENT_PAINTER_DRIVER)),$$(VALID_QUANTUM_PAINTER_DRIVERS)),)
         $$(error "$$(CURRENT_PAINTER_DRIVER)" is not a valid Quantum Painter driver)
 
-    else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),qmk_oled_wrapper)
-        OLED_ENABLE := yes
-        OLED_DRIVER := SSD1306
-        OPT_DEFS += -DQUANTUM_PAINTER_QMK_OLED_WRAPPER_ENABLE
-        COMMON_VPATH += $(DRIVER_PATH)/painter/qmk_oled_wrapper
-        SRC += $(DRIVER_PATH)/painter/qmk_oled_wrapper/qp_qmk_oled_wrapper.c
-
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9163_spi)
         QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
         QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET = yes
         OPT_DEFS += -DQUANTUM_PAINTER_ILI9163_ENABLE -DQUANTUM_PAINTER_ILI9163_SPI_ENABLE
         COMMON_VPATH += \
+            $(DRIVER_PATH)/painter/tft_panel \
             $(DRIVER_PATH)/painter/ili9xxx
         SRC += \
-            $(DRIVER_PATH)/painter/ili9xxx/qp_ili9xxx.c \
+            $(DRIVER_PATH)/painter/tft_panel/qp_tft_panel.c \
             $(DRIVER_PATH)/painter/ili9xxx/qp_ili9163.c \
 
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341_spi)
@@ -48,9 +42,10 @@ define handle_quantum_painter_driver
         QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET = yes
         OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE -DQUANTUM_PAINTER_ILI9341_SPI_ENABLE
         COMMON_VPATH += \
+            $(DRIVER_PATH)/painter/tft_panel \
             $(DRIVER_PATH)/painter/ili9xxx
         SRC += \
-            $(DRIVER_PATH)/painter/ili9xxx/qp_ili9xxx.c \
+            $(DRIVER_PATH)/painter/tft_panel/qp_tft_panel.c \
             $(DRIVER_PATH)/painter/ili9xxx/qp_ili9341.c \
 
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),st7789_spi)
@@ -58,9 +53,10 @@ define handle_quantum_painter_driver
         QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET = yes
         OPT_DEFS += -DQUANTUM_PAINTER_ST7789_ENABLE -DQUANTUM_PAINTER_ST7789_SPI_ENABLE
         COMMON_VPATH += \
+            $(DRIVER_PATH)/painter/tft_panel \
             $(DRIVER_PATH)/painter/st77xx
         SRC += \
-            $(DRIVER_PATH)/painter/st77xx/qp_st77xx.c \
+            $(DRIVER_PATH)/painter/tft_panel/qp_tft_panel.c \
             $(DRIVER_PATH)/painter/st77xx/qp_st7789.c
 
     endif

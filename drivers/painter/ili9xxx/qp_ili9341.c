@@ -5,8 +5,8 @@
 #include <qp_internal.h>
 #include <qp_comms.h>
 #include <qp_ili9341.h>
-#include <qp_ili9xxx_internal.h>
 #include <qp_ili9xxx_opcodes.h>
+#include <qp_tft_panel.h>
 
 #ifdef QUANTUM_PAINTER_ILI9341_SPI_ENABLE
 #    include <qp_comms_spi.h>
@@ -17,7 +17,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Driver storage
-ili9xxx_painter_device_t ili9341_drivers[ILI9341_NUM_DEVICES] = {0};
+tft_panel_dc_reset_painter_device_t ili9341_drivers[ILI9341_NUM_DEVICES] = {0};
 
 // Initialization
 bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
@@ -65,15 +65,27 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
 }
 
 // Driver vtable
-const struct painter_driver_vtable_t QP_RESIDENT_FLASH ili9341_driver_vtable = {
-    .init            = qp_ili9341_init,
-    .power           = qp_ili9xxx_power,
-    .clear           = qp_ili9xxx_clear,
-    .flush           = qp_ili9xxx_flush,
-    .pixdata         = qp_ili9xxx_pixdata,
-    .viewport        = qp_ili9xxx_viewport,
-    .palette_convert = qp_ili9xxx_palette_convert,
-    .append_pixels   = qp_ili9xxx_append_pixels,
+const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili9341_driver_vtable = {
+    .base =
+        {
+            .init            = qp_ili9341_init,
+            .power           = qp_tft_panel_power,
+            .clear           = qp_tft_panel_clear,
+            .flush           = qp_tft_panel_flush,
+            .pixdata         = qp_tft_panel_pixdata,
+            .viewport        = qp_tft_panel_viewport,
+            .palette_convert = qp_tft_panel_palette_convert,
+            .append_pixels   = qp_tft_panel_append_pixels,
+        },
+    .rgb888_to_native16bit = qp_rgb888_to_rgb565,
+    .opcodes =
+        {
+            .display_on         = ILI9XXX_CMD_DISPLAY_ON,
+            .display_off        = ILI9XXX_CMD_DISPLAY_OFF,
+            .set_column_address = ILI9XXX_SET_COL_ADDR,
+            .set_row_address    = ILI9XXX_SET_PAGE_ADDR,
+            .enable_writes      = ILI9XXX_SET_MEM,
+        },
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,10 +97,10 @@ const struct painter_driver_vtable_t QP_RESIDENT_FLASH ili9341_driver_vtable = {
 // Factory function for creating a handle to the ILI9341 device
 painter_device_t qp_ili9341_make_spi_device(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, int spi_mode) {
     for (uint32_t i = 0; i < ILI9341_NUM_DEVICES; ++i) {
-        ili9xxx_painter_device_t *driver = &ili9341_drivers[i];
+        tft_panel_dc_reset_painter_device_t *driver = &ili9341_drivers[i];
         if (!driver->qp_driver.driver_vtable) {
-            driver->qp_driver.driver_vtable         = &ili9341_driver_vtable;
-            driver->qp_driver.comms_vtable          = (struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
+            driver->qp_driver.driver_vtable         = (const struct painter_driver_vtable_t QP_RESIDENT_FLASH *)&ili9341_driver_vtable;
+            driver->qp_driver.comms_vtable          = (const struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
             driver->qp_driver.screen_width          = screen_width;
             driver->qp_driver.screen_height         = screen_height;
             driver->qp_driver.rotation              = QP_ROTATION_0;
