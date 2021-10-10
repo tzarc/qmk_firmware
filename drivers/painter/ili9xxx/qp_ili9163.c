@@ -14,12 +14,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Common
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Driver storage
 tft_panel_dc_reset_painter_device_t ili9163_drivers[ILI9163_NUM_DEVICES] = {0};
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialization
+
 bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
     // clang-format off
     const uint8_t ili9163_init_sequence[] QP_RESIDENT_FLASH = {
@@ -29,7 +30,7 @@ bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
         ILI9XXX_SET_PIX_FMT,            0,  1, 0x55,
         ILI9XXX_SET_GAMMA,              0,  1, 0x04,
         ILI9XXX_ENABLE_3_GAMMA,         0,  1, 0x01,
-        ILI9XXX_SET_FUNCTION_CTL,       0,  2, 0b11111111, 0b00000110,
+        ILI9XXX_SET_FUNCTION_CTL,       0,  2, 0xFF, 0x06,
         ILI9XXX_SET_PGAMMA,             0, 15, 0x36, 0x29, 0x12, 0x22, 0x1C, 0x15, 0x42, 0xB7, 0x2F, 0x13, 0x12, 0x0A, 0x11, 0x0B, 0x06,
         ILI9XXX_SET_NGAMMA,             0, 15, 0x09, 0x16, 0x2D, 0x0D, 0x13, 0x15, 0x40, 0x48, 0x53, 0x0C, 0x1D, 0x25, 0x2E, 0x34, 0x39,
         ILI9XXX_SET_FRAME_CTL_NORMAL,   0,  2, 0x08, 0x02,
@@ -57,7 +58,9 @@ bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
     return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Driver vtable
+
 const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili9163_driver_vtable = {
     .base =
         {
@@ -70,7 +73,7 @@ const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili916
             .palette_convert = qp_tft_panel_palette_convert,
             .append_pixels   = qp_tft_panel_append_pixels,
         },
-    .rgb888_to_native16bit = qp_rgb888_to_rgb565,
+    .rgb888_to_native16bit = qp_rgb888_to_rgb565_swapped,
     .opcodes =
         {
             .display_on         = ILI9XXX_CMD_DISPLAY_ON,
@@ -83,7 +86,6 @@ const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili916
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SPI
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef QUANTUM_PAINTER_ILI9163_SPI_ENABLE
 
@@ -91,18 +93,18 @@ const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili916
 painter_device_t qp_ili9163_make_spi_device(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, int spi_mode) {
     for (uint32_t i = 0; i < ILI9163_NUM_DEVICES; ++i) {
         tft_panel_dc_reset_painter_device_t *driver = &ili9163_drivers[i];
-        if (!driver->qp_driver.driver_vtable) {
-            driver->qp_driver.driver_vtable         = (const struct painter_driver_vtable_t QP_RESIDENT_FLASH *)&ili9163_driver_vtable;
-            driver->qp_driver.comms_vtable          = (const struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
-            driver->qp_driver.screen_width          = screen_width;
-            driver->qp_driver.screen_height         = screen_height;
-            driver->qp_driver.rotation              = QP_ROTATION_0;
-            driver->qp_driver.offset_x              = 0;
-            driver->qp_driver.offset_y              = 0;
-            driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
+        if (!driver->base.driver_vtable) {
+            driver->base.driver_vtable         = (const struct painter_driver_vtable_t QP_RESIDENT_FLASH *)&ili9163_driver_vtable;
+            driver->base.comms_vtable          = (const struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
+            driver->base.screen_width          = screen_width;
+            driver->base.screen_height         = screen_height;
+            driver->base.rotation              = QP_ROTATION_0;
+            driver->base.offset_x              = 0;
+            driver->base.offset_y              = 0;
+            driver->base.native_bits_per_pixel = 16;  // RGB565
 
             // SPI and other pin configuration
-            driver->qp_driver.comms_config                         = &driver->spi_dc_reset_config;
+            driver->base.comms_config                              = &driver->spi_dc_reset_config;
             driver->spi_dc_reset_config.spi_config.chip_select_pin = chip_select_pin;
             driver->spi_dc_reset_config.spi_config.divisor         = spi_divisor;
             driver->spi_dc_reset_config.spi_config.lsb_first       = false;
@@ -116,3 +118,5 @@ painter_device_t qp_ili9163_make_spi_device(uint16_t screen_width, uint16_t scre
 }
 
 #endif  // QUANTUM_PAINTER_ILI9163_SPI_ENABLE
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

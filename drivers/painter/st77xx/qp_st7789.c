@@ -16,15 +16,40 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Common
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Driver storage
 tft_panel_dc_reset_painter_device_t st7789_drivers[ST7789_NUM_DEVICES] = {0};
 
-// Initialization
-bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Automatic viewport offsets
+
+#ifndef ST7789_NO_AUTOMATIC_OFFSETS
+static inline void st7789_automatic_viewport_offsets(painter_device_t device, painter_rotation_t rotation) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
 
+    // clang-format off
+    const struct {
+        uint16_t offset_x;
+        uint16_t offset_y;
+    } rotation_offsets_240x240[] QP_RESIDENT_FLASH = {
+        [QP_ROTATION_0]   = { .offset_x =  0, .offset_y =  0 },
+        [QP_ROTATION_90]  = { .offset_x =  0, .offset_y =  0 },
+        [QP_ROTATION_180] = { .offset_x =  0, .offset_y = 80 },
+        [QP_ROTATION_270] = { .offset_x = 80, .offset_y =  0 },
+    };
+    // clang-format on
+
+    if (driver->screen_width == 240 && driver->screen_height == 240) {
+        driver->offset_x = rotation_offsets_240x240[rotation].offset_x;
+        driver->offset_y = rotation_offsets_240x240[rotation].offset_y;
+    }
+}
+#endif  // ST7789_NO_AUTOMATIC_OFFSETS
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Initialization
+
+bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
     // clang-format off
     const uint8_t st7789_init_sequence[] QP_RESIDENT_FLASH = {
         // Command,                 Delay, N, Data[N]
@@ -49,27 +74,16 @@ bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
 
     qp_comms_command_databyte(device, ST77XX_SET_MADCTL, madctl[rotation]);
 
-    // clang-format off
-    const struct {
-        uint16_t offset_x;
-        uint16_t offset_y;
-    } rotation_offsets_240x240[] QP_RESIDENT_FLASH = {
-        [QP_ROTATION_0]   = { .offset_x =  0, .offset_y =  0 },
-        [QP_ROTATION_90]  = { .offset_x =  0, .offset_y =  0 },
-        [QP_ROTATION_180] = { .offset_x =  0, .offset_y = 80 },
-        [QP_ROTATION_270] = { .offset_x = 80, .offset_y =  0 },
-    };
-    // clang-format on
-
-    if (driver->screen_width == 240 && driver->screen_height == 240) {
-        driver->offset_x = rotation_offsets_240x240[rotation].offset_x;
-        driver->offset_y = rotation_offsets_240x240[rotation].offset_y;
-    }
+#ifndef ST7789_NO_AUTOMATIC_VIEWPORT_OFFSETS
+    st7789_automatic_viewport_offsets(device, rotation);
+#endif  // ST7789_NO_AUTOMATIC_VIEWPORT_OFFSETS
 
     return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Driver vtable
+
 const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH st7789_driver_vtable = {
     .base =
         {
@@ -82,7 +96,7 @@ const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH st7789
             .palette_convert = qp_tft_panel_palette_convert,
             .append_pixels   = qp_tft_panel_append_pixels,
         },
-    .rgb888_to_native16bit = qp_rgb888_to_rgb565,
+    .rgb888_to_native16bit = qp_rgb888_to_rgb565_swapped,
     .opcodes =
         {
             .display_on         = ST77XX_CMD_DISPLAY_ON,
@@ -95,7 +109,6 @@ const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH st7789
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SPI
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef QUANTUM_PAINTER_ST7789_SPI_ENABLE
 
@@ -103,18 +116,18 @@ const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH st7789
 painter_device_t qp_st7789_make_spi_device(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, int spi_mode) {
     for (uint32_t i = 0; i < ST7789_NUM_DEVICES; ++i) {
         tft_panel_dc_reset_painter_device_t *driver = &st7789_drivers[i];
-        if (!driver->qp_driver.driver_vtable) {
-            driver->qp_driver.driver_vtable         = (const struct painter_driver_vtable_t QP_RESIDENT_FLASH *)&st7789_driver_vtable;
-            driver->qp_driver.comms_vtable          = (const struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
-            driver->qp_driver.screen_width          = screen_width;
-            driver->qp_driver.screen_height         = screen_height;
-            driver->qp_driver.rotation              = QP_ROTATION_0;
-            driver->qp_driver.offset_x              = 0;
-            driver->qp_driver.offset_y              = 0;
-            driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
+        if (!driver->base.driver_vtable) {
+            driver->base.driver_vtable         = (const struct painter_driver_vtable_t QP_RESIDENT_FLASH *)&st7789_driver_vtable;
+            driver->base.comms_vtable          = (const struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
+            driver->base.screen_width          = screen_width;
+            driver->base.screen_height         = screen_height;
+            driver->base.rotation              = QP_ROTATION_0;
+            driver->base.offset_x              = 0;
+            driver->base.offset_y              = 0;
+            driver->base.native_bits_per_pixel = 16;  // RGB565
 
             // SPI and other pin configuration
-            driver->qp_driver.comms_config                         = &driver->spi_dc_reset_config;
+            driver->base.comms_config                              = &driver->spi_dc_reset_config;
             driver->spi_dc_reset_config.spi_config.chip_select_pin = chip_select_pin;
             driver->spi_dc_reset_config.spi_config.divisor         = spi_divisor;
             driver->spi_dc_reset_config.spi_config.lsb_first       = false;
@@ -128,3 +141,5 @@ painter_device_t qp_st7789_make_spi_device(uint16_t screen_width, uint16_t scree
 }
 
 #endif  // QUANTUM_PAINTER_ST7789_SPI_ENABLE
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

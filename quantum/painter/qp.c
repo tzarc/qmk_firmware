@@ -7,6 +7,9 @@
 #include <qp_comms.h>
 #include <qp_draw.h>
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Internal driver validation
+
 static bool validate_driver_vtable(struct painter_driver_t *driver) { return (driver->driver_vtable && driver->driver_vtable->init && driver->driver_vtable->power && driver->driver_vtable->clear && driver->driver_vtable->viewport && driver->driver_vtable->pixdata && driver->driver_vtable->palette_convert && driver->driver_vtable->append_pixels) ? true : false; }
 
 static bool validate_comms_vtable(struct painter_driver_t *driver) { return (driver->comms_vtable && driver->comms_vtable->comms_init && driver->comms_vtable->comms_start && driver->comms_vtable->comms_stop && driver->comms_vtable->comms_send) ? true : false; }
@@ -14,8 +17,7 @@ static bool validate_comms_vtable(struct painter_driver_t *driver) { return (dri
 static bool validate_driver_integrity(struct painter_driver_t *driver) { return validate_driver_vtable(driver) && validate_comms_vtable(driver); }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// External API
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_init
 
 bool qp_init(painter_device_t device, painter_rotation_t rotation) {
     qp_dprintf("qp_init: entry\n");
@@ -50,6 +52,9 @@ bool qp_init(painter_device_t device, painter_rotation_t rotation) {
     return ret;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_power
+
 bool qp_power(painter_device_t device, bool power_on) {
     qp_dprintf("qp_power: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
@@ -68,6 +73,9 @@ bool qp_power(painter_device_t device, bool power_on) {
     qp_dprintf("qp_power: %s\n", ret ? "ok" : "fail");
     return ret;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_clear
 
 bool qp_clear(painter_device_t device) {
     qp_dprintf("qp_clear: entry\n");
@@ -88,6 +96,9 @@ bool qp_clear(painter_device_t device) {
     return ret;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_flush
+
 bool qp_flush(painter_device_t device) {
     qp_dprintf("qp_flush: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
@@ -106,6 +117,9 @@ bool qp_flush(painter_device_t device) {
     qp_dprintf("qp_flush: %s\n", ret ? "ok" : "fail");
     return ret;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_get_geometry
 
 void qp_get_geometry(painter_device_t device, uint16_t *width, uint16_t *height, painter_rotation_t *rotation, uint16_t *offset_x, uint16_t *offset_y) {
     qp_dprintf("qp_geometry: entry\n");
@@ -134,6 +148,9 @@ void qp_get_geometry(painter_device_t device, uint16_t *width, uint16_t *height,
     qp_dprintf("qp_geometry: ok\n");
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_override_offsets
+
 void qp_override_offsets(painter_device_t device, uint16_t offset_x, uint16_t offset_y) {
     qp_dprintf("qp_override_offsets: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
@@ -143,6 +160,9 @@ void qp_override_offsets(painter_device_t device, uint16_t offset_x, uint16_t of
 
     qp_dprintf("qp_override_offsets: ok\n");
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_viewport
 
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     qp_dprintf("qp_viewport: entry\n");
@@ -163,6 +183,9 @@ bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t 
     qp_comms_stop(device);
     return ret;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_pixdata
 
 bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
     qp_dprintf("qp_pixdata: entry\n");

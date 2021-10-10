@@ -14,12 +14,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Common
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Driver storage
 tft_panel_dc_reset_painter_device_t ili9341_drivers[ILI9341_NUM_DEVICES] = {0};
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialization
+
 bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     // clang-format off
     const uint8_t ili9341_init_sequence[] QP_RESIDENT_FLASH = {
@@ -64,7 +65,9 @@ bool qp_ili9341_init(painter_device_t device, painter_rotation_t rotation) {
     return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Driver vtable
+
 const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili9341_driver_vtable = {
     .base =
         {
@@ -77,7 +80,7 @@ const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili934
             .palette_convert = qp_tft_panel_palette_convert,
             .append_pixels   = qp_tft_panel_append_pixels,
         },
-    .rgb888_to_native16bit = qp_rgb888_to_rgb565,
+    .rgb888_to_native16bit = qp_rgb888_to_rgb565_swapped,
     .opcodes =
         {
             .display_on         = ILI9XXX_CMD_DISPLAY_ON,
@@ -90,7 +93,6 @@ const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili934
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SPI
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef QUANTUM_PAINTER_ILI9341_SPI_ENABLE
 
@@ -98,18 +100,18 @@ const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili934
 painter_device_t qp_ili9341_make_spi_device(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, int spi_mode) {
     for (uint32_t i = 0; i < ILI9341_NUM_DEVICES; ++i) {
         tft_panel_dc_reset_painter_device_t *driver = &ili9341_drivers[i];
-        if (!driver->qp_driver.driver_vtable) {
-            driver->qp_driver.driver_vtable         = (const struct painter_driver_vtable_t QP_RESIDENT_FLASH *)&ili9341_driver_vtable;
-            driver->qp_driver.comms_vtable          = (const struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
-            driver->qp_driver.screen_width          = screen_width;
-            driver->qp_driver.screen_height         = screen_height;
-            driver->qp_driver.rotation              = QP_ROTATION_0;
-            driver->qp_driver.offset_x              = 0;
-            driver->qp_driver.offset_y              = 0;
-            driver->qp_driver.native_bits_per_pixel = 16;  // RGB565
+        if (!driver->base.driver_vtable) {
+            driver->base.driver_vtable         = (const struct painter_driver_vtable_t QP_RESIDENT_FLASH *)&ili9341_driver_vtable;
+            driver->base.comms_vtable          = (const struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
+            driver->base.native_bits_per_pixel = 16;  // RGB565
+            driver->base.screen_width          = screen_width;
+            driver->base.screen_height         = screen_height;
+            driver->base.rotation              = QP_ROTATION_0;
+            driver->base.offset_x              = 0;
+            driver->base.offset_y              = 0;
 
             // SPI and other pin configuration
-            driver->qp_driver.comms_config                         = &driver->spi_dc_reset_config;
+            driver->base.comms_config                              = &driver->spi_dc_reset_config;
             driver->spi_dc_reset_config.spi_config.chip_select_pin = chip_select_pin;
             driver->spi_dc_reset_config.spi_config.divisor         = spi_divisor;
             driver->spi_dc_reset_config.spi_config.lsb_first       = false;
@@ -123,3 +125,5 @@ painter_device_t qp_ili9341_make_spi_device(uint16_t screen_width, uint16_t scre
 }
 
 #endif  // QUANTUM_PAINTER_ILI9341_SPI_ENABLE
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

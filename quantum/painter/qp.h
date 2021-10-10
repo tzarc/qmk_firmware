@@ -6,19 +6,23 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// This controls the maximum size of the pixel data buffer used for single blocks of transmission
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter global configurables (add to your keyboard's config.h)
+
+// This controls the maximum size of the pixel data buffer used for single blocks of transmission. Larger buffers means
+// more data is processed at one time, with less frequent transmissions, at the cost of RAM.
 #ifndef QP_PIXDATA_BUFFER_SIZE
 #    define QP_PIXDATA_BUFFER_SIZE 32
 #endif
 
-// This controls whether 256-color palettes are supported -- will require a significant amount of RAM
+// This controls whether 256-color palettes are supported -- basically unusable on AVR due to the associated RAM
+// requirements on the internal buffer sizes.
 #ifndef QUANTUM_PAINTER_SUPPORTS_256_PALETTE
 #    define QUANTUM_PAINTER_SUPPORTS_256_PALETTE FALSE
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Cater for AVR address space
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// AVR split address space shenanigans
 
 #define QP_PACKED __attribute__((packed))
 
@@ -36,7 +40,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter types
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Device type
 typedef const void *painter_device_t;
@@ -71,8 +74,7 @@ typedef struct painter_font_descriptor_t {
 typedef const painter_font_descriptor_t QP_RESIDENT_FLASH_OR_RAM *painter_font_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter API
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API
 
 // Initialize a device and set its rotation -- need to create the device using its corresponding factory method first
 bool qp_init(painter_device_t device, painter_rotation_t rotation);
@@ -96,7 +98,7 @@ void qp_override_offsets(painter_device_t device, uint16_t offset_x, uint16_t of
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
 
 // Stream pixel data in the device's native format into the previously-set viewport
-bool qp_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count);
+bool qp_pixdata(painter_device_t device, const void QP_RESIDENT_FLASH_OR_RAM *pixel_data, uint32_t native_pixel_count);
 
 // Set a specific pixel
 bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val);
@@ -118,6 +120,6 @@ bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image
 bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
 
 // Draw text to the display
-int16_t qp_textwidth(painter_font_t font, const char *str);
-int16_t qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str);
-int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
+int16_t qp_textwidth(painter_font_t font, const char QP_RESIDENT_FLASH_OR_RAM *str);
+int16_t qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char QP_RESIDENT_FLASH_OR_RAM *str);
+int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char QP_RESIDENT_FLASH_OR_RAM *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);

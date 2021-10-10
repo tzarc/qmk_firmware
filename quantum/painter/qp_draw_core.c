@@ -17,7 +17,6 @@ _Static_assert((QP_PIXDATA_BUFFER_SIZE > 0) && (QP_PIXDATA_BUFFER_SIZE % 16) == 
 //       **** DO NOT refactor this and decide to place the variables inside the function calling them -- you will ****
 //       **** very likely get artifacts rendered to the screen as a result.                                       ****
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Buffer used for transmitting native pixel data to the downstream device.
 uint8_t qp_global_pixdata_buffer[QP_PIXDATA_BUFFER_SIZE];
@@ -35,7 +34,6 @@ qp_pixel_color_t qp_global_pixel_lookup_table[16];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Helpers
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 uint32_t qp_num_pixels_in_buffer(painter_device_t device) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
@@ -110,7 +108,6 @@ void qp_invalidate_palette(void) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter External API: qp_setpixel
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, uint8_t sat, uint8_t val) {
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
@@ -133,7 +130,6 @@ bool qp_setpixel(painter_device_t device, uint16_t x, uint16_t y, uint8_t hue, u
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter External API: qp_line
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t hue, uint8_t sat, uint8_t val) {
     if (x0 == x1 || y0 == y1) {
@@ -196,7 +192,6 @@ bool qp_line(painter_device_t device, uint16_t x0, uint16_t y0, uint16_t x1, uin
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter External API: qp_rect
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool qp_fillrect_helper_impl(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
     uint32_t                 pixels_in_pixdata = qp_num_pixels_in_buffer(device);

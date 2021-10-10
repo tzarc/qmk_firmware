@@ -11,21 +11,29 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Native pixel format conversion
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 uint16_t qp_rgb888_to_rgb565(uint8_t r, uint8_t g, uint8_t b) {
+    uint16_t rgb565 = (((uint16_t)r) >> 3) << 11 | (((uint16_t)g) >> 2) << 5 | (((uint16_t)b) >> 3);
+    return rgb565;
+}
+
+uint16_t qp_rgb888_to_rgb565_swapped(uint8_t r, uint8_t g, uint8_t b) {
     uint16_t rgb565 = (((uint16_t)r) >> 3) << 11 | (((uint16_t)g) >> 2) << 5 | (((uint16_t)b) >> 3);
     return BYTE_SWAP(rgb565);
 }
 
 uint16_t qp_rgb888_to_bgr565(uint8_t r, uint8_t g, uint8_t b) {
     uint16_t bgr565 = (((uint16_t)b) >> 3) << 11 | (((uint16_t)g) >> 2) << 5 | (((uint16_t)r) >> 3);
+    return bgr565;
+}
+
+uint16_t qp_rgb888_to_bgr565_swapped(uint8_t r, uint8_t g, uint8_t b) {
+    uint16_t bgr565 = (((uint16_t)b) >> 3) << 11 | (((uint16_t)g) >> 2) << 5 | (((uint16_t)r) >> 3);
     return BYTE_SWAP(bgr565);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter API implementations
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Power control
 bool qp_tft_panel_power(painter_device_t device, bool power_on) {
@@ -45,7 +53,6 @@ bool qp_tft_panel_clear(painter_device_t device) {
 // Screen flush
 bool qp_tft_panel_flush(painter_device_t device) {
     // No-op, as there's no framebuffer in RAM for this device.
-    (void)device;
     return true;
 }
 
@@ -74,11 +81,12 @@ bool qp_tft_panel_viewport(painter_device_t device, uint16_t left, uint16_t top,
 }
 
 // Stream pixel data to the current write position in GRAM
-bool qp_tft_panel_pixdata(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count) {
+bool qp_tft_panel_pixdata(painter_device_t device, const void QP_RESIDENT_FLASH_OR_RAM *pixel_data, uint32_t native_pixel_count) {
     qp_comms_send(device, pixel_data, native_pixel_count * sizeof(uint16_t));
     return true;
 }
 
+// Convert supplied palette entries into their native equivalents
 bool qp_tft_panel_palette_convert(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette) {
     struct painter_driver_t *                          driver = (struct painter_driver_t *)device;
     struct tft_panel_dc_reset_painter_driver_vtable_t *vtable = (struct tft_panel_dc_reset_painter_driver_vtable_t *)driver->driver_vtable;
@@ -89,6 +97,7 @@ bool qp_tft_panel_palette_convert(painter_device_t device, int16_t palette_size,
     return true;
 }
 
+// Append pixels to the target location, keyed by the pixel index
 bool qp_tft_panel_append_pixels(painter_device_t device, uint8_t *target_buffer, qp_pixel_color_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices) {
     uint16_t *buf = (uint16_t *)target_buffer;
     for (uint32_t i = 0; i < pixel_count; ++i) {

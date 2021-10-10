@@ -6,10 +6,12 @@
 #include <qp_comms.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Image renderer
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_drawimage
 
 bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image) { return qp_drawimage_recolor(device, x, y, image, 0, 0, 255, 0, 0, 0); }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_drawimage_recolor
 
 bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
     qp_dprintf("qp_drawimage_recolor: entry\n");
@@ -34,25 +36,12 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
     const painter_raw_image_descriptor_t QP_RESIDENT_FLASH_OR_RAM* raw_image_desc = (const painter_raw_image_descriptor_t QP_RESIDENT_FLASH_OR_RAM*)image;
 
     // Set up the input/output states
-    struct byte_input_state input_state = {
-        .device   = device,
-        .src_data = raw_image_desc->image_data,
-    };
-
-    byte_input_callback input_callback;
-    switch (image->compression) {
-        case IMAGE_UNCOMPRESSED:
-            input_callback = qp_drawimage_byte_uncompressed_decoder;
-            break;
-        case IMAGE_COMPRESSED_RLE:
-            input_callback         = qp_drawimage_byte_rle_decoder;
-            input_state.rle.mode   = MARKER_BYTE;
-            input_state.rle.remain = 0;
-            break;
-        default:
-            qp_dprintf("qp_drawimage_recolor: fail (invalid image compression scheme)\n");
-            qp_comms_stop(device);
-            return false;
+    struct byte_input_state input_state    = {.device = device, .src_data = raw_image_desc->image_data};
+    byte_input_callback     input_callback = qp_prepare_input_state(&input_state, image->compression);
+    if (input_callback == NULL) {
+        qp_dprintf("qp_drawimage_recolor: fail (invalid image compression scheme)\n");
+        qp_comms_stop(device);
+        return false;
     }
 
     struct pixel_output_state output_state = {.device = device, .pixel_write_pos = 0, .max_pixels = qp_num_pixels_in_buffer(device)};
@@ -85,7 +74,7 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
 
         // Convert the palette to native format
         if (!driver->driver_vtable->palette_convert(device, palette_entries, qp_global_pixel_lookup_table)) {
-            qp_dprintf("qp_drawimage_recolor: fail (could not set viewport)\n");
+            qp_dprintf("qp_drawimage_recolor: fail (could not convert pixels to native)\n");
             qp_comms_stop(device);
             return false;
         }

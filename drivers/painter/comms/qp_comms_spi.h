@@ -5,7 +5,6 @@
 
 #ifdef QUANTUM_PAINTER_SPI_ENABLE
 
-#    include <stddef.h>
 #    include <stdint.h>
 #    include <gpio.h>
 
@@ -13,7 +12,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Base SPI support
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct qp_comms_spi_config_t {
     pin_t    chip_select_pin;
@@ -24,14 +22,13 @@ struct qp_comms_spi_config_t {
 
 bool     qp_comms_spi_init(painter_device_t device);
 bool     qp_comms_spi_start(painter_device_t device);
-uint32_t qp_comms_spi_send_data(painter_device_t device, const void *data, uint32_t byte_count);
+uint32_t qp_comms_spi_send_data(painter_device_t device, const void QP_RESIDENT_FLASH_OR_RAM* data, uint32_t byte_count);
 void     qp_comms_spi_stop(painter_device_t device);
 
 extern const struct painter_comms_vtable_t QP_RESIDENT_FLASH spi_comms_vtable;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SPI with D/C and RST pins
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #    ifdef QUANTUM_PAINTER_SPI_DC_RESET_ENABLE
 
@@ -42,11 +39,13 @@ struct qp_comms_spi_dc_reset_config_t {
 };
 
 void     qp_comms_spi_dc_reset_send_command(painter_device_t device, uint8_t cmd);
-uint32_t qp_comms_spi_dc_reset_send_data(painter_device_t device, const void *data, uint32_t byte_count);
-void     qp_comms_spi_dc_reset_bulk_command_sequence(painter_device_t device, const uint8_t *sequence, size_t sequence_len);
+uint32_t qp_comms_spi_dc_reset_send_data(painter_device_t device, const void QP_RESIDENT_FLASH_OR_RAM* data, uint32_t byte_count);
+void     qp_comms_spi_dc_reset_bulk_command_sequence(painter_device_t device, const uint8_t QP_RESIDENT_FLASH_OR_RAM* sequence, size_t sequence_len);
 
 extern const struct painter_comms_with_command_vtable_t QP_RESIDENT_FLASH spi_comms_with_dc_vtable;
 
 #    endif  // QUANTUM_PAINTER_SPI_DC_RESET_ENABLE
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif  // QUANTUM_PAINTER_SPI_ENABLE

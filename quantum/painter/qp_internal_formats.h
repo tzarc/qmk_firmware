@@ -6,20 +6,7 @@
 #include <qp_internal.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum painter types
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-typedef enum qp_image_format_t {
-    // Pixel formats available in the QGF frame format
-    GRAYSCALE_1BPP = 0x00,
-    GRAYSCALE_2BPP = 0x01,
-    GRAYSCALE_4BPP = 0x02,
-    GRAYSCALE_8BPP = 0x03,
-    PALETTE_1BPP   = 0x04,
-    PALETTE_2BPP   = 0x05,
-    PALETTE_4BPP   = 0x06,
-    PALETTE_8BPP   = 0x07,
-} qp_image_format_t;
+// Quantum Painter pixel formats
 
 // Datatype containing a pixel's colour
 typedef union QP_PACKED qp_pixel_color_t {
@@ -44,6 +31,21 @@ typedef union QP_PACKED qp_pixel_color_t {
 } qp_pixel_color_t;
 _Static_assert(sizeof(qp_pixel_color_t) == 4, "Invalid size for qp_pixel_color_t");
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter image format
+
+typedef enum qp_image_format_t {
+    // Pixel formats available in the QGF frame format
+    GRAYSCALE_1BPP = 0x00,
+    GRAYSCALE_2BPP = 0x01,
+    GRAYSCALE_4BPP = 0x02,
+    GRAYSCALE_8BPP = 0x03,
+    PALETTE_1BPP   = 0x04,
+    PALETTE_2BPP   = 0x05,
+    PALETTE_4BPP   = 0x06,
+    PALETTE_8BPP   = 0x07,
+} qp_image_format_t;
+
 // Uncompressed raw image descriptor
 typedef struct painter_raw_image_descriptor_t {
     const painter_image_descriptor_t base;
@@ -51,6 +53,9 @@ typedef struct painter_raw_image_descriptor_t {
     const uint8_t *const             image_palette;  // pointer to the image palette
     const uint8_t *const             image_data;     // pointer to the image data
 } painter_raw_image_descriptor_t;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter font format
 
 // ASCII font glyph offset descriptor
 typedef struct painter_font_ascii_glyph_offset_t {

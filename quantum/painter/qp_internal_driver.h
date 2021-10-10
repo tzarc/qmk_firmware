@@ -7,14 +7,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Driver callbacks
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef bool (*painter_driver_init_func)(painter_device_t device, painter_rotation_t rotation);
 typedef bool (*painter_driver_power_func)(painter_device_t device, bool power_on);
 typedef bool (*painter_driver_clear_func)(painter_device_t device);
 typedef bool (*painter_driver_flush_func)(painter_device_t device);
 typedef bool (*painter_driver_viewport_func)(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
-typedef bool (*painter_driver_pixdata_func)(painter_device_t device, const void *pixel_data, uint32_t native_pixel_count);
+typedef bool (*painter_driver_pixdata_func)(painter_device_t device, const void QP_RESIDENT_FLASH_OR_RAM *pixel_data, uint32_t native_pixel_count);
 typedef bool (*painter_driver_convert_palette_func)(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette);
 typedef bool (*painter_driver_append_pixels)(painter_device_t device, uint8_t *target_buffer, qp_pixel_color_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices);
 
@@ -32,12 +31,11 @@ struct painter_driver_vtable_t {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Comms callbacks
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef bool (*painter_driver_comms_init_func)(painter_device_t device);
 typedef bool (*painter_driver_comms_start_func)(painter_device_t device);
 typedef void (*painter_driver_comms_stop_func)(painter_device_t device);
-typedef uint32_t (*painter_driver_comms_send_func)(painter_device_t device, const void *data, uint32_t byte_count);
+typedef uint32_t (*painter_driver_comms_send_func)(painter_device_t device, const void QP_RESIDENT_FLASH_OR_RAM *data, uint32_t byte_count);
 
 struct painter_comms_vtable_t {
     painter_driver_comms_init_func  comms_init;
@@ -47,7 +45,7 @@ struct painter_comms_vtable_t {
 };
 
 typedef void (*painter_driver_comms_send_command_func)(painter_device_t device, uint8_t cmd);
-typedef void (*painter_driver_comms_bulk_command_sequence)(painter_device_t device, const uint8_t *sequence, size_t sequence_len);
+typedef void (*painter_driver_comms_bulk_command_sequence)(painter_device_t device, const uint8_t QP_RESIDENT_FLASH_OR_RAM *sequence, size_t sequence_len);
 
 struct painter_comms_with_command_vtable_t {
     struct painter_comms_vtable_t              base;  // must be first, so this object can be cast from the painter_comms_vtable_t* type
@@ -57,11 +55,13 @@ struct painter_comms_with_command_vtable_t {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Driver base definition
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct painter_driver_t {
     const struct painter_driver_vtable_t QP_RESIDENT_FLASH *driver_vtable;
     const struct painter_comms_vtable_t QP_RESIDENT_FLASH *comms_vtable;
+
+    // Flag signifying if validation was successful
+    bool validate_ok;
 
     // Panel geometry
     uint16_t screen_width;
@@ -79,7 +79,4 @@ struct painter_driver_t {
 
     // Comms config pointer -- needs to point to an appropriate comms config if the comms driver requires it.
     void *comms_config;
-
-    // Flag signifying if validation was successful
-    bool validate_ok;
 };

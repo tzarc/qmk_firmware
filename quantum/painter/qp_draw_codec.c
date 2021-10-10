@@ -7,7 +7,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Palette / Monochrome-format decoder
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const qp_pixel_color_t qp_pixel_white QP_RESIDENT_FLASH = {.hsv888 = {.h = 0, .s = 0, .v = 255}};
+static const qp_pixel_color_t qp_pixel_black QP_RESIDENT_FLASH = {.hsv888 = {.h = 0, .s = 0, .v = 0}};
 
 bool qp_decode_palette(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, byte_input_callback input_callback, void* input_arg, qp_pixel_color_t* palette, pixel_output_callback output_callback, void* output_arg) {
     const uint8_t pixel_bitmask    = (1 << bits_per_pixel) - 1;
@@ -30,11 +32,7 @@ bool qp_decode_palette(painter_device_t device, uint32_t pixel_count, uint8_t bi
     return true;
 }
 
-bool qp_decode_grayscale(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, byte_input_callback input_callback, void* input_arg, pixel_output_callback output_callback, void* output_arg) {
-    qp_pixel_color_t white = {.hsv888 = {.h = 0, .s = 0, .v = 255}};
-    qp_pixel_color_t black = {.hsv888 = {.h = 0, .s = 0, .v = 0}};
-    return qp_decode_recolor(device, pixel_count, bits_per_pixel, input_callback, input_arg, white, black, output_callback, output_arg);
-}
+bool qp_decode_grayscale(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, byte_input_callback input_callback, void* input_arg, pixel_output_callback output_callback, void* output_arg) { return qp_decode_recolor(device, pixel_count, bits_per_pixel, input_callback, input_arg, qp_pixel_white, qp_pixel_black, output_callback, output_arg); }
 
 bool qp_decode_recolor(painter_device_t device, uint32_t pixel_count, uint8_t bits_per_pixel, byte_input_callback input_callback, void* input_arg, qp_pixel_color_t fg_hsv888, qp_pixel_color_t bg_hsv888, pixel_output_callback output_callback, void* output_arg) {
     struct painter_driver_t* driver = (struct painter_driver_t*)device;
@@ -50,14 +48,13 @@ bool qp_decode_recolor(painter_device_t device, uint32_t pixel_count, uint8_t bi
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Progressive pull of bytes, push of pixels
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int16_t qp_drawimage_byte_uncompressed_decoder(void* cb_arg) {
+static inline int16_t qp_drawimage_byte_uncompressed_decoder(void* cb_arg) {
     struct byte_input_state* state = (struct byte_input_state*)cb_arg;
     return *state->src_data++;
 }
 
-int16_t qp_drawimage_byte_rle_decoder(void* cb_arg) {
+static inline int16_t qp_drawimage_byte_rle_decoder(void* cb_arg) {
     struct byte_input_state* state = (struct byte_input_state*)cb_arg;
 
     // Work out if we're parsing the initial marker byte
@@ -112,4 +109,17 @@ bool qp_drawimage_pixel_appender(qp_pixel_color_t* palette, uint8_t index, void*
     }
 
     return true;
+}
+
+byte_input_callback qp_prepare_input_state(struct byte_input_state* input_state, painter_compression_t compression) {
+    switch (compression) {
+        case IMAGE_UNCOMPRESSED:
+            return qp_drawimage_byte_uncompressed_decoder;
+        case IMAGE_COMPRESSED_RLE:
+            input_state->rle.mode   = MARKER_BYTE;
+            input_state->rle.remain = 0;
+            return qp_drawimage_byte_rle_decoder;
+        default:
+            return NULL;
+    }
 }

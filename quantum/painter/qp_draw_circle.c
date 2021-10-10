@@ -7,10 +7,6 @@
 #include <qp_comms.h>
 #include <qp_draw.h>
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter External API: qp_circle
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // Utilize 8-way symmetry to draw circles
 static bool qp_circle_helper_impl(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, bool filled) {
     /*
@@ -125,6 +121,9 @@ static bool qp_circle_helper_impl(painter_device_t device, uint16_t centerx, uin
 
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Quantum Painter External API: qp_circle
 
 bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius, uint8_t hue, uint8_t sat, uint8_t val, bool filled) {
     qp_dprintf("qp_circle: entry\n");
