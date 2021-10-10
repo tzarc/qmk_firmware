@@ -11,8 +11,8 @@
 // Quantum Painter External API: qp_circle
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Utilize 8-way symmetry to draw circle
-bool qp_circle_helper_impl(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, bool filled) {
+// Utilize 8-way symmetry to draw circles
+static bool qp_circle_helper_impl(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, bool filled) {
     /*
     Circles have the property of 8-way symmetry, so eight pixels can be drawn
     for each computed [offsetx,offsety] given the center coordinates

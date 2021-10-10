@@ -27,7 +27,7 @@ bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
 
     // clang-format off
     const uint8_t st7789_init_sequence[] QP_RESIDENT_FLASH = {
-        // Command,                 Delay,  N, Data[N]
+        // Command,                 Delay, N, Data[N]
         ST77XX_CMD_RESET,            120,  0,
         ST77XX_CMD_SLEEP_OFF,          5,  0,
         ST77XX_SET_PIX_FMT,            0,  1, 0x55,

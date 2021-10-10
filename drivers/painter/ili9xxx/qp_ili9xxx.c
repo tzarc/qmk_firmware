@@ -15,13 +15,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Color conversion to LCD-native
-static inline rgb565_t rgb_to_ili9xxx(uint8_t r, uint8_t g, uint8_t b) {
-    rgb565_t rgb565 = (((rgb565_t)r) >> 3) << 11 | (((rgb565_t)g) >> 2) << 5 | (((rgb565_t)b) >> 3);
+static inline uint16_t rgb_to_ili9xxx(uint8_t r, uint8_t g, uint8_t b) {
+    uint16_t rgb565 = (((uint16_t)r) >> 3) << 11 | (((uint16_t)g) >> 2) << 5 | (((uint16_t)b) >> 3);
     return BYTE_SWAP(rgb565);
 }
 
 // Color conversion to LCD-native
-static inline rgb565_t hsv_to_ili9xxx(uint8_t hue, uint8_t sat, uint8_t val) {
+static inline uint16_t hsv_to_ili9xxx(uint8_t hue, uint8_t sat, uint8_t val) {
     RGB rgb = hsv_to_rgb_nocie((HSV){hue, sat, val});
     return rgb_to_ili9xxx(rgb.r, rgb.g, rgb.b);
 }

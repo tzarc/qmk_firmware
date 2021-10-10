@@ -11,7 +11,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Utilize 4-way symmetry to draw an ellipse
-bool qp_ellipse_helper_impl(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, bool filled) {
+static bool qp_ellipse_helper_impl(painter_device_t device, uint16_t centerx, uint16_t centery, uint16_t offsetx, uint16_t offsety, bool filled) {
     /*
     Ellipses have the property of 4-way symmetry, so four pixels can be drawn
     for each computed [offsetx,offsety] given the center coordinates
