@@ -87,7 +87,7 @@ bool qp_tft_panel_pixdata(painter_device_t device, const void QP_RESIDENT_FLASH_
 }
 
 // Convert supplied palette entries into their native equivalents
-bool qp_tft_panel_palette_convert(painter_device_t device, int16_t palette_size, qp_pixel_color_t *palette) {
+bool qp_tft_panel_palette_convert(painter_device_t device, int16_t palette_size, qp_pixel_t *palette) {
     struct painter_driver_t *                          driver = (struct painter_driver_t *)device;
     struct tft_panel_dc_reset_painter_driver_vtable_t *vtable = (struct tft_panel_dc_reset_painter_driver_vtable_t *)driver->driver_vtable;
     for (int16_t i = 0; i < palette_size; ++i) {
@@ -98,7 +98,7 @@ bool qp_tft_panel_palette_convert(painter_device_t device, int16_t palette_size,
 }
 
 // Append pixels to the target location, keyed by the pixel index
-bool qp_tft_panel_append_pixels(painter_device_t device, uint8_t *target_buffer, qp_pixel_color_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices) {
+bool qp_tft_panel_append_pixels(painter_device_t device, uint8_t *target_buffer, qp_pixel_t *palette, uint32_t pixel_offset, uint32_t pixel_count, uint8_t *palette_indices) {
     uint16_t *buf = (uint16_t *)target_buffer;
     for (uint32_t i = 0; i < pixel_count; ++i) {
         buf[pixel_offset + i] = palette[palette_indices[i]].rgb565;

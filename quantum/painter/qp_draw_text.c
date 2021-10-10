@@ -107,14 +107,14 @@ static inline bool qp_font_code_point_handler_calcwidth(painter_font_t font, uin
 
 // Callback state
 struct code_point_iter_drawglyph_state {
-    painter_device_t           device;
-    int16_t                    xpos;
-    int16_t                    ypos;
-    qp_pixel_color_t           fg_hsv888;
-    qp_pixel_color_t           bg_hsv888;
-    byte_input_callback        input_callback;
-    struct byte_input_state *  input_state;
-    struct pixel_output_state *output_state;
+    painter_device_t                       device;
+    int16_t                                xpos;
+    int16_t                                ypos;
+    qp_pixel_t                             fg_hsv888;
+    qp_pixel_t                             bg_hsv888;
+    qp_internal_byte_input_callback        input_callback;
+    struct qp_internal_byte_input_state *  input_state;
+    struct qp_internal_pixel_output_state *output_state;
 };
 
 // Codepoint handler callback: drawing
@@ -138,11 +138,11 @@ static inline bool qp_font_code_point_handler_drawglyph(painter_font_t font, uin
 
     // Decode the pixel data for the glyph
     uint32_t pixel_count = ((uint32_t)width) * height;
-    bool     ret         = qp_decode_recolor(state->device, pixel_count, font->image_bpp, state->input_callback, state->input_state, state->fg_hsv888, state->bg_hsv888, qp_drawimage_pixel_appender, state->output_state);
+    bool     ret         = qp_internal_decode_recolor(state->device, pixel_count, font->image_bpp, state->input_callback, state->input_state, state->fg_hsv888, state->bg_hsv888, qp_internal_pixel_appender, state->output_state);
 
     // Any leftovers need transmission as well.
     if (ret && state->output_state->pixel_write_pos > 0) {
-        ret &= driver->driver_vtable->pixdata(state->device, qp_global_pixdata_buffer, state->output_state->pixel_write_pos);
+        ret &= driver->driver_vtable->pixdata(state->device, qp_internal_global_pixdata_buffer, state->output_state->pixel_write_pos);
     }
 
     return ret;
@@ -184,8 +184,8 @@ int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, pai
     }
 
     // Set up the byte input state and input callback
-    struct byte_input_state input_state    = {.device = device, .src_data = NULL};
-    byte_input_callback     input_callback = qp_prepare_input_state(&input_state, font->compression);
+    struct qp_internal_byte_input_state input_state    = {.device = device, .src_data = NULL};
+    qp_internal_byte_input_callback     input_callback = qp_internal_prepare_input_state(&input_state, font->compression);
     if (input_callback == NULL) {
         qp_dprintf("qp_drawtext_recolor: fail (invalid font compression scheme)\n");
         qp_comms_stop(device);
@@ -193,7 +193,7 @@ int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, pai
     }
 
     // Set up the pixel output state
-    struct pixel_output_state output_state = {.device = device, .pixel_write_pos = 0, .max_pixels = qp_num_pixels_in_buffer(device)};
+    struct qp_internal_pixel_output_state output_state = {.device = device, .pixel_write_pos = 0, .max_pixels = qp_internal_num_pixels_in_buffer(device)};
 
     // Set up the codepoint iteration state
     struct code_point_iter_drawglyph_state state = {// Common
@@ -201,8 +201,8 @@ int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, pai
                                                     .xpos   = x,
                                                     .ypos   = y,
                                                     // Colors
-                                                    .fg_hsv888 = (qp_pixel_color_t){.hsv888 = {.h = hue_fg, .s = sat_fg, .v = val_fg}},
-                                                    .bg_hsv888 = (qp_pixel_color_t){.hsv888 = {.h = hue_bg, .s = sat_bg, .v = val_bg}},
+                                                    .fg_hsv888 = (qp_pixel_t){.hsv888 = {.h = hue_fg, .s = sat_fg, .v = val_fg}},
+                                                    .bg_hsv888 = (qp_pixel_t){.hsv888 = {.h = hue_bg, .s = sat_bg, .v = val_bg}},
                                                     // Input
                                                     .input_callback = input_callback,
                                                     .input_state    = &input_state,

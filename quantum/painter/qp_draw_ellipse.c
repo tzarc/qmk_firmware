@@ -25,30 +25,30 @@ static bool qp_ellipse_helper_impl(painter_device_t device, uint16_t centerx, ui
     int16_t ymy = ((int16_t)centery) - ((int16_t)offsety);
 
     if (offsetx == 0) {
-        if (!qp_setpixel_impl(device, xpx, ypy)) {
+        if (!qp_internal_setpixel_impl(device, xpx, ypy)) {
             return false;
         }
-        if (!qp_setpixel_impl(device, xpx, ymy)) {
+        if (!qp_internal_setpixel_impl(device, xpx, ymy)) {
             return false;
         }
     } else if (filled) {
-        if (!qp_fillrect_helper_impl(device, xpx, ypy, xmx, ypy)) {
+        if (!qp_internal_fillrect_helper_impl(device, xpx, ypy, xmx, ypy)) {
             return false;
         }
-        if (offsety > 0 && !qp_fillrect_helper_impl(device, xpx, ymy, xmx, ymy)) {
+        if (offsety > 0 && !qp_internal_fillrect_helper_impl(device, xpx, ymy, xmx, ymy)) {
             return false;
         }
     } else {
-        if (!qp_setpixel_impl(device, xpx, ypy)) {
+        if (!qp_internal_setpixel_impl(device, xpx, ypy)) {
             return false;
         }
-        if (!qp_setpixel_impl(device, xpx, ymy)) {
+        if (!qp_internal_setpixel_impl(device, xpx, ymy)) {
             return false;
         }
-        if (!qp_setpixel_impl(device, xmx, ypy)) {
+        if (!qp_internal_setpixel_impl(device, xmx, ypy)) {
             return false;
         }
-        if (!qp_setpixel_impl(device, xmx, ymy)) {
+        if (!qp_internal_setpixel_impl(device, xmx, ymy)) {
             return false;
         }
     }
@@ -75,7 +75,7 @@ bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex,
     int16_t dx = 0;
     int16_t dy = ((int16_t)sizey);
 
-    qp_fill_pixdata(device, QP_MAX(sizex, sizey), hue, sat, val);
+    qp_internal_fill_pixdata(device, QP_MAX(sizex, sizey), hue, sat, val);
 
     if (!qp_comms_start(device)) {
         qp_dprintf("qp_ellipse: fail (could not start comms)\n");

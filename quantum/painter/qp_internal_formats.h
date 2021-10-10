@@ -9,7 +9,7 @@
 // Quantum Painter pixel formats
 
 // Datatype containing a pixel's colour
-typedef union QP_PACKED qp_pixel_color_t {
+typedef union QP_PACKED qp_pixel_t {
     uint8_t mono;
     uint8_t palette_idx;
 
@@ -28,8 +28,8 @@ typedef union QP_PACKED qp_pixel_color_t {
     uint16_t rgb565;
 
     uint32_t dummy;
-} qp_pixel_color_t;
-_Static_assert(sizeof(qp_pixel_color_t) == 4, "Invalid size for qp_pixel_color_t");
+} qp_pixel_t;
+_Static_assert(sizeof(qp_pixel_t) == 4, "Invalid size for qp_pixel_t");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter image format
