@@ -47,7 +47,7 @@ typedef enum qp_image_format_t {
 } qp_image_format_t;
 
 // Uncompressed raw image descriptor
-typedef struct painter_raw_image_descriptor_t {
+typedef struct QP_PACKED painter_raw_image_descriptor_t {
     const painter_image_descriptor_t base;
     const uint32_t                   byte_count;     // number of bytes in the image
     const uint8_t *const             image_palette;  // pointer to the image palette
@@ -58,14 +58,14 @@ typedef struct painter_raw_image_descriptor_t {
 // Quantum Painter font format
 
 // ASCII font glyph offset descriptor
-typedef struct painter_font_ascii_glyph_offset_t {
+typedef struct QP_PACKED painter_font_ascii_glyph_offset_t {
     uint32_t offset : 24;  // The offset into the data block where it starts
     uint8_t  width;        // The width of the glyph (in pixels)
 } painter_font_ascii_glyph_offset_t;
 
 #ifdef UNICODE_ENABLE
 // Extra font glyph offset descriptor
-typedef struct painter_font_unicode_glyph_offset_t {
+typedef struct QP_PACKED painter_font_unicode_glyph_offset_t {
     int32_t  unicode_glyph;  // The unicode glyph
     uint32_t offset : 24;    // The offset into the data block where it starts
     uint8_t  width;          // The width of the glyph (in pixels)
@@ -73,7 +73,7 @@ typedef struct painter_font_unicode_glyph_offset_t {
 #endif  // UNICODE_ENABLE
 
 // Uncompressed raw font descriptor
-typedef struct painter_raw_font_descriptor_t {
+typedef struct QP_PACKED painter_raw_font_descriptor_t {
     const painter_font_descriptor_t                base;
     const uint8_t *const                           image_palette;            // pointer to the image palette
     const uint8_t *const                           image_data;               // pointer to the image data

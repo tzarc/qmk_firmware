@@ -15,7 +15,7 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter ILI9341 device factory
+// Quantum Painter ILI9341 device factories
 
 #ifdef QUANTUM_PAINTER_ILI9341_SPI_ENABLE
 // Factory method for an ILI9341 SPI device

@@ -24,14 +24,17 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // AVR split address space shenanigans
 
+// Mark certain types that there should be no padding bytes between members.
 #define QP_PACKED __attribute__((packed))
 
+// Ensure we can mark certain data as being available in flash, only.
 #ifdef __FLASH
 #    define QP_RESIDENT_FLASH __flash
 #else
 #    define QP_RESIDENT_FLASH
 #endif
 
+// Ensure we can mark certain data as being available in flash or ram.
 #ifdef __MEMX
 #    define QP_RESIDENT_FLASH_OR_RAM __memx
 #else
@@ -53,7 +56,7 @@ typedef enum { IMAGE_FORMAT_RAW, IMAGE_FORMAT_GRAYSCALE, IMAGE_FORMAT_PALETTE } 
 typedef enum { IMAGE_UNCOMPRESSED, IMAGE_COMPRESSED_RLE } painter_compression_t;
 
 // Image types -- handled by `qmk convert-image`
-typedef struct painter_image_descriptor_t {
+typedef struct QP_PACKED painter_image_descriptor_t {
     const painter_image_type_t   image_type;
     const painter_image_format_t image_format;
     const uint8_t                image_bpp;
@@ -64,7 +67,7 @@ typedef struct painter_image_descriptor_t {
 typedef const painter_image_descriptor_t QP_RESIDENT_FLASH_OR_RAM *painter_image_t;
 
 // Font types -- handled by `qmk painter-convert-font-image`
-typedef struct painter_font_descriptor_t {
+typedef struct QP_PACKED painter_font_descriptor_t {
     const painter_image_type_t   image_type;
     const painter_image_format_t image_format;
     const uint8_t                image_bpp;
@@ -92,7 +95,7 @@ bool qp_flush(painter_device_t device);
 void qp_get_geometry(painter_device_t device, uint16_t *width, uint16_t *height, painter_rotation_t *rotation, uint16_t *offset_x, uint16_t *offset_y);
 
 // Allows repositioning of the viewport if the panel geometry offsets are different to what's expected.
-void qp_override_offsets(painter_device_t device, uint16_t offset_x, uint16_t offset_y);
+void qp_set_viewport_offsets(painter_device_t device, uint16_t offset_x, uint16_t offset_y);
 
 // Set the viewport that native pixel data is to get streamed into
 bool qp_viewport(painter_device_t device, uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);

@@ -18,11 +18,11 @@
 // Additional configuration options to be copied to your keyboard's config.h (don't change here):
 
 // If you know exactly which offsets should be used on your panel with respect to selected rotation, then this config
-// option allows you to save some flash space -- you'll need to invoke qp_override_offsets() instead from your keyboard.
+// option allows you to save some flash space -- you'll need to invoke qp_set_viewport_offsets() instead from your keyboard.
 //       #define ST7789_NO_AUTOMATIC_VIEWPORT_OFFSETS
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter ST7789 device factory
+// Quantum Painter ST7789 device factories
 
 #ifdef QUANTUM_PAINTER_ST7789_SPI_ENABLE
 // Factory method for an ST7789 SPI device

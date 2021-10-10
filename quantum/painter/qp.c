@@ -149,16 +149,16 @@ void qp_get_geometry(painter_device_t device, uint16_t *width, uint16_t *height,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter External API: qp_override_offsets
+// Quantum Painter External API: qp_set_viewport_offsets
 
-void qp_override_offsets(painter_device_t device, uint16_t offset_x, uint16_t offset_y) {
-    qp_dprintf("qp_override_offsets: entry\n");
+void qp_set_viewport_offsets(painter_device_t device, uint16_t offset_x, uint16_t offset_y) {
+    qp_dprintf("qp_set_viewport_offsets: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
 
     driver->offset_x = offset_x;
     driver->offset_y = offset_y;
 
-    qp_dprintf("qp_override_offsets: ok\n");
+    qp_dprintf("qp_set_viewport_offsets: ok\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

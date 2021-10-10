@@ -1,7 +1,6 @@
 // Copyright 2021 Nick Brassel (@tzarc)
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <wait.h>
 #include <qp_internal.h>
 #include <qp_comms.h>
 #include <qp_ili9163.h>
@@ -42,7 +41,6 @@ bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
         ILI9XXX_CMD_DISPLAY_ON,        20,  0
     };
     // clang-format on
-
     qp_comms_bulk_command_sequence(device, ili9163_init_sequence, sizeof(ili9163_init_sequence));
 
     // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
@@ -52,7 +50,6 @@ bool qp_ili9163_init(painter_device_t device, painter_rotation_t rotation) {
         [QP_ROTATION_180] = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MX | ILI9XXX_MADCTL_MY,
         [QP_ROTATION_270] = ILI9XXX_MADCTL_BGR | ILI9XXX_MADCTL_MV | ILI9XXX_MADCTL_MY,
     };
-
     qp_comms_command_databyte(device, ILI9XXX_SET_MEM_ACS_CTL, madctl[rotation]);
 
     return true;

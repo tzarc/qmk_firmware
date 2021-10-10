@@ -2,7 +2,6 @@
 // Copyright 2021 Nick Brassel (@tzarc)
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <wait.h>
 #include <qp_internal.h>
 #include <qp_comms.h>
 #include <qp_st7789.h>
@@ -61,7 +60,6 @@ bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
         ST77XX_CMD_DISPLAY_ON,        20,  0
     };
     // clang-format on
-
     qp_comms_bulk_command_sequence(device, st7789_init_sequence, sizeof(st7789_init_sequence));
 
     // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
@@ -71,7 +69,6 @@ bool qp_st7789_init(painter_device_t device, painter_rotation_t rotation) {
         [QP_ROTATION_180] = ST77XX_MADCTL_RGB | ST77XX_MADCTL_MX | ST77XX_MADCTL_MY,
         [QP_ROTATION_270] = ST77XX_MADCTL_RGB | ST77XX_MADCTL_MV | ST77XX_MADCTL_MY,
     };
-
     qp_comms_command_databyte(device, ST77XX_SET_MADCTL, madctl[rotation]);
 
 #ifndef ST7789_NO_AUTOMATIC_VIEWPORT_OFFSETS

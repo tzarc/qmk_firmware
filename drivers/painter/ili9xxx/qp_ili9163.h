@@ -15,7 +15,7 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quantum Painter ILI9163 device factory
+// Quantum Painter ILI9163 device factories
 
 #ifdef QUANTUM_PAINTER_ILI9163_SPI_ENABLE
 // Factory method for an ILI9163 SPI device

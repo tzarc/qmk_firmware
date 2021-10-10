@@ -12,7 +12,6 @@
 
 painter_device_t ili9163;
 painter_device_t st7789;
-painter_device_t st7735;
 
 void init_and_clear(painter_device_t device, painter_rotation_t rotation) {
     uint16_t width;
