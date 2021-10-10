@@ -161,7 +161,7 @@ static const painter_font_unicode_glyph_offset_t font_thintel15_unicode_defs[0] 
 
 static const painter_raw_font_descriptor_t font_thintel15_raw QP_RESIDENT_FLASH = {
     .base = {
-        .image_type   = IMAGE_TYPE_LOCATION_FLASH,
+        .version      = IMAGE_VERSION_0,
         .image_format = IMAGE_FORMAT_GRAYSCALE,
         .image_bpp    = 1,
         .compression  = IMAGE_UNCOMPRESSED,

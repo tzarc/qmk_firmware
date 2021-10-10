@@ -82,7 +82,7 @@ ${unicode_glyphs}
 
 static const painter_raw_font_descriptor_t font_${sane_name}_raw QP_RESIDENT_FLASH = {
     .base = {
-        .image_type   = IMAGE_TYPE_LOCATION_FLASH,
+        .version      = IMAGE_VERSION_0,
         .image_format = ${image_format},
         .image_bpp    = ${image_bpp},
         .compression  = ${compression},

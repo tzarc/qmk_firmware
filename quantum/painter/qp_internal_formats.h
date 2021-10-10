@@ -91,3 +91,6 @@ typedef struct QP_PACKED painter_raw_font_descriptor_t {
     const uint16_t                                                     unicode_glyph_count;        // Number of unicode glyphs defined
 #endif                                                                                             // UNICODE_ENABLE
 } painter_raw_font_descriptor_t;
+
+// Import the QGF header for serialised image formats
+#include <qgf.h>

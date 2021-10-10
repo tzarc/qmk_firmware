@@ -54,13 +54,12 @@ ${bytes_lines}
 
 static const painter_raw_image_descriptor_t gfx_${sane_name}_raw QP_RESIDENT_FLASH = {
     .base = {
-        .image_type   = IMAGE_TYPE_LOCATION_FLASH,
+        .version      = IMAGE_VERSION_0,
         .image_format = ${image_format},
         .image_bpp    = ${image_bpp},
         .compression  = ${compression},
         .width        = ${image_width},
         .height       = ${image_height},
-        .version      = IMAGE_VERSION_0,
     },
     .image_palette = ${palette_ptr},
     .byte_count    = ${byte_count},

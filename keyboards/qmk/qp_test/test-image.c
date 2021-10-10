@@ -319,13 +319,12 @@ static const uint8_t gfx_test_image_data[4877] QP_RESIDENT_FLASH = {
 
 static const painter_raw_image_descriptor_t gfx_test_image_raw QP_RESIDENT_FLASH = {
     .base = {
-        .image_type   = IMAGE_TYPE_LOCATION_FLASH,
+        .version      = IMAGE_VERSION_0,
         .image_format = IMAGE_FORMAT_GRAYSCALE,
         .image_bpp    = 4,
         .compression  = IMAGE_COMPRESSED_RLE,
         .width        = 128,
         .height       = 83,
-        .version      = IMAGE_VERSION_0,
     },
     .image_palette = NULL,
     .byte_count    = 4877,
