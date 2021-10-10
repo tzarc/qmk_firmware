@@ -34,6 +34,50 @@ static void qgf_seek_to_frame(qp_stream_t *stream, uint16_t frame_number) {
     qp_stream_setpos(stream, offset);
 }
 
+static bool qgf_parse_frame_descriptor(qgf_frame_v1_t *frame_descriptor, uint8_t *bpp, bool *has_palette, bool *is_delta) {
+    // Work out if this is a delta frame
+    *is_delta = (frame_descriptor->flags & QGF_FRAME_FLAG_DELTA) == QGF_FRAME_FLAG_DELTA;
+
+    // Work out the BPP and if we have a palette
+    switch (frame_descriptor->format) {
+        case GRAYSCALE_1BPP:
+            *bpp         = 1;
+            *has_palette = false;
+            break;
+        case GRAYSCALE_2BPP:
+            *bpp         = 2;
+            *has_palette = false;
+            break;
+        case GRAYSCALE_4BPP:
+            *bpp         = 4;
+            *has_palette = false;
+            break;
+        case GRAYSCALE_8BPP:
+            *bpp         = 8;
+            *has_palette = false;
+            break;
+        case PALETTE_1BPP:
+            *bpp         = 1;
+            *has_palette = true;
+            break;
+        case PALETTE_2BPP:
+            *bpp         = 2;
+            *has_palette = true;
+            break;
+        case PALETTE_4BPP:
+            *bpp         = 4;
+            *has_palette = true;
+            break;
+        case PALETTE_8BPP:
+            *bpp         = 8;
+            *has_palette = true;
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
 static bool qgf_validate_stream(qp_stream_t *stream) {
     // Validate the graphics descriptor
     qgf_graphics_descriptor_v1_t graphics_descriptor;
@@ -76,47 +120,11 @@ static bool qgf_validate_stream(qp_stream_t *stream) {
             return false;
         }
 
-        // Work out if we expect a delta block
-        bool has_delta_block = (frame_descriptor.flags & QGF_FRAME_FLAG_DELTA) == QGF_FRAME_FLAG_DELTA;
-
-        // Work out if we expect a palette block
         uint8_t bpp;
         bool    has_palette_block;
-        switch (frame_descriptor.format) {
-            case GRAYSCALE_1BPP:
-                bpp               = 1;
-                has_palette_block = false;
-                break;
-            case GRAYSCALE_2BPP:
-                bpp               = 2;
-                has_palette_block = false;
-                break;
-            case GRAYSCALE_4BPP:
-                bpp               = 4;
-                has_palette_block = false;
-                break;
-            case GRAYSCALE_8BPP:
-                bpp               = 8;
-                has_palette_block = false;
-                break;
-            case PALETTE_1BPP:
-                bpp               = 1;
-                has_palette_block = true;
-                break;
-            case PALETTE_2BPP:
-                bpp               = 2;
-                has_palette_block = true;
-                break;
-            case PALETTE_4BPP:
-                bpp               = 4;
-                has_palette_block = true;
-                break;
-            case PALETTE_8BPP:
-                bpp               = 8;
-                has_palette_block = true;
-                break;
-            default:
-                return false;
+        bool    has_delta_block;
+        if (!qgf_parse_frame_descriptor(&frame_descriptor, &bpp, &has_palette_block, &has_delta_block)) {
+            return false;
         }
 
         // Read and validate the delta block if required
