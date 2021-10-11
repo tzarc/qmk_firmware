@@ -2,7 +2,7 @@
 """
 import math
 import re
-from PIL import Image, ImageOps, GifImagePlugin
+from PIL import Image, ImageOps
 
 valid_formats = {
     'pal256': {
@@ -130,7 +130,7 @@ def convert_image_bytes(im, format):
         palette = []
         pal = im.getpalette()
         for n in range(0, ncolors * 3, 3):
-            palette.append([pal[n + 0], pal[n + 1], pal[n + 2]])
+            palette.append((pal[n + 0], pal[n + 1], pal[n + 2]))
 
         bytearray = []
         for x in range(int(image_bytes_len / pixels_per_byte)):
