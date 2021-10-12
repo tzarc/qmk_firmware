@@ -71,6 +71,7 @@ tags
 *.gif
 *.jpg
 *.png
+*.qgf
 
 # Things Travis sees
 /.vs

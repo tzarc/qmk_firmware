@@ -4,54 +4,63 @@ import math
 import re
 from PIL import Image, ImageOps
 
+# The list of valid formats Quantum Painter supports
 valid_formats = {
     'pal256': {
         'image_format': 'IMAGE_FORMAT_PALETTE',
         'bpp': 8,
         'has_palette': True,
         'num_colors': 256,
+        'image_format_byte': 0x03,  # see qp_internal_formats.h
     },
     'pal16': {
         'image_format': 'IMAGE_FORMAT_PALETTE',
         'bpp': 4,
         'has_palette': True,
         'num_colors': 16,
+        'image_format_byte': 0x02,  # see qp_internal_formats.h
     },
     'pal4': {
         'image_format': 'IMAGE_FORMAT_PALETTE',
         'bpp': 2,
         'has_palette': True,
         'num_colors': 4,
+        'image_format_byte': 0x01,  # see qp_internal_formats.h
     },
     'pal2': {
         'image_format': 'IMAGE_FORMAT_PALETTE',
         'bpp': 1,
         'has_palette': True,
         'num_colors': 2,
+        'image_format_byte': 0x00,  # see qp_internal_formats.h
     },
     'mono256': {
         'image_format': 'IMAGE_FORMAT_GRAYSCALE',
         'bpp': 8,
         'has_palette': False,
         'num_colors': 256,
+        'image_format_byte': 0x07,  # see qp_internal_formats.h
     },
     'mono16': {
         'image_format': 'IMAGE_FORMAT_GRAYSCALE',
         'bpp': 4,
         'has_palette': False,
         'num_colors': 16,
+        'image_format_byte': 0x06,  # see qp_internal_formats.h
     },
     'mono4': {
         'image_format': 'IMAGE_FORMAT_GRAYSCALE',
         'bpp': 2,
         'has_palette': False,
         'num_colors': 4,
+        'image_format_byte': 0x05,  # see qp_internal_formats.h
     },
     'mono2': {
         'image_format': 'IMAGE_FORMAT_GRAYSCALE',
         'bpp': 1,
         'has_palette': False,
         'num_colors': 2,
+        'image_format_byte': 0x04,  # see qp_internal_formats.h
     }
 }
 
