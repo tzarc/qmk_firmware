@@ -257,7 +257,6 @@ def _save(im, fp, filename):
 
     # Write out the initial graphics descriptor (and write a dummy value), so that we can come back and fill in the
     # correct values once we've written all the frames to the output
-    graphics_descriptor_location = fp.tell()
     graphics_descriptor = QGFGraphicsDescriptor()
     graphics_descriptor.frame_count = len(frame_sizes)
     graphics_descriptor.image_width = frame_sizes[0][0]
