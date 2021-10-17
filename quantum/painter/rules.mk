@@ -12,13 +12,14 @@ SRC += \
     $(QUANTUM_DIR)/utf8.c \
     $(QUANTUM_DIR)/color.c \
     $(QUANTUM_DIR)/painter/qp.c \
+    $(QUANTUM_DIR)/painter/qp_stream.c \
+    $(QUANTUM_DIR)/painter/qgf.c \
     $(QUANTUM_DIR)/painter/qp_draw_core.c \
     $(QUANTUM_DIR)/painter/qp_draw_codec.c \
     $(QUANTUM_DIR)/painter/qp_draw_circle.c \
     $(QUANTUM_DIR)/painter/qp_draw_ellipse.c \
     $(QUANTUM_DIR)/painter/qp_draw_image.c \
-    $(QUANTUM_DIR)/painter/qp_draw_text.c \
-    $(QUANTUM_DIR)/painter/qgf.c
+    $(QUANTUM_DIR)/painter/qp_draw_text.c
 
 # Handler for each driver
 define handle_quantum_painter_driver

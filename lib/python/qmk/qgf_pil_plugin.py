@@ -34,13 +34,14 @@ class QGFBlockHeader:
 
 class QGFGraphicsDescriptor:
     type_id = 0x00
-    length = 10
+    length = 18
     magic = 0x464751
 
     def __init__(self):
         self.header = QGFBlockHeader()
         self.header.type_id = QGFGraphicsDescriptor.type_id
         self.header.length = QGFGraphicsDescriptor.length
+        self.total_file_size = 0
         self.version = 1
         self.image_width = 0
         self.image_height = 0
@@ -51,6 +52,8 @@ class QGFGraphicsDescriptor:
         fp.write(b''  # start off with empty bytes...
                  + o24(QGFGraphicsDescriptor.magic)  # magic
                  + o8(self.version)  # version
+                 + o32(self.total_file_size)  # file size
+                 + o32((~self.total_file_size) & 0xFFFFFFFF)  # negated file size
                  + o16(self.image_width)  # width
                  + o16(self.image_height)  # height
                  + o16(self.frame_count)  # frame count
@@ -83,7 +86,7 @@ class QGFFrameOffsetDescriptorV1:
 
 class QGFFrameDescriptorV1:
     type_id = 0x02
-    length = 5
+    length = 6
 
     def __init__(self):
         self.header = QGFBlockHeader()
@@ -257,6 +260,7 @@ def _save(im, fp, filename):
 
     # Write out the initial graphics descriptor (and write a dummy value), so that we can come back and fill in the
     # correct values once we've written all the frames to the output
+    graphics_descriptor_location = fp.tell()
     graphics_descriptor = QGFGraphicsDescriptor()
     graphics_descriptor.frame_count = len(frame_sizes)
     graphics_descriptor.image_width = frame_sizes[0][0]
@@ -381,6 +385,11 @@ def _save(im, fp, filename):
 
     # Iterate over each if the input frames, writing it to the output in the process
     _for_all_frames(_write_frame)
+
+    # Go back and update the graphics descriptor now that we can determine the final file size
+    graphics_descriptor.total_file_size = fp.tell()
+    fp.seek(graphics_descriptor_location, 0)
+    graphics_descriptor.write(fp)
 
     # Go back and update the frame offsets now that they're written to the file
     fp.seek(frame_offset_location, 0)

@@ -8,10 +8,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <qp_stream.h>
 #include <qp_internal.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // QGF API
+
+// Work out the total size of an image definition, assuming we can read far enough into the file
+uint32_t qgf_get_total_size(qp_stream_t *stream);
 
 // Validate the image data
 bool qgf_validate(const void QP_RESIDENT_FLASH_OR_RAM *buffer, uint32_t length);
@@ -36,15 +40,17 @@ _Static_assert(sizeof(qgf_block_header_v1_t) == 5, "qgf_block_header_v1_t must b
 #define QGF_GRAPHICS_DESCRIPTOR_TYPEID 0x00
 
 typedef struct QP_PACKED qgf_graphics_descriptor_v1_t {
-    qgf_block_header_v1_t header;        // = { .type_id = 0x00, .neg_type_id = (~0x00), .length = 10 }
-    uint32_t              magic : 24;    // constant, equal to 0x464751 ("QGF")
-    uint8_t               qgf_version;   // constant, equal to 0x01
-    uint16_t              image_width;   // in pixels
-    uint16_t              image_height;  // in pixels
-    uint16_t              frame_count;   // minimum of 1
+    qgf_block_header_v1_t header;               // = { .type_id = 0x00, .neg_type_id = (~0x00), .length = 10 }
+    uint32_t              magic : 24;           // constant, equal to 0x464751 ("QGF")
+    uint8_t               qgf_version;          // constant, equal to 0x01
+    uint32_t              total_file_size;      // total size of the entire file, starting at offset zero
+    uint32_t              neg_total_file_size;  // negated value of total_file_size
+    uint16_t              image_width;          // in pixels
+    uint16_t              image_height;         // in pixels
+    uint16_t              frame_count;          // minimum of 1
 } qgf_graphics_descriptor_v1_t;
 
-_Static_assert(sizeof(qgf_graphics_descriptor_v1_t) == 15, "qgf_graphics_descriptor_v1_t must be 15 bytes in v1 of QGF");
+_Static_assert(sizeof(qgf_graphics_descriptor_v1_t) == 23, "qgf_graphics_descriptor_v1_t must be 23 bytes in v1 of QGF");
 
 #define QGF_MAGIC 0x464751
 
@@ -66,9 +72,9 @@ _Static_assert(sizeof(qgf_frame_offsets_v1_t) == sizeof(qgf_block_header_v1_t), 
 #define QGF_FRAME_DESCRIPTOR_TYPEID 0x02
 
 typedef struct QP_PACKED qgf_frame_v1_t {
-    qgf_block_header_v1_t header;              // = { .type_id = 0x02, .neg_type_id = (~0x02), .length = 5 }
-    qp_image_format_t     format;              // Frame format
-    uint8_t               flags;               // Frame flags, see qp.h.
+    qgf_block_header_v1_t header;              // = { .type_id = 0x02, .neg_type_id = (~0x02), .length = 6 }
+    qp_image_format_t     format;              // Frame format, see qp.h.
+    uint8_t               flags;               // Frame flags, see below.
     painter_compression_t compression_scheme;  // Compression scheme, see qp.h.
     uint8_t               transparency_index;  // palette index used for transparent pixels
     uint16_t              delay;               // frame delay time for animations (in units of milliseconds)

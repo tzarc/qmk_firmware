@@ -64,7 +64,7 @@ typedef struct qp_memory_stream_t {
     uint32_t                          position;
 } qp_memory_stream_t;
 
-qp_memory_stream_t qp_make_memory_stream(void QP_RESIDENT_FLASH_OR_RAM *buffer, int length);
+qp_memory_stream_t qp_make_memory_stream(void QP_RESIDENT_FLASH_OR_RAM *buffer, uint32_t length);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FILE streams
@@ -76,6 +76,6 @@ typedef struct qp_file_stream_t {
     FILE *      file;
 } qp_file_stream_t;
 
-qp_file_stream_t make_file_stream(FILE *f);
+qp_file_stream_t qo_make_file_stream(FILE *f);
 
 #endif  // QP_STREAM_HAS_FILE_IO

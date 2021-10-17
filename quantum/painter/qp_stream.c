@@ -7,7 +7,7 @@
 // Stream API
 
 uint32_t qp_stream_read_impl(void QP_RESIDENT_FLASH_OR_RAM *output_buf, uint32_t member_size, uint32_t num_members, qp_stream_t *stream) {
-    uint8_t *output_ptr = (uint8_t *)data;
+    uint8_t *output_ptr = (uint8_t *)output_buf;
 
     uint32_t i;
     for (i = 0; i < (num_members * member_size); ++i) {
@@ -23,7 +23,7 @@ uint32_t qp_stream_read_impl(void QP_RESIDENT_FLASH_OR_RAM *output_buf, uint32_t
 }
 
 uint32_t qp_stream_write_impl(const void *input_buf, uint32_t member_size, uint32_t num_members, qp_stream_t *stream) {
-    uint8_t *input_ptr = (uint8_t *)data;
+    uint8_t *input_ptr = (uint8_t *)input_buf;
 
     uint32_t i;
     for (i = 0; i < (num_members * member_size); ++i) {
@@ -128,7 +128,7 @@ bool file_is_eof(qp_stream_t *stream) {
     return (bool)feof(s->file);
 }
 
-qp_file_stream_t make_file_stream(FILE *f) {
+qp_file_stream_t qp_make_file_stream(FILE *f) {
     qp_file_stream_t stream = {
         .base =
             {

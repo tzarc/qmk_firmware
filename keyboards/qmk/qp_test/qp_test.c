@@ -9,6 +9,7 @@
 // Test assets
 #include "thintel15.c"
 #include "test-image.c"
+#include "test-image.qgf.c"
 
 painter_device_t ili9163;
 painter_device_t st7789;
@@ -61,10 +62,17 @@ void keyboard_post_init_kb(void) {
 void matrix_scan_kb(void) {
     static uint32_t last_scan = 0;
     uint32_t        now       = timer_read32();
-    if (TIMER_DIFF_32(now, last_scan) >= 100) {
+    if (TIMER_DIFF_32(now, last_scan) >= 5000) {
         last_scan = now;
 
         draw_test(ili9163, "ILI9163", now);
         draw_test(st7789, "ST7789", now);
+
+        extern bool qgf_validate_mem(const void QP_RESIDENT_FLASH_OR_RAM *buffer);
+        if (!qgf_validate_mem(gfx_test_image_qgf)) {
+            qp_dprintf("gfx_test_image_qgf validation failed\n");
+        } else {
+            qp_dprintf("gfx_test_image_qgf validation success\n");
+        }
     }
 }
