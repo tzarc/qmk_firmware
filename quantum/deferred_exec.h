@@ -19,7 +19,7 @@ typedef uint32_t (*deferred_exec_callback)(void *cb_arg);
 //  -- Parameter delay_ms: the number of milliseconds before executing the callback
 //  --           callback: the executor to invoke
 //  --           cb_arg: the argument to pass to the executor, may be NULL if unused by the executor
-//  -- Return value: a token
+//  -- Return value: a token usable for cancellation, or INVALID_DEFERRED_TOKEN if an error occurred
 deferred_token enqueue_deferred_exec(uint32_t delay_ms, deferred_exec_callback callback, void *cb_arg);
 
 // Allows for cancellation of an existing deferred execution.

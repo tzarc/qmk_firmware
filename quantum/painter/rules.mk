@@ -1,10 +1,10 @@
+# Quantum Painter Configurables
 QUANTUM_PAINTER_ENABLE ?= no
 VALID_QUANTUM_PAINTER_DRIVERS := ili9163_spi ili9341_spi st7789_spi
 QUANTUM_PAINTER_DRIVERS ?=
+QUANTUM_PAINTER_ANIMATIONS_ENABLE ?= yes
 
-QUANTUM_PAINTER_NEEDS_COMMS_SPI ?= no
-QUANTUM_PAINTER_NEEDS_COMMS_I2C ?= no
-QUANTUM_PAINTER_NEEDS_COMMS_PARALLEL ?= no
+#-------------------------------------------------------------------------------
 
 OPT_DEFS += -DQUANTUM_PAINTER_ENABLE
 COMMON_VPATH += $(QUANTUM_DIR)/painter
@@ -21,6 +21,17 @@ SRC += \
     $(QUANTUM_DIR)/painter/qp_draw_image.c \
     $(QUANTUM_DIR)/painter/qp_draw_text.c
 
+# Check if people want animations... enable the defered exec if so.
+ifeq ($(strip $(QUANTUM_PAINTER_ANIMATIONS_ENABLE)), yes)
+    DEFERRED_EXEC_ENABLE := yes
+    OPT_DEFS += -DQUANTUM_PAINTER_ANIMATIONS_ENABLE
+endif
+
+# Comms flags
+QUANTUM_PAINTER_NEEDS_COMMS_SPI ?= no
+QUANTUM_PAINTER_NEEDS_COMMS_I2C ?= no
+QUANTUM_PAINTER_NEEDS_COMMS_PARALLEL ?= no
+
 # Handler for each driver
 define handle_quantum_painter_driver
     CURRENT_PAINTER_DRIVER := $1
@@ -29,8 +40,8 @@ define handle_quantum_painter_driver
         $$(error "$$(CURRENT_PAINTER_DRIVER)" is not a valid Quantum Painter driver)
 
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9163_spi)
-        QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
-        QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET = yes
+        QUANTUM_PAINTER_NEEDS_COMMS_SPI := yes
+        QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET := yes
         OPT_DEFS += -DQUANTUM_PAINTER_ILI9163_ENABLE -DQUANTUM_PAINTER_ILI9163_SPI_ENABLE
         COMMON_VPATH += \
             $(DRIVER_PATH)/painter/tft_panel \
@@ -40,8 +51,8 @@ define handle_quantum_painter_driver
             $(DRIVER_PATH)/painter/ili9xxx/qp_ili9163.c \
 
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),ili9341_spi)
-        QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
-        QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET = yes
+        QUANTUM_PAINTER_NEEDS_COMMS_SPI := yes
+        QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET := yes
         OPT_DEFS += -DQUANTUM_PAINTER_ILI9341_ENABLE -DQUANTUM_PAINTER_ILI9341_SPI_ENABLE
         COMMON_VPATH += \
             $(DRIVER_PATH)/painter/tft_panel \
@@ -51,8 +62,8 @@ define handle_quantum_painter_driver
             $(DRIVER_PATH)/painter/ili9xxx/qp_ili9341.c \
 
     else ifeq ($$(strip $$(CURRENT_PAINTER_DRIVER)),st7789_spi)
-        QUANTUM_PAINTER_NEEDS_COMMS_SPI = yes
-        QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET = yes
+        QUANTUM_PAINTER_NEEDS_COMMS_SPI := yes
+        QUANTUM_PAINTER_NEEDS_COMMS_SPI_DC_RESET := yes
         OPT_DEFS += -DQUANTUM_PAINTER_ST7789_ENABLE -DQUANTUM_PAINTER_ST7789_SPI_ENABLE
         COMMON_VPATH += \
             $(DRIVER_PATH)/painter/tft_panel \

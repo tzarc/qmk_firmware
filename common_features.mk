@@ -122,6 +122,11 @@ ifeq ($(strip $(QUANTUM_PAINTER_ENABLE)), yes)
     include $(QUANTUM_DIR)/painter/rules.mk
 endif
 
+ifeq ($(strip $(DEFERRED_EXEC_ENABLE)), yes)
+    OPT_DEFS += -DDEFERRED_EXEC_ENABLE
+    SRC += $(QUANTUM_DIR)/deferred_exec.c
+endif
+
 ifeq ($(strip $(PROGRAMMABLE_BUTTON_ENABLE)), yes)
     OPT_DEFS += -DPROGRAMMABLE_BUTTON_ENABLE
     SRC += $(QUANTUM_DIR)/programmable_button.c

@@ -37,5 +37,10 @@ int main(void) {
     while (true) {
         protocol_task();
         housekeeping_task();
+
+#ifdef DEFERRED_EXEC_ENABLE
+        // Run deferred executions
+        deferred_exec_task()
+#endif // DEFERRED_EXEC_ENABLE
     }
 }
