@@ -1,6 +1,8 @@
 // Copyright 2021 Nick Brassel (@tzarc)
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <stddef.h>
+#include <timer.h>
 #include <deferred_exec.h>
 
 #ifndef MAX_DEFERRED_EXECUTORS
@@ -13,6 +15,7 @@ typedef struct deferred_executor_t {
     void *                 cb_arg;
 } deferred_executor_t;
 
+static uint32_t            last_deferred_exec_check          = 0;
 static deferred_executor_t executors[MAX_DEFERRED_EXECUTORS] = {0};
 
 deferred_token enqueue_deferred_exec(uint32_t delay_ms, deferred_exec_callback callback, void *cb_arg) {
@@ -45,19 +48,18 @@ void cancel_deferred_exec(deferred_token token) {
 }
 
 void deferred_exec_task(void) {
-    static uint32_t last_check = 0;
-    uint32_t        now        = timer_read32();
+    uint32_t now = timer_read32();
 
     // Throttle only once per millisecond
-    if (TIMER_DIFF_32(now, last_check) >= 1) {
-        last_check = now;
+    if (((int32_t)TIMER_DIFF_32(now, last_deferred_exec_check)) > 0) {
+        last_deferred_exec_check = now;
 
         // Run through each of the executors
         for (int i = 0; i < MAX_DEFERRED_EXECUTORS; ++i) {
             deferred_executor_t *entry = &executors[i];
 
             // Check if we're supposed to execute this entry
-            if (entry->trigger_time > 0 && TIMER_DIFF_32(now, entry->trigger_time) <= 0) {
+            if (entry->trigger_time > 0 && ((int32_t)TIMER_DIFF_32(entry->trigger_time, now)) <= 0) {
                 // Invoke the callback and work work out if we should be requeued
                 uint32_t delay_ms = entry->callback(entry->cb_arg);
 

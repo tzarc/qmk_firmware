@@ -1,8 +1,10 @@
 # Quantum Painter Configurables
 QUANTUM_PAINTER_ENABLE ?= no
-VALID_QUANTUM_PAINTER_DRIVERS := ili9163_spi ili9341_spi st7789_spi
 QUANTUM_PAINTER_DRIVERS ?=
 QUANTUM_PAINTER_ANIMATIONS_ENABLE ?= yes
+
+# The list of permissible drivers that can be listed in QUANTUM_PAINTER_DRIVERS
+VALID_QUANTUM_PAINTER_DRIVERS := ili9163_spi ili9341_spi st7789_spi
 
 #-------------------------------------------------------------------------------
 

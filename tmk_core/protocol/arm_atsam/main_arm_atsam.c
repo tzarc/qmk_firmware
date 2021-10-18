@@ -365,7 +365,7 @@ int main(void) {
 
 #ifdef DEFERRED_EXEC_ENABLE
         // Run deferred executions
-        deferred_exec_task()
+        deferred_exec_task();
 #endif // DEFERRED_EXEC_ENABLE
     }
 
