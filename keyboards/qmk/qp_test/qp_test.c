@@ -14,6 +14,15 @@
 painter_device_t ili9163;
 painter_device_t st7789;
 
+static uint32_t delayed_test(void* cb_arg) {
+    uint16_t timeout = (uint16_t)(uintptr_t)cb_arg;
+    static uint32_t last = 0;
+    uint32_t now = timer_read32();
+    dprintf("AHOY THERE MATEY @ %d: %d, delta = %d\n", (int)timeout, (int)now, (int)(now-last));
+    last = now;
+    return timeout;
+}
+
 void init_and_clear(painter_device_t device, painter_rotation_t rotation) {
     uint16_t width;
     uint16_t height;
@@ -51,6 +60,9 @@ void keyboard_post_init_kb(void) {
     debug_enable   = true;
     debug_matrix   = true;
     debug_keyboard = true;
+
+    defer_exec(3000, delayed_test, (void*)(uint16_t)3000);
+    defer_exec(2900, delayed_test, (void*)(uint16_t)2900);
 
     ili9163 = qp_ili9163_make_spi_device(128, 128, DISPLAY_CS_PIN_1_44_INCH_LCD_ILI9163, DISPLAY_DC_PIN, DISPLAY_RST_PIN_1_44_INCH_LCD_ILI9163, 8, 0);
     init_and_clear(ili9163, QP_ROTATION_90);
