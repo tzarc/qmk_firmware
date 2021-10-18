@@ -40,6 +40,10 @@ void    send_mouse(report_mouse_t *report);
 void    send_system(uint16_t data);
 void    send_consumer(uint16_t data);
 
+#ifdef DEFERRED_EXEC_ENABLE
+void deferred_exec_task(void);
+#endif  // DEFERRED_EXEC_ENABLE
+
 host_driver_t arm_atsam_driver = {keyboard_leds, send_keyboard, send_mouse, send_system, send_consumer};
 
 uint8_t led_states;
@@ -360,13 +364,13 @@ int main(void) {
         }
 #endif  // CONSOLE_ENABLE
 
-        // Run housekeeping
-        housekeeping_task();
-
 #ifdef DEFERRED_EXEC_ENABLE
         // Run deferred executions
         deferred_exec_task();
-#endif // DEFERRED_EXEC_ENABLE
+#endif  // DEFERRED_EXEC_ENABLE
+
+        // Run housekeeping
+        housekeeping_task();
     }
 
     return 1;

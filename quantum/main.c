@@ -24,7 +24,7 @@ void protocol_task(void);
 
 #ifdef DEFERRED_EXEC_ENABLE
 void deferred_exec_task(void);
-#endif // DEFERRED_EXEC_ENABLE
+#endif  // DEFERRED_EXEC_ENABLE
 
 /** \brief Main
  *
@@ -40,11 +40,12 @@ int main(void) {
     /* Main loop */
     while (true) {
         protocol_task();
-        housekeeping_task();
 
 #ifdef DEFERRED_EXEC_ENABLE
         // Run deferred executions
         deferred_exec_task();
-#endif // DEFERRED_EXEC_ENABLE
+#endif  // DEFERRED_EXEC_ENABLE
+
+        housekeeping_task();
     }
 }
