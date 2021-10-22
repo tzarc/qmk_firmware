@@ -42,9 +42,23 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include "gpio.h"
 #include "ps2.h"
 #include "ps2_io.h"
 #include "print.h"
+
+#ifndef PS2_CLOCK_DDR
+#    define PS2_CLOCK_DDR PORTx_ADDRESS(PS2_CLOCK_PIN)
+#endif
+#ifndef PS2_CLOCK_BIT
+#    define PS2_CLOCK_BIT (PS2_CLOCK_PIN & 0xF)
+#endif
+#ifndef PS2_DATA_DDR
+#    define PS2_DATA_DDR PORTx_ADDRESS(PS2_DATA_PIN)
+#endif
+#ifndef PS2_DATA_BIT
+#    define PS2_DATA_BIT (PS2_DATA_PIN & 0xF)
+#endif
 
 #define WAIT(stat, us, err)     \
     do {                        \
