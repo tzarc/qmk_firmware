@@ -9,6 +9,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter global configurables (add to your keyboard's config.h)
 
+// This controls the maximum number of images that Quantum Painter can load. Increasing this number in order to load
+// more images increases the amount of RAM required.
+#ifndef QUANTUM_PAINTER_NUM_IMAGES
+#    define QUANTUM_PAINTER_NUM_IMAGES 8
+#endif  // QUANTUM_PAINTER_NUM_IMAGES
+
 // This controls the maximum size of the pixel data buffer used for single blocks of transmission. Larger buffers means
 // more data is processed at one time, with less frequent transmissions, at the cost of RAM.
 #ifndef QP_PIXDATA_BUFFER_SIZE
@@ -138,6 +144,9 @@ bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex,
 // Load an image from memory
 // - Returns NULL if unable to load
 painter_image_handle_t qp_load_image_mem(const void QP_RESIDENT_FLASH_OR_RAM *buffer);
+
+// Closes an image handle when no longer in use. Returns true if successfully closed.
+bool qp_close_image(painter_image_handle_t image);
 
 // Draw an image on the device
 bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_handle_t image);

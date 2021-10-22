@@ -6,16 +6,12 @@
 #include <qp_comms.h>
 #include <qgf.h>
 
-#ifndef NUM_QUANTUM_PAINTER_IMAGES
-#    define NUM_QUANTUM_PAINTER_IMAGES 8
-#endif  // NUM_QUANTUM_PAINTER_IMAGES
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // QGF image handles
 
 typedef struct QP_PACKED qgf_image_handle_t {
     painter_image_desc_t base;
-    bool                 validate_okay;
+    bool                 validate_ok;
     union {
         qp_stream_t        stream;
         qp_memory_stream_t mem_stream;
@@ -25,7 +21,7 @@ typedef struct QP_PACKED qgf_image_handle_t {
     };
 } qgf_image_handle_t;
 
-static qgf_image_handle_t image_descriptors[NUM_QUANTUM_PAINTER_IMAGES] = {0};
+static qgf_image_handle_t image_descriptors[QUANTUM_PAINTER_NUM_IMAGES] = {0};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter External API: qp_load_image_mem
@@ -35,8 +31,8 @@ painter_image_handle_t qp_load_image_mem(const void QP_RESIDENT_FLASH_OR_RAM* bu
     qgf_image_handle_t* image = NULL;
 
     // Find a free slot
-    for (int i = 0; i < NUM_QUANTUM_PAINTER_IMAGES; ++i) {
-        if (!image_descriptors[i].validate_okay) {
+    for (int i = 0; i < QUANTUM_PAINTER_NUM_IMAGES; ++i) {
+        if (!image_descriptors[i].validate_ok) {
             image = &image_descriptors[i];
             break;
         }
@@ -65,9 +61,21 @@ painter_image_handle_t qp_load_image_mem(const void QP_RESIDENT_FLASH_OR_RAM* bu
     qgf_read_graphics_descriptor(&image->stream, &image->base.width, &image->base.height, &image->base.frame_count);
 
     // Validation success, we can return the handle
-    image->validate_okay = true;
+    image->validate_ok = true;
     qp_dprintf("qp_load_image_mem: ok\n");
     return (painter_image_handle_t)image;
+}
+
+bool qp_close_image(painter_image_handle_t image) {
+    qgf_image_handle_t* qgf_image = (qgf_image_handle_t*)image;
+    if (!qgf_image->validate_ok) {
+        qp_dprintf("qp_drawimage_recolor: fail (invalid image)\n");
+        return false;
+    }
+
+    // Free up this image for use elsewhere.
+    qgf_image->validate_ok = false;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +95,7 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
     }
 
     qgf_image_handle_t* qgf_image = (qgf_image_handle_t*)image;
-    if (!qgf_image->validate_okay) {
+    if (!qgf_image->validate_ok) {
         qp_dprintf("qp_drawimage_recolor: fail (invalid image)\n");
         qp_comms_stop(device);
         return false;
@@ -105,9 +113,6 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
         return false;
     }
 
-    // Ensure we aren't reusing any palette
-    qp_internal_invalidate_palette();
-
     // Read the frame info // TODO: animations and deferred exec
     qgf_frame_info_t frame_info = {0};
     if (!qgf_prepare_frame_for_stream_read(&qgf_image->stream, 0, &frame_info, qp_internal_global_pixel_lookup_table)) {
@@ -116,7 +121,7 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
         return false;
     }
 
-    // Set up the input/output states
+    // Set up the input state
     struct qp_internal_byte_input_state input_state    = {.device = device, .src_stream = &qgf_image->stream};
     qp_internal_byte_input_callback     input_callback = qp_internal_prepare_input_state(&input_state, frame_info.compression_scheme);
     if (input_callback == NULL) {
@@ -125,10 +130,8 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
         return false;
     }
 
+    // Set up the output state
     struct qp_internal_pixel_output_state output_state = {.device = device, .pixel_write_pos = 0, .max_pixels = qp_internal_num_pixels_in_buffer(device)};
-
-    // Stream data to the LCD
-    bool ret = false;
 
     // If we have no palette, then it's a greyscale image -- interpolate the palette given the supplied arguments
     int16_t palette_entries = 1 << frame_info.bpp;
@@ -146,8 +149,8 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
         return false;
     }
 
-    // Decode the pixel data
-    ret = qp_internal_decode_palette(device, ((uint32_t)image->width) * image->height, frame_info.bpp, input_callback, &input_state, qp_internal_global_pixel_lookup_table, qp_internal_pixel_appender, &output_state);
+    // Decode the pixel data and stream to the display
+    bool ret = qp_internal_decode_palette(device, ((uint32_t)image->width) * image->height, frame_info.bpp, input_callback, &input_state, qp_internal_global_pixel_lookup_table, qp_internal_pixel_appender, &output_state);
 
     // Any leftovers need transmission as well.
     if (ret && output_state.pixel_write_pos > 0) {

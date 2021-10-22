@@ -254,6 +254,9 @@ bool qgf_prepare_frame_for_stream_read(qp_stream_t *stream, uint16_t frame_numbe
 
     // Handle palette if needed
     if (info->has_palette) {
+        // Ensure we aren't reusing any palette
+        qp_internal_invalidate_palette();
+
         qgf_palette_v1_t palette_descriptor;
         if (qp_stream_read(&palette_descriptor, sizeof(qgf_palette_v1_t), 1, stream) != sizeof(qgf_palette_v1_t)) {
             qp_dprintf("Failed to read palette_descriptor, expected length was not %d\n", (int)sizeof(qgf_palette_v1_t));
