@@ -46,21 +46,6 @@ typedef enum qp_image_format_t {
     PALETTE_8BPP   = 0x07,
 } qp_image_format_t;
 
-// Raw image descriptor (matches version 0)
-typedef struct QP_PACKED painter_raw_image_descriptor_t {
-    const painter_image_descriptor_t base;
-
-    const uint32_t byte_count;                             // number of bytes in the image
-    const uint8_t QP_RESIDENT_FLASH *const image_palette;  // pointer to the image palette
-    const uint8_t QP_RESIDENT_FLASH *const image_data;     // pointer to the image data
-} painter_raw_image_descriptor_t;
-
-// V1 image descriptor
-typedef struct QP_PACKED painter_v1_image_descriptor_t {
-    const painter_image_descriptor_t base;
-    // TBD, based off QGF
-} painter_v1_image_descriptor_t;
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter font format
 

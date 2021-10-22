@@ -50,8 +50,23 @@ typedef const void *painter_device_t;
 // Rotation type
 typedef enum { QP_ROTATION_0, QP_ROTATION_90, QP_ROTATION_180, QP_ROTATION_270 } painter_rotation_t;
 
-// Image format internal flags
+// Image handle type
+typedef struct QP_PACKED painter_image_desc_t {
+    uint16_t width;
+    uint16_t height;
+    uint16_t frame_count;
+} painter_image_desc_t;
+typedef const painter_image_desc_t *painter_image_handle_t;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// BEGIN OLD STUFF, TO BE REMOVED
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Image format version
 enum qp_image_version_t {
     IMAGE_VERSION_0 = 0,  // Must be zero as it'll get initialised that way in flash.
     IMAGE_VERSION_1,
@@ -59,17 +74,6 @@ enum qp_image_version_t {
 
 typedef enum { IMAGE_FORMAT_RAW, IMAGE_FORMAT_GRAYSCALE, IMAGE_FORMAT_PALETTE } painter_image_format_t;
 typedef enum { IMAGE_UNCOMPRESSED, IMAGE_COMPRESSED_RLE } painter_compression_t;
-
-// Image types -- handled by `qmk convert-image`
-typedef struct QP_PACKED painter_image_descriptor_t {
-    const enum qp_image_version_t version;  // default-initialized to zero if unspecified in older images, i.e. IMAGE_VERSION_0
-    const painter_image_format_t  image_format;
-    const uint8_t                 image_bpp;
-    const painter_compression_t   compression;
-    const uint16_t                width;
-    const uint16_t                height;
-} painter_image_descriptor_t;
-typedef const painter_image_descriptor_t QP_RESIDENT_FLASH_OR_RAM *painter_image_t;
 
 // Font types -- handled by `qmk painter-convert-font-image`
 typedef struct QP_PACKED painter_font_descriptor_t {
@@ -80,6 +84,14 @@ typedef struct QP_PACKED painter_font_descriptor_t {
     const uint8_t                 glyph_height;
 } painter_font_descriptor_t;
 typedef const painter_font_descriptor_t QP_RESIDENT_FLASH_OR_RAM *painter_font_t;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// END OLD STUFF, TO BE REMOVED
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter External API
@@ -123,9 +135,13 @@ bool qp_circle(painter_device_t device, uint16_t x, uint16_t y, uint16_t radius,
 // Draw an ellipse
 bool qp_ellipse(painter_device_t device, uint16_t x, uint16_t y, uint16_t sizex, uint16_t sizey, uint8_t hue, uint8_t sat, uint8_t val, bool filled);
 
+// Load an image from memory
+// - Returns NULL if unable to load
+painter_image_handle_t qp_load_image_mem(const void QP_RESIDENT_FLASH_OR_RAM *buffer);
+
 // Draw an image on the device
-bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image);
-bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_t image, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
+bool qp_drawimage(painter_device_t device, uint16_t x, uint16_t y, painter_image_handle_t image);
+bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_image_handle_t image, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg);
 
 // Draw text to the display
 int16_t qp_textwidth(painter_font_t font, const char QP_RESIDENT_FLASH_OR_RAM *str);

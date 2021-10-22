@@ -4,6 +4,7 @@
 #pragma once
 
 #include <qp_internal.h>
+#include <qp_stream.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quantum Painter utility functions
@@ -56,8 +57,8 @@ enum qp_internal_rle_mode_t {
 
 struct qp_internal_byte_input_state {
     painter_device_t device;
-    const uint8_t QP_RESIDENT_FLASH_OR_RAM* src_data;
-
+    qp_stream_t*     src_stream;
+    int16_t          curr;
     union {
         // RLE-specific
         struct {

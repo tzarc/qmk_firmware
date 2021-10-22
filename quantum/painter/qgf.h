@@ -3,7 +3,8 @@
 
 #pragma once
 
-// See https://docs.qmk.fm/#/qgf for more information.
+// Quantum Graphics File "QGF" Image File Format.
+// See https://docs.qmk.fm/#/quantum_painter_qgf for more information.
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -14,11 +15,22 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // QGF API
 
-// Work out the total size of an image definition, assuming we can read far enough into the file
-uint32_t qgf_get_total_size(qp_stream_t *stream);
+typedef struct QP_PACKED qgf_frame_info_t {
+    painter_compression_t compression_scheme;
+    uint8_t               bpp;
+    bool                  has_palette;
+    bool                  is_delta;
+    uint16_t              left;
+    uint16_t              top;
+    uint16_t              right;
+    uint16_t              bottom;
+    uint16_t              delay;
+} qgf_frame_info_t;
 
-// Validate the image data
-bool qgf_validate(const void QP_RESIDENT_FLASH_OR_RAM *buffer, uint32_t length);
+bool     qgf_validate_stream(qp_stream_t *stream);
+uint32_t qgf_get_total_size(qp_stream_t *stream);
+bool     qgf_read_graphics_descriptor(qp_stream_t *stream, uint16_t *image_width, uint16_t *image_height, uint16_t *frame_count);
+bool     qgf_prepare_frame_for_stream_read(qp_stream_t *stream, uint16_t frame_number, qgf_frame_info_t *info, qp_pixel_t *pixel_lookup_table);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // QGF structures
@@ -40,7 +52,7 @@ _Static_assert(sizeof(qgf_block_header_v1_t) == 5, "qgf_block_header_v1_t must b
 #define QGF_GRAPHICS_DESCRIPTOR_TYPEID 0x00
 
 typedef struct QP_PACKED qgf_graphics_descriptor_v1_t {
-    qgf_block_header_v1_t header;               // = { .type_id = 0x00, .neg_type_id = (~0x00), .length = 10 }
+    qgf_block_header_v1_t header;               // = { .type_id = 0x00, .neg_type_id = (~0x00), .length = 18 }
     uint32_t              magic : 24;           // constant, equal to 0x464751 ("QGF")
     uint8_t               qgf_version;          // constant, equal to 0x01
     uint32_t              total_file_size;      // total size of the entire file, starting at offset zero
@@ -50,7 +62,7 @@ typedef struct QP_PACKED qgf_graphics_descriptor_v1_t {
     uint16_t              frame_count;          // minimum of 1
 } qgf_graphics_descriptor_v1_t;
 
-_Static_assert(sizeof(qgf_graphics_descriptor_v1_t) == 23, "qgf_graphics_descriptor_v1_t must be 23 bytes in v1 of QGF");
+_Static_assert(sizeof(qgf_graphics_descriptor_v1_t) == sizeof(qgf_block_header_v1_t) + 18, "qgf_graphics_descriptor_v1_t must be 23 bytes in v1 of QGF");
 
 #define QGF_MAGIC 0x464751
 
@@ -80,7 +92,7 @@ typedef struct QP_PACKED qgf_frame_v1_t {
     uint16_t              delay;               // frame delay time for animations (in units of milliseconds)
 } qgf_frame_v1_t;
 
-_Static_assert(sizeof(qgf_frame_v1_t) == 11, "qgf_frame_v1_t must be 11 bytes in v1 of QGF");
+_Static_assert(sizeof(qgf_frame_v1_t) == sizeof(qgf_block_header_v1_t) + 6, "qgf_frame_v1_t must be 11 bytes in v1 of QGF");
 
 #define QGF_FRAME_FLAG_DELTA 0x02
 #define QGF_FRAME_FLAG_TRANSPARENT 0x01
@@ -114,7 +126,7 @@ typedef struct QP_PACKED qgf_delta_v1_t {
     uint16_t              bottom;  // The bottom pixel location to to draw the delta image
 } qgf_delta_v1_t;
 
-_Static_assert(sizeof(qgf_delta_v1_t) == 13, "qgf_delta_v1_t must be 13 bytes in v1 of QGF");
+_Static_assert(sizeof(qgf_delta_v1_t) == sizeof(qgf_block_header_v1_t) + 8, "qgf_delta_v1_t must be 13 bytes in v1 of QGF");
 
 /////////////////////////////////////////
 // Frame data descriptor

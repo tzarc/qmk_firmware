@@ -38,8 +38,8 @@ typedef struct qp_stream_t qp_stream_t;
 #define qp_stream_read(output_buf, member_size, num_members, stream_ptr) qp_stream_read_impl((output_buf), (member_size), (num_members), (qp_stream_t *)(stream_ptr))
 #define qp_stream_write(input_buf, member_size, num_members, stream_ptr) qp_stream_write_impl((input_buf), (member_size), (num_members), (qp_stream_t *)(stream_ptr))
 
-uint32_t qp_stream_read_impl(void QP_RESIDENT_FLASH_OR_RAM *output_buf, uint32_t member_size, uint32_t num_members, qp_stream_t *stream);
-uint32_t qp_stream_write_impl(const void *input_buf, uint32_t member_size, uint32_t num_members, qp_stream_t *stream);
+uint32_t qp_stream_read_impl(void *output_buf, uint32_t member_size, uint32_t num_members, qp_stream_t *stream);
+uint32_t qp_stream_write_impl(const void QP_RESIDENT_FLASH_OR_RAM *input_buf, uint32_t member_size, uint32_t num_members, qp_stream_t *stream);
 
 #define STREAM_EOF ((int16_t)(-1))
 
@@ -60,11 +60,12 @@ struct qp_stream_t {
 typedef struct qp_memory_stream_t {
     qp_stream_t base;
     uint8_t QP_RESIDENT_FLASH_OR_RAM *buffer;
-    uint32_t                          length;
-    uint32_t                          position;
+    int32_t                           length;
+    int32_t                           position;
+    bool                              is_eof;
 } qp_memory_stream_t;
 
-qp_memory_stream_t qp_make_memory_stream(void QP_RESIDENT_FLASH_OR_RAM *buffer, uint32_t length);
+qp_memory_stream_t qp_make_memory_stream(void QP_RESIDENT_FLASH_OR_RAM *buffer, int32_t length);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FILE streams

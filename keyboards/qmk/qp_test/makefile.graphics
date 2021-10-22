@@ -1,0 +1,67 @@
+all: build
+
+.INTERMEDIATE: build
+.INTERMEDIATE: clean
+
+# Fields are split by '@' symbol
+# Field 1: URL
+# Field 2: Local filename
+# Field 3: Output format
+# Field 4: Output directory for graphics
+GRAPHICS_LIST := \
+    https://i.imgur.com/vzVj1lS.png@test-image.png@mono16@graphics \
+    https://i.imgur.com/NXkNAf2.gif@test-anim.gif@pal4@graphics
+
+# Graphics handler
+define handle_graphics
+
+source_$(subst :,_,$1) := $(word 1,$(subst @, ,$(subst :,_,$1)))
+target_$(subst :,_,$1) := $(word 4,$(subst @, ,$(subst :,_,$1)))/$(word 2,$(subst @, ,$(subst :,_,$1)))
+format_$(subst :,_,$1) := $(word 3,$(subst @, ,$(subst :,_,$1)))
+output_$(subst :,_,$1) := $(word 4,$(subst @, ,$(subst :,_,$1)))
+
+# Rule for cleaning up this entry
+.INTERMEDIATE: clean_$$(target_$(subst :,_,$1))
+clean: clean_$$(target_$(subst :,_,$1))
+clean_$$(target_$(subst :,_,$1)):
+	@if [ -f "$$(target_$(subst :,_,$1))" ] ; then \
+		echo "\e[1;34m*** Removing $$(target_$(subst :,_,$1))\e[0m" ; \
+		rm "$$(target_$(subst :,_,$1))" ; \
+	fi
+	@if [ -f "$$(basename $$(target_$(subst :,_,$1))).qgf.c" ] ; then \
+		echo "\e[1;34m*** Removing $$(basename $$(target_$(subst :,_,$1))).qgf.c\e[0m" ; \
+		rm "$$(basename $$(target_$(subst :,_,$1))).qgf.c" ; \
+	fi
+	@if [ -f "$$(basename $$(target_$(subst :,_,$1))).qgf.h" ] ; then \
+		echo "\e[1;34m*** Removing $$(basename $$(target_$(subst :,_,$1))).qgf.h\e[0m" ; \
+		rm "$$(basename $$(target_$(subst :,_,$1))).qgf.h" ; \
+	fi
+
+# Rule for retrieving the image
+$$(target_$(subst :,_,$1)):
+	@if [ ! -d "$$(output_$(subst :,_,$1))" ] ; then \
+		mkdir -p "$$(output_$(subst :,_,$1))" ; \
+	fi
+	@if [ -e "$(shell which curl)" ] ; then \
+		echo "\e[1;34m*** Downloading $(word 1,$(subst @, ,$1)) to $$(output_$(subst :,_,$1))/$(word 2,$(subst @, ,$1)):\e[0m" ; \
+		curl -L '$(word 1,$(subst @, ,$1))' > "$$(target_$(subst :,_,$1))" ; \
+	elif [ -e "$(shell which wget)" ] ; then \
+		echo "\e[1;34m*** Downloading $(word 1,$(subst @, ,$1)) to $$(output_$(subst :,_,$1))/$(word 2,$(subst @, ,$1)):\e[0m" ; \
+		wget -O "$$(target_$(subst :,_,$1))" '$(word 1,$(subst @, ,$1))' ; \
+	else \
+		echo "\e[1;31m*** Could not find curl or wget to download images, failed." ; \
+		exit 1 ; \
+	fi
+
+# Rule for converting the image
+build: $$(basename $$(target_$(subst :,_,$1))).qgf.c
+$$(basename $$(target_$(subst :,_,$1))).qgf.c: makefile.graphics $$(target_$(subst :,_,$1))
+	@if [ ! -d "$$(output_$(subst :,_,$1))" ] ; then \
+		mkdir -p "$$(output_$(subst :,_,$1))" ; \
+	fi
+	@echo "\e[1;34m*** Converting $$(output_$(subst :,_,$1))/$(word 2,$(subst @, ,$1)) to $$(format_$(subst :,_,$1)):\e[0m"
+	@qmk painter-convert-graphics -i "$$(target_$(subst :,_,$1))" -f $$(format_$(subst :,_,$1)) -o $$(output_$(subst :,_,$1))
+
+endef
+
+$(foreach gfx_entry,$(GRAPHICS_LIST),$(eval $(call handle_graphics,$(gfx_entry))))

@@ -2,23 +2,25 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <quantum.h>
+#include <debug.h>
 #include <qp.h>
 #include <qp_ili9163.h>
 #include <qp_st7789.h>
 
 // Test assets
 #include "thintel15.c"
-#include "test-image.c"
-#include "test-image.qgf.c"
+#include "graphics/test-image.qgf.c"
 
 painter_device_t ili9163;
 painter_device_t st7789;
 
-static uint32_t delayed_test(void* cb_arg) {
-    uint16_t timeout = (uint16_t)(uintptr_t)cb_arg;
-    static uint32_t last = 0;
-    uint32_t now = timer_read32();
-    dprintf("AHOY THERE MATEY @ %d: %d, delta = %d\n", (int)timeout, (int)now, (int)(now-last));
+painter_image_handle_t test_image;
+
+static uint32_t delayed_test(void *cb_arg) {
+    uint16_t        timeout = (uint16_t)(uintptr_t)cb_arg;
+    static uint32_t last    = 0;
+    uint32_t        now     = timer_read32();
+    dprintf("AHOY THERE MATEY @ %d: %d, delta = %d\n", (int)timeout, (int)now, (int)(now - last));
     last = now;
     return timeout;
 }
@@ -52,7 +54,9 @@ void draw_test(painter_device_t device, const char *name, uint32_t now) {
     qp_rect(device, xpos, 1 * font_thintel15->glyph_height, width - 1, 2 * font_thintel15->glyph_height, 0, 0, 0, true);
     xpos = qp_drawtext_recolor(device, 0, 2 * font_thintel15->glyph_height, font_thintel15, buf3, hue, 255, 255, hue, 255, 0);
     qp_rect(device, xpos, 2 * font_thintel15->glyph_height, width - 1, 3 * font_thintel15->glyph_height, 0, 0, 0, true);
-    qp_drawimage_recolor(device, 0, 3 * font_thintel15->glyph_height, gfx_test_image, hue, 255, 255, hue, 255, 0);
+    if (test_image) {
+        qp_drawimage_recolor(device, 0, 3 * font_thintel15->glyph_height, test_image, hue, 255, 255, hue, 255, 0);
+    }
     qp_flush(device);
 }
 
@@ -61,8 +65,10 @@ void keyboard_post_init_kb(void) {
     debug_matrix   = true;
     debug_keyboard = true;
 
-    defer_exec(3000, delayed_test, (void*)(uint16_t)3000);
-    defer_exec(2900, delayed_test, (void*)(uint16_t)2900);
+    defer_exec(3000, delayed_test, (void *)(uint16_t)3000);
+    defer_exec(2900, delayed_test, (void *)(uint16_t)2900);
+
+    test_image = qp_load_image_mem(gfx_test_image);
 
     ili9163 = qp_ili9163_make_spi_device(128, 128, DISPLAY_CS_PIN_1_44_INCH_LCD_ILI9163, DISPLAY_DC_PIN, DISPLAY_RST_PIN_1_44_INCH_LCD_ILI9163, 8, 0);
     init_and_clear(ili9163, QP_ROTATION_90);
@@ -77,14 +83,13 @@ void matrix_scan_kb(void) {
     if (TIMER_DIFF_32(now, last_scan) >= 5000) {
         last_scan = now;
 
-        draw_test(ili9163, "ILI9163", now);
-        draw_test(st7789, "ST7789", now);
+        if (!test_image) {
+            test_image = qp_load_image_mem(gfx_test_image);
+        }
 
-        extern bool qgf_validate_mem(const void QP_RESIDENT_FLASH_OR_RAM *buffer);
-        if (!qgf_validate_mem(gfx_test_image_qgf)) {
-            qp_dprintf("gfx_test_image_qgf validation failed\n");
-        } else {
-            qp_dprintf("gfx_test_image_qgf validation success\n");
+        if (test_image != NULL) {
+            draw_test(ili9163, "ILI9163", now);
+            draw_test(st7789, "ST7789", now);
         }
     }
 }

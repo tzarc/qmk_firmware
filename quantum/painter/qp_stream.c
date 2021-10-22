@@ -6,13 +6,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Stream API
 
-uint32_t qp_stream_read_impl(void QP_RESIDENT_FLASH_OR_RAM *output_buf, uint32_t member_size, uint32_t num_members, qp_stream_t *stream) {
+uint32_t qp_stream_read_impl(void *output_buf, uint32_t member_size, uint32_t num_members, qp_stream_t *stream) {
     uint8_t *output_ptr = (uint8_t *)output_buf;
 
     uint32_t i;
     for (i = 0; i < (num_members * member_size); ++i) {
         int16_t c = qp_stream_get(stream);
-        if (c == STREAM_EOF) {
+        if (c < 0) {
             break;
         }
 
@@ -22,7 +22,7 @@ uint32_t qp_stream_read_impl(void QP_RESIDENT_FLASH_OR_RAM *output_buf, uint32_t
     return i;
 }
 
-uint32_t qp_stream_write_impl(const void *input_buf, uint32_t member_size, uint32_t num_members, qp_stream_t *stream) {
+uint32_t qp_stream_write_impl(const void QP_RESIDENT_FLASH_OR_RAM *input_buf, uint32_t member_size, uint32_t num_members, qp_stream_t *stream) {
     uint8_t *input_ptr = (uint8_t *)input_buf;
 
     uint32_t i;
@@ -40,32 +40,58 @@ uint32_t qp_stream_write_impl(const void *input_buf, uint32_t member_size, uint3
 
 int16_t mem_get(qp_stream_t *stream) {
     qp_memory_stream_t *s = (qp_memory_stream_t *)stream;
-    if (s->position >= s->length) return STREAM_EOF;
+    if (s->position >= s->length) {
+        s->is_eof = true;
+        return STREAM_EOF;
+    }
     return s->buffer[s->position++];
 }
 
 bool mem_put(qp_stream_t *stream, uint8_t c) {
     qp_memory_stream_t *s = (qp_memory_stream_t *)stream;
-    if (s->position >= s->length) return false;
+    if (s->position >= s->length) {
+        s->is_eof = true;
+        return false;
+    }
     s->buffer[s->position++] = c;
     return true;
 }
 
 int mem_seek(qp_stream_t *stream, int32_t offset, int origin) {
     qp_memory_stream_t *s = (qp_memory_stream_t *)stream;
+
+    // Handle as per fseek
+    int32_t position = s->position;
     switch (origin) {
         case SEEK_SET:
-            s->position = offset;
+            position = offset;
             break;
         case SEEK_CUR:
-            s->position += offset;
+            position += offset;
             break;
         case SEEK_END:
-            s->position = s->length + offset;
+            position = s->length + offset;
             break;
+        default:
+            return -1;
     }
-    if (s->position < 0) s->position = 0;
-    if (s->position >= s->length) s->position = s->length;
+
+    // If we're before the start, ignore it.
+    if (position < 0) {
+        return -1;
+    }
+
+    // If we're at the end it's okay, we only care if we're after the end for failure purposes -- as per lseek()
+    if (position > s->length) {
+        return -1;
+    }
+
+    // Update the offset
+    s->position = position;
+
+    // Successful invocation of fseek() results in clearing of the EOF flag by default, mirror the same functionality
+    s->is_eof = false;
+
     return 0;
 }
 
@@ -76,10 +102,10 @@ int32_t mem_tell(qp_stream_t *stream) {
 
 bool mem_is_eof(qp_stream_t *stream) {
     qp_memory_stream_t *s = (qp_memory_stream_t *)stream;
-    return s->position >= s->length;
+    return s->is_eof;
 }
 
-qp_memory_stream_t qp_make_memory_stream(void QP_RESIDENT_FLASH_OR_RAM *buffer, uint32_t length) {
+qp_memory_stream_t qp_make_memory_stream(void QP_RESIDENT_FLASH_OR_RAM *buffer, int32_t length) {
     qp_memory_stream_t stream = {
         .base =
             {

@@ -51,7 +51,8 @@ bool qp_internal_decode_recolor(painter_device_t device, uint32_t pixel_count, u
 
 static inline int16_t qp_drawimage_byte_uncompressed_decoder(void* cb_arg) {
     struct qp_internal_byte_input_state* state = (struct qp_internal_byte_input_state*)cb_arg;
-    return *state->src_data++;
+    state->curr                                = qp_stream_get(state->src_stream);
+    return state->curr;
 }
 
 static inline int16_t qp_drawimage_byte_rle_decoder(void* cb_arg) {
@@ -59,7 +60,7 @@ static inline int16_t qp_drawimage_byte_rle_decoder(void* cb_arg) {
 
     // Work out if we're parsing the initial marker byte
     if (state->rle.mode == MARKER_BYTE) {
-        uint8_t c = *state->src_data++;
+        uint8_t c = qp_stream_get(state->src_stream);
         if (c >= 128) {
             state->rle.mode   = NON_REPEATING_RUN;  // non-repeated run
             state->rle.remain = c - 127;
@@ -67,25 +68,23 @@ static inline int16_t qp_drawimage_byte_rle_decoder(void* cb_arg) {
             state->rle.mode   = REPEATING_RUN;  // repeated run
             state->rle.remain = c;
         }
+
+        state->curr = qp_stream_get(state->src_stream);
     }
 
     // Work out which byte we're returning
-    uint8_t c = *state->src_data;
-
-    // Advance the position if we're in a non-repeated run
-    if (state->rle.mode == NON_REPEATING_RUN) {
-        state->src_data++;
-    }
+    uint8_t c = state->curr;
 
     // Decrement the counter of the bytes remaining
     state->rle.remain--;
-    if (state->rle.remain == 0) {
-        // Advance the position if we're in a repeated run
-        if (state->rle.mode == REPEATING_RUN) {
-            state->src_data++;
-        }
 
-        // Swap back to querying the marker byte
+    if (state->rle.remain > 0) {
+        // If we're in a non-repeating run, queue up the next byte
+        if (state->rle.mode == NON_REPEATING_RUN) {
+            state->curr = qp_stream_get(state->src_stream);
+        }
+    } else {
+        // Swap back to querying the marker byte mode
         state->rle.mode = MARKER_BYTE;
     }
 

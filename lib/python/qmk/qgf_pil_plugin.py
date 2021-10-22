@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # Quantum Graphics File "QGF" Image File Format.
-# See https://docs.qmk.fm/#/qgf for more information.
+# See https://docs.qmk.fm/#/quantum_painter_qgf for more information.
 
 from colorsys import rgb_to_hsv
 from types import FunctionType

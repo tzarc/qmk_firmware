@@ -119,6 +119,7 @@ struct code_point_iter_drawglyph_state {
 
 // Codepoint handler callback: drawing
 static inline bool qp_font_code_point_handler_drawglyph(painter_font_t font, uint32_t code_point, uint8_t width, uint8_t height, uint32_t offset, void *cb_arg) {
+    /*
     struct code_point_iter_drawglyph_state *state  = (struct code_point_iter_drawglyph_state *)cb_arg;
     struct painter_driver_t *               driver = (struct painter_driver_t *)state->device;
     const painter_raw_font_descriptor_t *   fdesc  = (const painter_raw_font_descriptor_t *)font;
@@ -146,6 +147,8 @@ static inline bool qp_font_code_point_handler_drawglyph(painter_font_t font, uin
     }
 
     return ret;
+    */
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +174,7 @@ int16_t qp_drawtext(painter_device_t device, uint16_t x, uint16_t y, painter_fon
 // Quantum Painter External API: qp_drawtext_recolor
 
 int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, painter_font_t font, const char QP_RESIDENT_FLASH_OR_RAM *str, uint8_t hue_fg, uint8_t sat_fg, uint8_t val_fg, uint8_t hue_bg, uint8_t sat_bg, uint8_t val_bg) {
+    /*
     qp_dprintf("qp_drawtext_recolor: entry\n");
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
     if (!driver->validate_ok) {
@@ -215,4 +219,6 @@ int16_t qp_drawtext_recolor(painter_device_t device, uint16_t x, uint16_t y, pai
     qp_dprintf("qp_drawtext_recolor: %s\n", ret ? "ok" : "fail");
     qp_comms_stop(device);
     return ret ? (state.xpos - x) : 0;
+    */
+    return 0;
 }

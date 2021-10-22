@@ -44,9 +44,11 @@ ${license}
 
 const uint32_t gfx_${sane_name}_length = ${byte_count};
 
+// clang-format off
 const uint8_t gfx_${sane_name}[${byte_count}] QP_RESIDENT_FLASH = {
 ${bytes_lines}
 };
+// clang-format on
 """
 
 
