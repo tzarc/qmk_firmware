@@ -29,7 +29,7 @@ ${license}
 #include <qp.h>
 
 extern const uint32_t gfx_${sane_name}_length;
-extern const uint8_t gfx_${sane_name}[${byte_count}] QP_RESIDENT_FLASH;
+extern const uint8_t  gfx_${sane_name}[${byte_count}] QP_RESIDENT_FLASH;
 """
 
 

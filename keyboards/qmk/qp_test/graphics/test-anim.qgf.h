@@ -8,4 +8,4 @@
 #include <qp.h>
 
 extern const uint32_t gfx_test_anim_length;
-extern const uint8_t gfx_test_anim[372] QP_RESIDENT_FLASH;
+extern const uint8_t  gfx_test_anim[372] QP_RESIDENT_FLASH;

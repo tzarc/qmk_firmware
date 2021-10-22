@@ -23,8 +23,6 @@ typedef struct QP_PACKED qgf_image_handle_t {
         qp_file_stream_t file_stream;
 #endif  // QP_STREAM_HAS_FILE_IO
     };
-    painter_compression_t compression_scheme;
-    uint16_t              delay;
 } qgf_image_handle_t;
 
 static qgf_image_handle_t image_descriptors[NUM_QUANTUM_PAINTER_IMAGES] = {0};
@@ -110,7 +108,7 @@ bool qp_drawimage_recolor(painter_device_t device, uint16_t x, uint16_t y, paint
     // Ensure we aren't reusing any palette
     qp_internal_invalidate_palette();
 
-    // Read the frame info
+    // Read the frame info // TODO: animations and deferred exec
     qgf_frame_info_t frame_info = {0};
     if (!qgf_prepare_frame_for_stream_read(&qgf_image->stream, 0, &frame_info, qp_internal_global_pixel_lookup_table)) {
         qp_dprintf("qp_drawimage_recolor: fail (could not read frame)\n");
