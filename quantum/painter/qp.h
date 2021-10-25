@@ -57,7 +57,7 @@ typedef const void *painter_device_t;
 typedef enum { QP_ROTATION_0, QP_ROTATION_90, QP_ROTATION_180, QP_ROTATION_270 } painter_rotation_t;
 
 // Image handle type
-typedef struct QP_PACKED painter_image_desc_t {
+typedef struct painter_image_desc_t {
     uint16_t width;
     uint16_t height;
     uint16_t frame_count;

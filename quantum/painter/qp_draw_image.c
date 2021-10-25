@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // QGF image handles
 
-typedef struct QP_PACKED qgf_image_handle_t {
+typedef struct qgf_image_handle_t {
     painter_image_desc_t base;
     bool                 validate_ok;
     union {

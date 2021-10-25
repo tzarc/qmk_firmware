@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // QGF API
 
-typedef struct QP_PACKED qgf_frame_info_t {
+typedef struct qgf_frame_info_t {
     painter_compression_t compression_scheme;
     uint8_t               bpp;
     bool                  has_palette;
@@ -102,9 +102,9 @@ _Static_assert(sizeof(qgf_frame_v1_t) == sizeof(qgf_block_header_v1_t) + 6, "qgf
 
 #define QGF_FRAME_PALETTE_DESCRIPTOR_TYPEID 0x03
 
-typedef struct QP_PACKED qgf_palette_v1_t {
+typedef struct qgf_palette_v1_t {
     qgf_block_header_v1_t header;  // = { .type_id = 0x03, .neg_type_id = (~0x03), .length = (N * 3 * sizeof(uint8_t)) }
-    struct QP_PACKED {             // container for a single HSV palette entry
+    struct {             // container for a single HSV palette entry
         uint8_t h;                 // hue component: `[0,360)` degrees is mapped to `[0,255]` uint8_t.
         uint8_t s;                 // saturation component: `[0,1]` is mapped to `[0,255]` uint8_t.
         uint8_t v;                 // value component: `[0,1]` is mapped to `[0,255]` uint8_t.
