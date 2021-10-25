@@ -126,11 +126,11 @@ void qp_get_geometry(painter_device_t device, uint16_t *width, uint16_t *height,
     struct painter_driver_t *driver = (struct painter_driver_t *)device;
 
     if (width) {
-        *width = driver->screen_width;
+        *width = (driver->rotation & 0x1) ? driver->screen_height : driver->screen_width;
     }
 
     if (height) {
-        *height = driver->screen_height;
+        *height = (driver->rotation & 0x1) ? driver->screen_width : driver->screen_height;
     }
 
     if (rotation) {
