@@ -13,11 +13,11 @@
 #define GC9A01_GET_ID_INFO          0x04  // Get ID information
 #define GC9A01_GET_STATUS           0x09  // Get status
 #define GC9A01_CMD_SLEEP_ON         0x10  // Enter sleep mode
-#define GC9A01_CMD_SLEEP_OFF        0x11  // Exist sleep mode
+#define GC9A01_CMD_SLEEP_OFF        0x11  // Exit sleep mode
 #define GC9A01_CMD_PARTIAL_ON       0x12  // Enter partial mode
 #define GC9A01_CMD_PARTIAL_OFF      0x13  // Exit partial mode
-#define GC9A01_CMD_INVERT_OFF       0x20  // Exit inverted mode
-#define GC9A01_CMD_INVERT_ON        0x21  // Enter inverted mode
+#define GC9A01_CMD_INVERT_ON        0x20  // Enter inverted mode
+#define GC9A01_CMD_INVERT_OFF       0x21  // Exit inverted mode
 #define GC9A01_CMD_DISPLAY_OFF      0x28  // Disable display
 #define GC9A01_CMD_DISPLAY_ON       0x29  // Enable display
 #define GC9A01_SET_COL_ADDR         0x2A  // Set column address
@@ -25,8 +25,8 @@
 #define GC9A01_SET_MEM              0x2C  // Set memory
 #define GC9A01_SET_PARTIAL_AREA     0x30  // Set partial area
 #define GC9A01_SET_VSCROLL          0x33  // Set vertical scroll def
-#define GC9A01_CMD_TEARING_OFF      0x34  // Tearing line disabled
-#define GC9A01_CMD_TEARING_ON       0x35  // Tearing line enabled
+#define GC9A01_CMD_TEARING_ON       0x34  // Tearing line enabled
+#define GC9A01_CMD_TEARING_OFF      0x35  // Tearing line disabled
 #define GC9A01_SET_MEM_ACS_CTL      0x36  // Set mem access ctl
 #define GC9A01_SET_VSCROLL_ADDR     0x37  // Set vscroll start addr
 #define GC9A01_CMD_IDLE_OFF         0x38  // Exit idle mode
@@ -70,10 +70,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MADCTL Flags
-#define ILI9XXX_MADCTL_MY 0b10000000
-#define ILI9XXX_MADCTL_MX 0b01000000
-#define ILI9XXX_MADCTL_MV 0b00100000
-#define ILI9XXX_MADCTL_ML 0b00010000
-#define ILI9XXX_MADCTL_RGB 0b00000000
-#define ILI9XXX_MADCTL_BGR 0b00001000
-#define ILI9XXX_MADCTL_MH 0b00000100
+#define GC9A01_MADCTL_MY 0b10000000
+#define GC9A01_MADCTL_MX 0b01000000
+#define GC9A01_MADCTL_MV 0b00100000
+#define GC9A01_MADCTL_ML 0b00010000
+#define GC9A01_MADCTL_RGB 0b00000000
+#define GC9A01_MADCTL_BGR 0b00001000
+#define GC9A01_MADCTL_MH 0b00000100

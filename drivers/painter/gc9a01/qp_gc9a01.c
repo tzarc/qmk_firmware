@@ -18,14 +18,12 @@ tft_panel_dc_reset_painter_device_t gc9a01_drivers[GC9A01_NUM_DEVICES] = {0};
 // Initialization
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool qp_gc9a01_init(painter_device_t device, painter_rotation_t rotation) {
-    gc9a01_painter_device_t *lcd = (gc9a01_painter_device_t *)device;
-
     const uint8_t gc9a01_init_sequence[] QP_RESIDENT_FLASH = {
         // Command,                 Delay,  N, Data[N]
-        GC9A01_SET_INTER_REG_ENABLE2    0,  0,
+        GC9A01_SET_INTER_REG_ENABLE2,   0,  0,
         0xEB,                           0,  1, 0x14,
         GC9A01_SET_INTER_REG_ENABLE1,   0,  0,
-        GC9A01_SET_INTER_REG_ENABLE2    0,  0,
+        GC9A01_SET_INTER_REG_ENABLE2,   0,  0,
         0xEB,                           0,  1, 0x14,
         0x84,                           0,  1, 0x40,
         0x85,                           0,  1, 0xFF,
@@ -33,13 +31,13 @@ bool qp_gc9a01_init(painter_device_t device, painter_rotation_t rotation) {
         0x87,                           0,  1, 0xFF,
         0x88,                           0,  1, 0x0A,
         0x89,                           0,  1, 0x21,
-        0x8A,                           0,  1, 0x00,
-        0x8B,                           0,  1, 0x80,
-        0x8C,                           0,  1, 0x01,
-        0x8D,                           0,  1, 0x01,
-        0x8E,                           0,  1, 0xFF,
-        0x8F,                           0,  1, 0xFF,
-        GC9A01_SET_FUNCTION_CTL,        0,  2, 0x00, 0x00,
+        0x8a,                           0,  1, 0x00,
+        0x8b,                           0,  1, 0x80,
+        0x8c,                           0,  1, 0x01,
+        0x8d,                           0,  1, 0x01,
+        0x8e,                           0,  1, 0xFF,
+        0x8f,                           0,  1, 0xFF,
+        GC9A01_SET_FUNCTION_CTL,        0,  2, 0x00, 0x20,
         GC9A01_SET_PIX_FMT,             0,  1, 0x55,
         0x90,                           0,  4, 0x08, 0x08, 0x08, 0x08,
         0xBD,                           0,  1, 0x06,
@@ -69,12 +67,12 @@ bool qp_gc9a01_init(painter_device_t device, painter_rotation_t rotation) {
         0x98,                           0,  2, 0x3E, 0x07,
         GC9A01_CMD_TEARING_OFF,         0,  0,
         GC9A01_CMD_INVERT_OFF,          0,  0,
-        GC9A01_CMD_SLEEP_OFF,         100,  0,
-        GC9A01_CMD_DISPLAY_ON          20,  0
+        GC9A01_CMD_SLEEP_OFF,         120,  0,
+        GC9A01_CMD_DISPLAY_ON,         20,  0
     };
 
     // clang-format on
-    qp_comms_bulk_command_sequence(device, ili9163_init_sequence, sizeof(ili9163_init_sequence));
+    qp_comms_bulk_command_sequence(device, gc9a01_init_sequence, sizeof(gc9a01_init_sequence));
 
     // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
     const uint8_t madctl[] QP_RESIDENT_FLASH = {
@@ -86,13 +84,14 @@ bool qp_gc9a01_init(painter_device_t device, painter_rotation_t rotation) {
     qp_comms_command_databyte(device, GC9A01_SET_MEM_ACS_CTL, madctl[rotation]);
 
     return true;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Driver vtable
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili9341_driver_vtable = {
+const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH gc9a01_driver_vtable = {
     .base =
         {
             .init            = qp_gc9a01_init,
@@ -115,12 +114,11 @@ const struct tft_panel_dc_reset_painter_driver_vtable_t QP_RESIDENT_FLASH ili934
         },
 };
 
-
-
+#ifdef QUANTUM_PAINTER_GC9A01_SPI_ENABLE
 // Factory function for creating a handle to the ILI9341 device
 painter_device_t qp_gc9a01_make_spi_device(uint16_t screen_width, uint16_t screen_height, pin_t chip_select_pin, pin_t dc_pin, pin_t reset_pin, uint16_t spi_divisor, int spi_mode) {
     for (uint32_t i = 0; i < GC9A01_NUM_DEVICES; ++i) {
-        gc9a01_painter_device_t *driver = &gc9a01_drivers[i];
+        tft_panel_dc_reset_painter_device_t *driver = &gc9a01_drivers[i];
         if (!driver->base.driver_vtable) {
             driver->base.driver_vtable         = (const struct painter_driver_vtable_t QP_RESIDENT_FLASH *)&gc9a01_driver_vtable;
             driver->base.comms_vtable          = (const struct painter_comms_vtable_t QP_RESIDENT_FLASH *)&spi_comms_with_dc_vtable;
