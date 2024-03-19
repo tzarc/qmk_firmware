@@ -23,6 +23,7 @@
 #include "keyboard.h"
 #include "sync_timer.h"
 #include "debug.h"
+#include "prng.h"
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>

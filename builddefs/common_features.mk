@@ -25,9 +25,10 @@ QUANTUM_SRC += \
     $(QUANTUM_DIR)/keyboard.c \
     $(QUANTUM_DIR)/keymap_common.c \
     $(QUANTUM_DIR)/keycode_config.c \
+    $(QUANTUM_DIR)/prng.c \
     $(QUANTUM_DIR)/sync_timer.c \
     $(QUANTUM_DIR)/logging/debug.c \
-    $(QUANTUM_DIR)/logging/sendchar.c \
+    $(QUANTUM_DIR)/logging/sendchar.c
 
 VPATH += $(QUANTUM_DIR)/logging
 # Fall back to lib/printf if there is no platform provided print

@@ -13,7 +13,7 @@ void set_starlight_color(int i, effect_params_t* params) {
 bool STARLIGHT(effect_params_t* params) {
     if (!params->init) {
         if (scale16by8(g_rgb_timer, qadd8(rgb_matrix_config.speed, 5)) % 5 == 0) {
-            int rand_led = rand() % RGB_MATRIX_LED_COUNT;
+            int rand_led = prng16() % RGB_MATRIX_LED_COUNT;
             set_starlight_color(rand_led, params);
         }
         return false;

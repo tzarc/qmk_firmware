@@ -23,6 +23,7 @@
 #include "keycode.h"
 #include "action.h"
 #include "wait.h"
+#include "prng.h"
 
 #if defined(AUDIO_ENABLE) && defined(SENDSTRING_BELL)
 #    include "audio.h"
@@ -268,7 +269,7 @@ void tap_random_base64(void) {
 #if defined(__AVR_ATmega32U4__)
     uint8_t key = (TCNT0 + TCNT1 + TCNT3 + TCNT4) % 64;
 #else
-    uint8_t key = rand() % 64;
+    uint8_t key = prng8() % 64;
 #endif
     switch (key) {
         case 0 ... 25:

@@ -17,6 +17,7 @@
 #include "voices.h"
 #include "audio.h"
 #include "timer.h"
+#include "prng.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -126,12 +127,12 @@ float voice_envelope(float frequency) {
             //         note_timbre = 0;
             //         break;
             // }
-            // frequency = (rand() % (int)(frequency * 1.2 - frequency)) + (frequency * 0.8);
+            // frequency = (prng16() % (int)(frequency * 1.2 - frequency)) + (frequency * 0.8);
 
             if (frequency < 80.0) {
             } else if (frequency < 160.0) {
                 // Bass drum: 60 - 100 Hz
-                frequency = (rand() % (int)(40)) + 60;
+                frequency = (prng8() % (int)(40)) + 60;
                 switch (envelope_index) {
                     case 0 ... 10:
                         note_timbre = 50;
@@ -146,7 +147,7 @@ float voice_envelope(float frequency) {
 
             } else if (frequency < 320.0) {
                 // Snare drum: 1 - 2 KHz
-                frequency = (rand() % (int)(1000)) + 1000;
+                frequency = (prng16() % (int)(1000)) + 1000;
                 switch (envelope_index) {
                     case 0 ... 5:
                         note_timbre = 50;
@@ -161,7 +162,7 @@ float voice_envelope(float frequency) {
 
             } else if (frequency < 640.0) {
                 // Closed Hi-hat: 3 - 5 KHz
-                frequency = (rand() % (int)(2000)) + 3000;
+                frequency = (prng16() % (int)(2000)) + 3000;
                 switch (envelope_index) {
                     case 0 ... 15:
                         note_timbre = 50;
@@ -176,7 +177,7 @@ float voice_envelope(float frequency) {
 
             } else if (frequency < 1280.0) {
                 // Open Hi-hat: 3 - 5 KHz
-                frequency = (rand() % (int)(2000)) + 3000;
+                frequency = (prng16() % (int)(2000)) + 3000;
                 switch (envelope_index) {
                     case 0 ... 35:
                         note_timbre = 50;

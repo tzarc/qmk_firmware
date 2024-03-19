@@ -20,6 +20,7 @@
 #include "haptic.h"
 #include "gpio.h"
 #include "usb_device_state.h"
+#include "prng.h"
 #include "util.h"
 #include <stdlib.h>
 
@@ -88,7 +89,7 @@ void solenoid_fire(uint8_t index) {
 void solenoid_fire_handler(void) {
 #ifndef SOLENOID_RANDOM_FIRE
     if (NUMBER_OF_SOLENOIDS > 1) {
-        uint8_t i = rand() % NUMBER_OF_SOLENOIDS;
+        uint8_t i = prng8() % NUMBER_OF_SOLENOIDS;
         if (!solenoid_on[i]) {
             solenoid_fire(i);
         }

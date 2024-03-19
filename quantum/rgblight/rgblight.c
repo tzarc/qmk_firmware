@@ -23,6 +23,7 @@
 #include "debug.h"
 #include "util.h"
 #include "led_tables.h"
+#include "prng.h"
 #include <lib/lib8tion/lib8tion.h>
 #ifdef EEPROM_ENABLE
 #    include "eeprom.h"
@@ -1491,11 +1492,11 @@ void rgblight_effect_twinkle(animation_status_t *anim) {
             t->life--;
             uint8_t unscaled = frac(breathe_calc(frac(t->life, t->max_life)) - bottom, top - bottom);
             c->v             = scale(rgblight_config.val, unscaled);
-        } else if ((rand() % 0xFF) < trigger) {
+        } else if (prng8() < trigger) {
             // This LED is off, but was randomly selected to start brightening
             if (random_color) {
-                c->h = rand() % 0xFF;
-                c->s = (rand() % (rgblight_config.sat / 2)) + (rgblight_config.sat / 2);
+                c->h = prng8();
+                c->s = (prng16() % (rgblight_config.sat / 2)) + (rgblight_config.sat / 2);
             }
             c->v        = 0;
             t->max_life = MAX(20, MIN(RGBLIGHT_EFFECT_TWINKLE_LIFE, rgblight_config.val));

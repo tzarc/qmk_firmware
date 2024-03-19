@@ -1,7 +1,9 @@
 #include "process_clicky.h"
 #include "audio.h"
+#include "prng.h"
 #include "eeconfig.h"
 #include <stdlib.h>
+#include <stdint.h>
 
 #ifdef AUDIO_CLICKY
 
@@ -41,8 +43,8 @@ void clicky_play(void) {
 #    ifndef NO_MUSIC_MODE
     if (music_activated || midi_activated || !audio_config.enable) return;
 #    endif // !NO_MUSIC_MODE
-    clicky_song[1][0] = 2.0f * clicky_freq * (1.0f + clicky_rand * (((float)rand()) / ((float)(RAND_MAX))));
-    clicky_song[2][0] = clicky_freq * (1.0f + clicky_rand * (((float)rand()) / ((float)(RAND_MAX))));
+    clicky_song[1][0] = 2.0f * clicky_freq * (1.0f + clicky_rand * (((float)prng16()) / ((float)(UINT16_MAX))));
+    clicky_song[2][0] = clicky_freq * (1.0f + clicky_rand * (((float)prng16()) / ((float)(UINT16_MAX))));
     PLAY_SONG(clicky_song);
 }
 
