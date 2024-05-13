@@ -55,6 +55,12 @@ typedef struct {
 #endif
 } keyrecord_t;
 
+#define RECORD_GET_ENCODER_INDEX(record_ptr) EVENT_GET_ENCODER_INDEX((record_ptr)->event)
+#define RECORD_GET_ENCODER_DIRECTION(record_ptr) EVENT_GET_ENCODER_DIRECTION((record_ptr)->event)
+
+#define RECORD_GET_DIPSWITCH_INDEX(record_ptr) EVENT_GET_DIPSWITCH_INDEX((record_ptr)->event)
+#define RECORD_GET_DIPSWITCH_STATE(record_ptr) EVENT_GET_DIPSWITCH_STATE((record_ptr)->event)
+
 /* Execute action per keyevent */
 void action_exec(keyevent_t event);
 

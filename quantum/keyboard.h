@@ -97,11 +97,17 @@ static inline bool IS_DIPSWITCHEVENT(const keyevent_t event) {
 #    define MAKE_ENCODER_CCW_EVENT(enc_id, press) MAKE_EVENT(KEYLOC_ENCODER_CCW, (enc_id), (press), ENCODER_CCW_EVENT)
 #endif // ENCODER_MAP_ENABLE
 
+#define EVENT_GET_ENCODER_INDEX(enc_event) ((enc_event).key.col)
+#define EVENT_GET_ENCODER_DIRECTION(enc_event) ((enc_event).type == ENCODER_CW_EVENT ? 1 : -1)
+
 #ifdef DIP_SWITCH_MAP_ENABLE
 /* Dip Switch events */
 #    define MAKE_DIPSWITCH_ON_EVENT(switch_id, press) MAKE_EVENT(KEYLOC_DIP_SWITCH_ON, (switch_id), (press), DIP_SWITCH_ON_EVENT)
 #    define MAKE_DIPSWITCH_OFF_EVENT(switch_id, press) MAKE_EVENT(KEYLOC_DIP_SWITCH_OFF, (switch_id), (press), DIP_SWITCH_OFF_EVENT)
 #endif // DIP_SWITCH_MAP_ENABLE
+
+#define EVENT_GET_DIPSWITCH_INDEX(switch_event) ((switch_event).key.col)
+#define EVENT_GET_DIPSWITCH_STATE(switch_event) ((switch_event).type == DIP_SWITCH_ON_EVENT)
 
 /* it runs once at early stage of startup before keyboard_init. */
 void keyboard_setup(void);
