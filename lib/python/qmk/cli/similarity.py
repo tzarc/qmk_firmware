@@ -56,5 +56,7 @@ def similarity(cli):
     cli.log.info(f'Top {{fg_cyan}}{cli.args.count}{{fg_reset}} similar keyboards to {{fg_cyan}}{target.keyboard}{{fg_reset}}:')
     for target, ratio in top_ratios:
         r = 100.0 * ratio
-        layouts = ', '.join([f'{{fg_cyan}}{layout}{{fg_reset}}' for layout in target.json['layouts'].keys()])
+        layouts = list(target.json['layouts'].keys())
+        layouts = [layout[7:] if layout[:7] == 'LAYOUT_' else layout for layout in layouts]
+        layouts = ', '.join([f'{{fg_cyan}}{layout}{{fg_reset}}' for layout in layouts])
         cli.log.info(f'{r:4.0f}% {{fg_cyan}}{target.keyboard}{{fg_reset}}, layouts: {layouts}')
