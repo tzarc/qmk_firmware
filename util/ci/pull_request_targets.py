@@ -61,14 +61,18 @@ args = parser.parse_args()
 
 # Import the QMK CLI for the base repo
 base_path = Path(args.base_path)
+print(f'Importing QMK CLI from {base_path}')
 _import_qmk_cli(base_path)
 
 # Unload the QMK CLI
+print('Unloading QMK CLI')
 _unload_qmk_cli()
 
 # Import the QMK CLI for the target repo
 target_path = Path(args.target_path)
+print(f'Importing QMK CLI from {target_path}')
 _import_qmk_cli(target_path)
 
 # Unload the QMK CLI
+print('Unloading QMK CLI')
 _unload_qmk_cli()
