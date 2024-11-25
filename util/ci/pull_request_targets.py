@@ -24,7 +24,7 @@ def _import_qmk_cli(qmk_firmware: Path):
     oldcwd = os.getcwd()
     os.chdir(qmk_firmware)
     os.environ["QMK_HOME"] = str(qmk_firmware)
-    os.environ["ORIG_CWD"] = str(qmk_firmware)
+    os.environ["ORIG_CWD"] = str(oldcwd)
     try:
         # Import the QMK CLI
         import qmk_cli.helpers
@@ -47,6 +47,8 @@ def _import_qmk_cli(qmk_firmware: Path):
 def _unload_qmk_cli(qmk_firmware: Path):
     oldcwd = os.getcwd()
     os.chdir(qmk_firmware)
+    os.environ["QMK_HOME"] = str(qmk_firmware)
+    os.environ["ORIG_CWD"] = str(oldcwd)
     try:
         # Remove the QMK CLI from sys.path
         lib_python = str(qmk_firmware / "lib/python")
