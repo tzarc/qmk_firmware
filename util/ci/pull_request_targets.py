@@ -23,6 +23,8 @@ def _set_log_level(level):
 def _import_qmk_cli(qmk_firmware: Path):
     oldcwd = os.getcwd()
     os.chdir(qmk_firmware)
+    os.environ["QMK_HOME"] = str(qmk_firmware)
+    os.environ["ORIG_CWD"] = str(qmk_firmware)
     try:
         # Import the QMK CLI
         import qmk_cli.helpers
