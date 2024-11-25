@@ -28,10 +28,5 @@ jobs:
           # Get the base commit so we can do a diff against it
           git -C target_repo fetch origin ${{ github.event.pull_request.base.sha }}
 
-          # Dump out last log entries for the base and target commits
-          echo "Base repo: $(git -C target_repo log -n3 ${{ github.event.pull_request.base.sha }})"
-          echo "Target repo: $(git -C target_repo log -n3 ${{ github.event.pull_request.merge_commit_sha }})"
-
           echo "Different files:"
-          echo git -C target_repo diff --name-only ${{ github.event.pull_request.base.sha }}
           git -C target_repo diff --name-only ${{ github.event.pull_request.base.sha }}
