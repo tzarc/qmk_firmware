@@ -69,8 +69,6 @@ def _unload_qmk_cli(qmk_firmware: Path):
     finally:
         os.chdir(oldcwd)
 
-_unload_qmk_cli()
-
 # Using argparse, define arguments '--base-path=BASE_PATH', '--target-path=TARGET_PATH', '--merge-sha=MERGE_SHA', '--base-sha=BASE_SHA'
 parser = argparse.ArgumentParser()
 parser.add_argument("--base-path", type=str, required=True)
