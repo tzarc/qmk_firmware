@@ -16,8 +16,8 @@ jobs:
     steps:
       - name: Prerequisites
         run: |
-          sudo apt update
-          sudo apt install -y jq curl git
+          apt update
+          apt install -y jq curl
 
       - name: Checkout base
         uses: actions/checkout@v4
