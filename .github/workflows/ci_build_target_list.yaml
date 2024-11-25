@@ -11,11 +11,19 @@ jobs:
   test_pr_trigger:
     name: Determine list of PR targets
     runs-on: ubuntu-latest
+    container: ghcr.io/qmk/qmk_cli
+
     steps:
       - name: Prerequisites
         run: |
           sudo apt update
           sudo apt install -y jq curl git
+
+      - name: Checkout base
+        uses: actions/checkout@v4
+        with:
+          path: base_repo
+          ref: ${{ github.event.pull_request.base.sha }}
 
       - name: Checkout target
         uses: actions/checkout@v4
@@ -23,10 +31,14 @@ jobs:
           path: target_repo
           ref: ${{ github.event.pull_request.merge_commit_sha }}
 
-      - name: "List changed files"
+      - name: List changed files
         run: |
           # Get the base commit so we can do a diff against it
           git -C target_repo fetch origin ${{ github.event.pull_request.base.sha }}
 
           echo "Different files:"
           git -C target_repo diff --name-only ${{ github.event.pull_request.base.sha }}
+
+      - name: List added targets
+        run: |
+          ./target_repo/util/ci/pull_request_targets.py "--base-path=base_repo" "--target-path=target_repo" "--merge-sha=${{ github.event.pull_request.merge_commit_sha }}" "--base-sha=${{ github.event.pull_request.base.sha }}"
