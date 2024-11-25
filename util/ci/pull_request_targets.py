@@ -5,6 +5,7 @@ import logging
 import sys
 import os
 
+
 def _set_log_level(level):
     from milc import cli
 
@@ -39,6 +40,7 @@ def _import_qmk_cli(qmk_firmware: Path):
 
         import qmk.cli
         from qmk.util import maybe_exit_config
+
         maybe_exit_config(should_exit=False, should_reraise=True)
     finally:
         os.chdir(oldcwd)
@@ -64,10 +66,13 @@ def _unload_qmk_cli(qmk_firmware: Path):
                     del sys.modules[m]
                 except:
                     pass
-            mods = [m for m in sys.modules if m.startswith("milc") or m.startswith("qmk")]
+            mods = [
+                m for m in sys.modules if m.startswith("milc") or m.startswith("qmk")
+            ]
             cycles += 1
     finally:
         os.chdir(oldcwd)
+
 
 # Using argparse, define arguments '--base-path=BASE_PATH', '--target-path=TARGET_PATH', '--merge-sha=MERGE_SHA', '--base-sha=BASE_SHA'
 parser = argparse.ArgumentParser()
@@ -79,18 +84,18 @@ args = parser.parse_args()
 
 # Import the QMK CLI for the base repo
 base_path = Path(args.base_path).absolute()
-print(f'Importing QMK CLI from {base_path}')
+print(f"Importing QMK CLI from {base_path}")
 _import_qmk_cli(base_path)
 
 # Unload the QMK CLI
-print('Unloading QMK CLI')
+print("Unloading QMK CLI")
 _unload_qmk_cli(base_path)
 
 # Import the QMK CLI for the target repo
 target_path = Path(args.target_path).absolute()
-print(f'Importing QMK CLI from {target_path}')
+print(f"Importing QMK CLI from {target_path}")
 _import_qmk_cli(target_path)
 
 # Unload the QMK CLI
-print('Unloading QMK CLI')
+print("Unloading QMK CLI")
 _unload_qmk_cli(base_path)
