@@ -41,4 +41,5 @@ jobs:
 
       - name: List added targets
         run: |
-          ./target_repo/util/ci/pull_request_targets.py "--base-path=base_repo" "--target-path=target_repo" "--merge-sha=${{ github.event.pull_request.merge_commit_sha }}" "--base-sha=${{ github.event.pull_request.base.sha }}"
+          pwd
+          python3 ./target_repo/util/ci/pull_request_targets.py "--base-path=$(realpath base_repo)" "--target-path=$(realpath target_repo)" "--merge-sha=${{ github.event.pull_request.merge_commit_sha }}" "--base-sha=${{ github.event.pull_request.base.sha }}"
