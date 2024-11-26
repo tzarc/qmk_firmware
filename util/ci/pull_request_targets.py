@@ -34,12 +34,11 @@ def _get_all_keyboards_and_keymaps():
 
 
 
-# Using argparse, define arguments '--base-path=BASE_PATH', '--target-path=TARGET_PATH', '--merge-sha=MERGE_SHA', '--base-sha=BASE_SHA'
+# Using argparse, define arguments '--base-path=BASE_PATH', '--target-path=TARGET_PATH'
 parser = argparse.ArgumentParser()
 parser.add_argument("--base-path", type=str, required=True)
 parser.add_argument("--target-path", type=str, required=True)
-parser.add_argument("--merge-sha", type=str, required=True)
-parser.add_argument("--base-sha", type=str, required=True)
+parser.add_argument("--pr-num", type=str, required=True)
 args = parser.parse_args()
 
 # Import the QMK CLI for the base repo
