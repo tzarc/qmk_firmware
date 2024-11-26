@@ -16,7 +16,6 @@ def _get_all_keyboards_and_keymaps():
     try:
         oldcwd = os.getcwd()
         os.chdir(os.environ["QMK_HOME"])
-
         oldlevel = qmk_cli_loader.set_log_level(logging.ERROR)
         all_targets = search_keymap_targets([("all", "all")])
     except Exception as exc:
@@ -50,6 +49,7 @@ print(f"Importing QMK CLI from {base_path}")
 qmk_cli_loader.import_qmk_cli(base_path)
 
 # Get all keyboards and keymaps for the base repo
+print("Getting all keyboards and keymaps")
 (_, kb_km_base, exc) = _get_all_keyboards_and_keymaps()
 
 # Unload the QMK CLI
@@ -67,6 +67,7 @@ print(f"Importing QMK CLI from {target_path}")
 qmk_cli_loader.import_qmk_cli(target_path)
 
 # Get all keyboards and keymaps for the target repo
+print("Getting all keyboards and keymaps")
 (_, kb_km_target, exc) = _get_all_keyboards_and_keymaps()
 
 # Unload the QMK CLI
@@ -77,10 +78,17 @@ qmk_cli_loader.unload_qmk_cli(target_path)
 if exc is not None:
     raise exc
 
-# Find the symmetric difference between the base and target keymap sets
-diff = kb_km_base.symmetric_difference(kb_km_target)
+# Find the combinations that exist in the target but not the base (we don't care if things are deleted)
+removed = kb_km_base - kb_km_target
+added = kb_km_target - kb_km_base
 
 # Print out all the resulting keyboards and keymaps
-print("Build targets:")
-for (kb, km) in diff:
-    print(f"  {kb}:{km}")
+if len(added) > 0:
+    print("Build targets added:")
+    for (kb, km) in added:
+        print(f"  {kb}:{km}")
+
+if len(removed) > 0:
+    print("Build targets removed:")
+    for (kb, km) in removed:
+        print(f"  {kb}:{km}")
