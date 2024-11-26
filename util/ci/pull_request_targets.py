@@ -38,7 +38,6 @@ def _get_all_keyboards_and_keymaps():
 parser = argparse.ArgumentParser()
 parser.add_argument("--base-path", type=str, required=True)
 parser.add_argument("--target-path", type=str, required=True)
-parser.add_argument("--pr-num", type=str, required=True)
 args = parser.parse_args()
 
 # Import the QMK CLI for the base repo

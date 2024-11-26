@@ -40,4 +40,4 @@ jobs:
 
       - name: List added targets
         run: |
-          python3 ./target_repo/util/ci/pull_request_targets.py "--base-path=$(realpath base_repo)" "--target-path=$(realpath target_repo)" "--pr-num=${{ github.event.pull_request.number }}"
+          python3 ./target_repo/util/ci/pull_request_targets.py "--base-path=$(realpath base_repo)" "--target-path=$(realpath target_repo)"
