@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Check mergeability
-        if: github.event.pull_request.mergeable
+        if: github.event.pull_request.mergeable == false
         uses: actions/github-script@v3
         with:
           script: |
