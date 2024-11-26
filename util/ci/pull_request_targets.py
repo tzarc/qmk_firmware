@@ -14,11 +14,15 @@ def _get_all_keyboards_and_keymaps():
     exception = None
 
     try:
+        oldcwd = os.getcwd()
+        os.chdir(os.environ["QMK_HOME"])
+
         oldlevel = qmk_cli_loader.set_log_level(logging.ERROR)
         all_targets = search_keymap_targets([("all", "all")])
     except Exception as exc:
         return (set(), set(), exc)
     finally:
+        os.chdir(oldcwd)
         qmk_cli_loader.set_log_level(oldlevel)
 
     try:
