@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import os
 import argparse
 import logging
 import qmk_cli_loader
@@ -8,15 +9,15 @@ import qmk_cli_loader
 def _get_all_keyboards_and_keymaps():
     from qmk.search import search_keymap_targets
 
-    all_keyboards = None
-    all_keymaps = None
+    all_keyboards = set()
+    all_keymaps = set()
     exception = None
 
     try:
         oldlevel = qmk_cli_loader.set_log_level(logging.ERROR)
         all_targets = search_keymap_targets([("all", "all")])
     except Exception as exc:
-        return (None, None, exc)
+        return (set(), set(), exc)
     finally:
         qmk_cli_loader.set_log_level(oldlevel)
 
@@ -40,6 +41,7 @@ args = parser.parse_args()
 
 # Import the QMK CLI for the base repo
 base_path = Path(args.base_path).absolute()
+os.chdir(base_path)
 print(f"Importing QMK CLI from {base_path}")
 qmk_cli_loader.import_qmk_cli(base_path)
 
@@ -56,6 +58,7 @@ if exc is not None:
 
 # Import the QMK CLI for the target repo
 target_path = Path(args.target_path).absolute()
+os.chdir(target_path)
 print(f"Importing QMK CLI from {target_path}")
 qmk_cli_loader.import_qmk_cli(target_path)
 
