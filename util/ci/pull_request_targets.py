@@ -60,7 +60,7 @@ qmk_cli_loader.import_qmk_cli(target_path)
 
 # Unload the QMK CLI
 print("Unloading QMK CLI")
-qmk_cli_loader.unload_qmk_cli(base_path)
+qmk_cli_loader.unload_qmk_cli(target_path)
 
 # Find the symmetric difference between the base and target keymap sets
 diff = kb_km_base.symmetric_difference(kb_km_target)
