@@ -34,7 +34,7 @@ jobs:
       - name: List changed files
         run: |
           # Get the base commit so we can do a diff against it
-          git -C target_repo fetch origin ${{ github.event.pull_request.base.sha }}
+          git -C target_repo fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
 
           echo "Different files:"
           git -C target_repo diff --name-only ${{ github.event.pull_request.base.sha }}
