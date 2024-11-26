@@ -44,11 +44,15 @@ print(f"Importing QMK CLI from {base_path}")
 qmk_cli_loader.import_qmk_cli(base_path)
 
 # Get all keyboards and keymaps for the base repo
-(_, kb_km_base, _) = _get_all_keyboards_and_keymaps()
+(_, kb_km_base, exc) = _get_all_keyboards_and_keymaps()
 
 # Unload the QMK CLI
 print("Unloading QMK CLI")
 qmk_cli_loader.unload_qmk_cli(base_path)
+
+# Throw the exception if it occurred
+if exc is not None:
+    raise exc
 
 # Import the QMK CLI for the target repo
 target_path = Path(args.target_path).absolute()
@@ -56,11 +60,15 @@ print(f"Importing QMK CLI from {target_path}")
 qmk_cli_loader.import_qmk_cli(target_path)
 
 # Get all keyboards and keymaps for the target repo
-(_, kb_km_target, _) = _get_all_keyboards_and_keymaps()
+(_, kb_km_target, exc) = _get_all_keyboards_and_keymaps()
 
 # Unload the QMK CLI
 print("Unloading QMK CLI")
 qmk_cli_loader.unload_qmk_cli(target_path)
+
+# Throw the exception if it occurred
+if exc is not None:
+    raise exc
 
 # Find the symmetric difference between the base and target keymap sets
 diff = kb_km_base.symmetric_difference(kb_km_target)
