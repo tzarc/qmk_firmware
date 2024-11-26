@@ -40,4 +40,4 @@ jobs:
 
       - name: List added targets
         run: |
-          python3 ./target_repo/util/ci/pull_request_targets.py "--base-path=$(realpath base_repo)" "--target-path=$(realpath target_repo)"
+          python3 ./target_repo/util/ci/pull_request_targets.py "--base-path=$(realpath base_repo)" "--target-path=$(realpath target_repo)" "--base-ref=${{ github.event.pull_request.base.sha }}" "--target-ref=$(git -C target_repo rev-parse HEAD)"

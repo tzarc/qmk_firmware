@@ -38,12 +38,14 @@ def _get_all_keyboards_and_keymaps():
 parser = argparse.ArgumentParser()
 parser.add_argument("--base-path", type=str, required=True)
 parser.add_argument("--target-path", type=str, required=True)
+parser.add_argument("--base-ref", type=str, required=True)
+parser.add_argument("--target-ref", type=str, required=True)
 args = parser.parse_args()
 
 # Import the QMK CLI for the base repo
 base_path = Path(args.base_path).absolute()
 os.chdir(base_path)
-print(f"Importing QMK CLI from {base_path}")
+print(f"Importing QMK CLI from {base_path} (@ {args.base_ref})")
 qmk_cli_loader.import_qmk_cli(base_path)
 
 # Get all keyboards and keymaps for the base repo
@@ -61,7 +63,7 @@ if exc is not None:
 # Import the QMK CLI for the target repo
 target_path = Path(args.target_path).absolute()
 os.chdir(target_path)
-print(f"Importing QMK CLI from {target_path}")
+print(f"Importing QMK CLI from {target_path} (@ {args.target_ref})")
 qmk_cli_loader.import_qmk_cli(target_path)
 
 # Get all keyboards and keymaps for the target repo
