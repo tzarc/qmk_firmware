@@ -14,13 +14,6 @@ jobs:
     container: ghcr.io/qmk/qmk_cli
 
     steps:
-      - name: Check mergeability
-        if: github.event.pull_request.mergeable == false
-        uses: actions/github-script@v3
-        with:
-          script: |
-            core.setFailed('Pull request is currently unmergeable. Please resolve conflicts on this PR.')
-
       - name: Prerequisites
         run: |
           apt update
