@@ -1,0 +1,43 @@
+name: Determine list of PR targets
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  test_pr_trigger:
+    name: Determine list of PR targets
+    runs-on: ubuntu-latest
+    container: ghcr.io/qmk/qmk_cli
+
+    steps:
+      - name: Prerequisites
+        run: |
+          apt update
+          apt install -y jq curl
+
+      - name: Checkout base
+        uses: actions/checkout@v4
+        with:
+          path: base_repo
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Checkout target (pre-merged into base)
+        uses: actions/checkout@v4
+        with:
+          path: target_repo
+
+      - name: List changed files
+        run: |
+          # Get the base commit so we can do a diff against it
+          git -C target_repo fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
+
+          echo "Different files:"
+          git -C target_repo diff --name-only ${{ github.event.pull_request.base.sha }}
+
+      - name: List added targets
+        run: |
+          python3 ./target_repo/util/ci/pull_request_targets.py "--base-path=$(realpath base_repo)" "--target-path=$(realpath target_repo)" "--base-ref=${{ github.event.pull_request.base.sha }}" "--target-ref=$(git -C target_repo rev-parse HEAD)"
