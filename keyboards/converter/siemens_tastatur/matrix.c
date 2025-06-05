@@ -243,4 +243,3 @@ void matrix_init_user(void) {
 __attribute__ ((weak))
 void matrix_scan_user(void) {
 }
-

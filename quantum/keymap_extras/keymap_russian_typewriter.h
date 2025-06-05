@@ -96,4 +96,3 @@
 #define RU_BSLS S(RU_SCLN) // (backslash)
 #define RU_LPRN S(RU_RPRN) // (
 #define RU_RUBL ALGR(RU_UNDS) // ₽
-

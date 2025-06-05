@@ -27,5 +27,3 @@ See the [QMK setup documentation](https://docs.qmk.fm/#/newbs_getting_started) t
 ## Bootloader
 
 Since the keyboard is designed to have an exposed ProMicro the bootloader can always be entered by short circuiting the `RST` and `GND` pins on the ProMicro. If the keyboard is configured with the default keymap, the bootloader can be entered by pressing `R_GUI/FN + B`
-
-

@@ -14,4 +14,3 @@ KBDfans is a keyboard retailer located in China.
 **Discord:** https://discord.gg/HMZKDhn  
 **Facebook:** https://www.facebook.com/KBDfanskeyboard/  
 **Instagram:** https://www.instagram.com/kbdfans.cn/  
-

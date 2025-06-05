@@ -26,5 +26,3 @@ Enter the bootloader in 3 ways:
 
 * **Physical reset button**: Briefly press the button in the middle of the bottom row
 * **Keycode in layout**: Press the key mapped to `QK_BOOT` if it is available
-
-

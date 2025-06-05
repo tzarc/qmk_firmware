@@ -170,4 +170,3 @@
 #define FR_OGON S(ALGR(FR_V))    // ˛ (dead)
 #define FR_DCMM S(ALGR(FR_COMM)) // ̦ (dead)
 #define FR_NEQL S(ALGR(FR_SCLN)) // ≠
-

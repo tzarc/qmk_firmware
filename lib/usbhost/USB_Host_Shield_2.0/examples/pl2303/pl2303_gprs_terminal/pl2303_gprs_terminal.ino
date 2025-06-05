@@ -98,4 +98,3 @@ void loop()
            }//if( rcvd ...
     }//if( Usb.getUsbTaskState() == USB_STATE_RUNNING..
 }
-

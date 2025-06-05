@@ -72,4 +72,3 @@ void backlight_task(void) {
     gpio_write_pin_low(Lcom8);
     }
 }
-

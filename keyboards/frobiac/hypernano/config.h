@@ -14,4 +14,3 @@
 #    define PS2_MOUSE_USE_REMOTE_MODE
 #    define PS2_MOUSE_INIT_DELAY 1000
 #endif
-

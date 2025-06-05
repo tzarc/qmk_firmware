@@ -47,6 +47,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LCTL, KC_LGUI, KC_LALT,          KC_SPC,                KC_TRNS, KC_TRNS, KC_ESC, KC_CAPS
     )
 };
-
-
-

@@ -252,4 +252,3 @@ void keylight_manager(keyrecord_t *record, uint8_t hue, uint8_t sat, uint8_t val
 }
 
 #endif  // RGBLIGHT_ENABLE
-

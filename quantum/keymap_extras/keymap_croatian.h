@@ -124,4 +124,3 @@
 #define HR_LCBR ALGR(HR_B)    // {
 #define HR_RCBR ALGR(HR_N)    // }
 #define HR_SECT ALGR(HR_M)    // §
-

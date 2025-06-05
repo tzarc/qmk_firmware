@@ -130,4 +130,3 @@
 #define LV_MUL  S(ALGR(LV_8))    // ×
 #define LV_MDSH S(ALGR(LV_MINS)) // —
 #define LV_DIAE S(ALGR(LV_QUOT)) // ¨ (dead)
-

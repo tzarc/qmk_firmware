@@ -73,4 +73,3 @@ void init_74hc15x(void) {
     MAP(INIT_74HC15X, MATRIX_EXT_74HC15x)
 }
 #define init_extension() init_74hc15x()
-

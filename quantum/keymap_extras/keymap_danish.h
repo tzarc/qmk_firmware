@@ -113,4 +113,3 @@
 #define DK_TILD ALGR(DK_DIAE) // ~ (dead)
 #define DK_BSLS ALGR(DK_LABK) // (backslash)
 #define DK_MICR ALGR(DK_M)    // µ
-

@@ -189,4 +189,3 @@
 #define FR_IQUE S(A(FR_COMM)) // ¿
 #define FR_BSLS S(A(FR_COLN)) // (backslash)
 #define FR_PLMN S(A(FR_EQL))  // ±
-

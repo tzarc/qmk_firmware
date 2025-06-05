@@ -26,4 +26,3 @@
 #if !defined(SERIAL_USART_DRIVER)
 #    define SERIAL_USART_DRIVER SD2
 #endif
-

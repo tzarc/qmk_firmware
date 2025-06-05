@@ -71,4 +71,3 @@
 #define NO_TILD ALGR(NO_QUOT)
 #define NO_BSLS ALGR(KC_MINS)
 #define NO_MU   ALGR(KC_M)   
-

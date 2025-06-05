@@ -109,4 +109,3 @@
 #define ES_TILD ALGR(ES_PLUS) // ~
 #define ES_CIRC ALGR(ES_LCBR) // ^
 #define ES_GRV  ALGR(KC_NUHS) // `
-

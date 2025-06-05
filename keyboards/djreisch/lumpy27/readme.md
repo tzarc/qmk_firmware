@@ -25,5 +25,3 @@ Enter the bootloader in 2 ways:
 
 * **Bootloader Reset**: Hold down the bootload button and press the reset button
 * **Bootloader Power On**: Hold down the bootloader button and plug in the keyboard
-
-

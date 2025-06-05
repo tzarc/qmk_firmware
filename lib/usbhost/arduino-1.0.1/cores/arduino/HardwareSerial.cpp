@@ -425,4 +425,3 @@ HardwareSerial::operator bool() {
 #endif
 
 #endif // whole file
-

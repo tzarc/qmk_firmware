@@ -169,4 +169,3 @@
 #define EU_MDDT S(ALGR(EU_SCLN)) // ·
 #define EU_DIAE ALGR(EU_DQUO) // ¨ (dead)
 #define EU_ELLP ALGR(EU_QUES) // …
-

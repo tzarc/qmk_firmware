@@ -20,4 +20,3 @@ For more information on the layout option and other ones, see the [`make` guide]
 
 # Flashing the firmware onto the keyboard
   https://docs.qmk.fm/#/newbs_flashing
-

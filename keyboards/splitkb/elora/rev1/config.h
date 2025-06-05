@@ -57,4 +57,3 @@
 // between halves.
 #undef SPLIT_OLED_ENABLE
 #define OLED_TIMEOUT 0
-

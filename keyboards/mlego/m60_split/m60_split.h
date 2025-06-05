@@ -34,4 +34,3 @@ static inline void led_caps(const bool on) {
     gpio_write_pin(LED_CAPS_LOCK_PIN, !on);
 #endif
 }
-

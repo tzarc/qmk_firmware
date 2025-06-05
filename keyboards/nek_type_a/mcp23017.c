@@ -104,4 +104,3 @@ uint8_t expander_write(uint8_t reg, unsigned char val) {
     }
     return result == 0;
 }
-

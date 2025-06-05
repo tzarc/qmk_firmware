@@ -97,4 +97,3 @@
 #define UA_SLSH S(UA_BSLS) // /
 #define UA_COMM S(UA_DOT)  // ,
 #define UA_GE   ALGR(UA_HE)   // ґ
-

@@ -48,4 +48,3 @@ This port utilizes the same pins that the TMK converter used. `PD1` is used for 
 ## QMK Port Changelog
 
 - 2018/08/01 - Original Release
-

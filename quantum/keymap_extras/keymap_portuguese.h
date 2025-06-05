@@ -112,4 +112,3 @@
 #define PT_RCBR ALGR(PT_0)    // }
 #define PT_DIAE ALGR(PT_PLUS) // ¨ (dead)
 #define PT_EURO ALGR(PT_E)    // €
-

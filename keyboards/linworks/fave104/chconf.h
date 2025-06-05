@@ -26,4 +26,3 @@
 #define CH_CFG_INTERVALS_SIZE 16
 
 #include_next <chconf.h>
-

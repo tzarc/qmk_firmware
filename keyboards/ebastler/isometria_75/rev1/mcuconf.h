@@ -30,4 +30,3 @@
 #define STM32_PWM_USE_TIM3                  FALSE
 #undef STM32_ST_USE_TIMER
 #define STM32_ST_USE_TIMER                  3
-

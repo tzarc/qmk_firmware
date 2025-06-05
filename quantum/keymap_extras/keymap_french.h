@@ -115,4 +115,3 @@
 #define FR_RCBR ALGR(FR_EQL)  // }
 #define FR_EURO ALGR(KC_E)    // €
 #define FR_CURR ALGR(FR_DLR)  // ¤
-

@@ -174,4 +174,3 @@
 #define FA_0    S(ALGR(FA_0A))   // 0
 #define FA_BRKP S(ALGR(FA_LT))   // ¦
 #define FA_NNBS S(ALGR(FA_SPC))  // (narrow non-breaking space)
-

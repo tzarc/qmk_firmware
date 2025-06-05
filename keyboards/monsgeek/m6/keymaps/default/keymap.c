@@ -73,4 +73,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, _______, _______, _______, KC_CALC, _______, _______, _______, _______, KC_MUTE, KC_VOLD, KC_VOLU, _______, _______,  RM_VALU,
         _______,                   _______, _______,          _______, _______,                  _______, _______,           RM_SATD,  RM_VALD, RM_SATU),
 };
-

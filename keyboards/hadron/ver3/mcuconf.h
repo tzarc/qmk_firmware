@@ -40,4 +40,3 @@
 
 #undef STM32_ST_USE_TIMER
 #define STM32_ST_USE_TIMER 3
-

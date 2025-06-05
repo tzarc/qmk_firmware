@@ -2,4 +2,3 @@
 
 
 ![Default Layout](https://i.imgur.com/APQGsvU.png)
-

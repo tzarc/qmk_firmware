@@ -100,4 +100,3 @@
 #define RS_COLN S(RS_DOT)  // :
 #define RS_UNDS S(RS_MINS) // _
 #define RS_EURO ALGR(RS_IE)   // €
-

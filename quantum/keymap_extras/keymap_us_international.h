@@ -147,4 +147,3 @@
 #define US_DEG  S(ALGR(US_SCLN)) // °
 #define US_NDDR S(ALGR(US_ACUT)) // ¨
 #define US_CENT S(ALGR(US_C))    // ¢
-

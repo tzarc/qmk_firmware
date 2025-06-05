@@ -25,4 +25,3 @@ You can compile the Iron 165R2 default keymap by using the following:
 And use dfu-util in the command line or through a GUI like QMK toolbox to upload the firmware to the PCB. To directly flash the PCB after it is put into a DFU state, use:
 
     make magnum_ergo_1:default:flash
-

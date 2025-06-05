@@ -151,4 +151,3 @@ $ make HELIX=no-oled helix:default:flash           # without oled
 ## Link
 * more detail wrote in Japanese [helix/Doc/firmware_jp.md](https://github.com/MakotoKurauchi/helix/blob/master/Doc/firmware_jp.md)
 * [Helix top](https://github.com/MakotoKurauchi/helix)
-

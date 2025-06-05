@@ -124,4 +124,3 @@
 #define SI_LCBR ALGR(SI_B)    // {
 #define SI_RCBR ALGR(SI_N)    // }
 #define SI_SECT ALGR(SI_M)    // §
-

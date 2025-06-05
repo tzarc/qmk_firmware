@@ -45,6 +45,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, XXXXXXX,                            XXXXXXX,                            XXXXXXX,          KC_MPLY
     ),
 };
-
-
-

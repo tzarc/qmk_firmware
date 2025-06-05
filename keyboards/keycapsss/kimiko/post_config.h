@@ -22,4 +22,3 @@
 #ifndef OLED_FONT_H
 #   define OLED_FONT_H "keyboards/keycapsss/kimiko/glcdfont.c"
 #endif
-

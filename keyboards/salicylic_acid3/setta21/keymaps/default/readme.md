@@ -34,5 +34,3 @@
 |     LEFT   |RGB_HUI| XXXXX| RGB_TOG|
 |   RGB_VAD  |RGB_VAI| XXXXX|        |
 |    XXXXX   |       | XXXXX| RGB_MOD|
-
-

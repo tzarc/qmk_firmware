@@ -44,4 +44,3 @@ If you printed one of the PCB variant with swapped letters `Q` and `B` / `P` and
     { B5, B4, NO_PIN, NO_PIN, NO_PIN } \
 }
 ```
-

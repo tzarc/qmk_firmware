@@ -12,4 +12,3 @@
 
 /* SPI Flash Config */
 #define EXTERNAL_FLASH_SPI_SLAVE_SELECT_PIN C12
-

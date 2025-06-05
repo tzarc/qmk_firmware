@@ -15,4 +15,3 @@
 #define HAL_USE_RTC TRUE
 
 #include_next <halconf.h>
-

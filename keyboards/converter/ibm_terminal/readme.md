@@ -36,4 +36,3 @@ make converter/ibm_terminal:default
 - RJ45 Connector: http://www.kbdbabel.org/conn/kbd_connector_ibmterm.png
 - DIN Connector: http://www.kbdbabel.org/conn/kbd_connector_ibm3179_318x_319x.png
 - WinAVR: http://winavr.sourceforge.net/
-

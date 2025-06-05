@@ -84,5 +84,3 @@ void loop() {
                 }//if( read_delay > millis()...
         }//if( Usb.getUsbTaskState() == USB_STATE_RUNNING..
 }
-
-

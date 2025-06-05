@@ -73,4 +73,3 @@ void rgbsps_sethsv(uint8_t index, uint16_t hue, uint8_t sat, uint8_t val) {
 
   rgbsps_set(index, r, g, b);
 }
-

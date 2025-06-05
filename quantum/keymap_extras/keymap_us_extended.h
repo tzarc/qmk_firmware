@@ -167,4 +167,3 @@
 #define US_CENT S(ALGR(US_C))    // ¢
 #define US_CARN S(ALGR(US_DOT))  // ˇ (dead)
 #define US_HOKA S(ALGR(US_SLSH)) // ̉ (dead)
-

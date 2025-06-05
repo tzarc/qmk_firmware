@@ -93,4 +93,3 @@ extern MidiDevice midi_device;
 
 uint8_t shift_led_indicator_left(uint8_t scale_indicator_col);
 uint8_t shift_led_indicator_right(uint8_t scale_indicator_col);
-

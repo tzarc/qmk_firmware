@@ -124,4 +124,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     XXXXXXX, XXXXXXX, XXXXXXX,                            XXXXXXX,                   XXXXXXX, MacRec1, MacRec2, MacPla1, MacPla2
    ),
 };
-

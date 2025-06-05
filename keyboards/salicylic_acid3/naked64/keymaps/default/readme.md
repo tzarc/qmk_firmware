@@ -52,5 +52,3 @@
 |      |  Control | XXXXX| XXXXX| XXXXX| XXXXX| XXXXX|  LTOG|  LMOD| XXXXX| C+A+D|Alt+PSCR|PSCR| XXXXX|
 |      |   Shift  | XXXXX| XXXXX| XXXXX| XXXXX| XXXXX|  LVAD|  LVAI|  LHUD|  LHUI|  LSAD|  LSAI| XXXXX|
 |      |    ADJUST|      |  LALT|      |   SPC| LOWER| RAISE|   SPC|      |  LGUI|  MNxt|  VoDn|  Mply|
-
-

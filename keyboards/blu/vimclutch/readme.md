@@ -35,4 +35,3 @@ See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_to
 
 ## Hardware Revision Compatibility
 This keyboard as-it-is in the QMK repository at the is only designed to work with Revision B (and possibly beyond!)
-

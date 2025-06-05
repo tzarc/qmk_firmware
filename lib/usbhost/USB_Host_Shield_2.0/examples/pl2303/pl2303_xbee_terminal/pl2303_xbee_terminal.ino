@@ -113,5 +113,3 @@ void loop()
         delay(10);
     }//if( Usb.getUsbTaskState() == USB_STATE_RUNNING..
 }
-
-

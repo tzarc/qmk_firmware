@@ -136,4 +136,3 @@ For example,
 #./KeymapBeautifier.py input.c -p -c -o output.c
 ```
 will read `input.c`, and produce `output.c` with LAYOUT_ergodox_pretty, and have the key symbols gravitating toward the center.
-

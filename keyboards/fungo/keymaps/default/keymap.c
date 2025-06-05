@@ -151,6 +151,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_NO,      TT(SAM1),   KC_NO,       KC_LALT,             KC_SPC,         TT(SAM2), KC_ENT,    MO(SAM4),  KC_NO, KC_ENT,   TT(SAM3),       KC_SPC,       KC_RALT, KC_NO,    TT(SAM1), KC_NO
   ),  
 };
-
-
-

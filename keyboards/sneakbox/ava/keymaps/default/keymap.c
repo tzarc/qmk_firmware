@@ -37,4 +37,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         QK_BOOT,   KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,                       KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,    UG_SATD,   UG_SATU,    KC_TRNS,    UG_HUEU,
                    KC_TRNS,   KC_TRNS,                   KC_TRNS, KC_TRNS,                       KC_TRNS, KC_TRNS,                                 KC_TRNS,    KC_TRNS,    KC_TRNS),
 };
-

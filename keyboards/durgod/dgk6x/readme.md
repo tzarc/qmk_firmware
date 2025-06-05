@@ -53,4 +53,3 @@ For repeating Flashing you can use BootMagic:
 - Unplug USB Cable
 - Holding Esc Button 
 - Plug in USB Cable, Keyboard should be in ST-Bootloader state
-

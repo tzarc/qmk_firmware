@@ -33,5 +33,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 			UG_HUEU, KC_TRNS, KC_TRNS, UG_HUED),
 
 };
-
-

@@ -214,4 +214,3 @@ bool feedgps()
     }
   return( rcode );
 }
-

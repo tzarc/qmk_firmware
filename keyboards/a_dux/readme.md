@@ -42,4 +42,3 @@ Enter the bootloader in 3 ways:
 * **Bootmagic reset**: Hold down the top left key on the left half (or the top right right key on the right half) and plug in the controller on that side.
 * **Physical reset pins**: Briefly short the RST and GND pins on the microcontroller using tweezers, a paperclip, or any other conductive material.
 * **Keycode in layout**: Press the key mapped to `QK_BOOT` if it is configured.
-

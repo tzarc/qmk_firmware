@@ -39,4 +39,3 @@ led_config_t g_led_config = { {
 } };
 // clang-format on
 #endif
-

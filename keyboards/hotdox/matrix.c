@@ -238,4 +238,3 @@ static void select_row(uint8_t row)
 
   left_select_row(row);
 }
-

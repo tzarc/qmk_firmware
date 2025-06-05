@@ -32,5 +32,3 @@ Enter the bootloader in 2 ways:
 
 * **Physical reset button**: Briefly press the button on the Teensy by inserting a small pin in the small hole in the switch plate
 * **Keycode in layout**: Press the key mapped to `QK_BOOT` if it is available
-
-

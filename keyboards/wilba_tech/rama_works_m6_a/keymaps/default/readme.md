@@ -9,4 +9,3 @@ The top left key will cycle through six layers.
 If LEDs are installed, one of the six LEDs will be on to indicate current layer.
 
 LEDs should be installed cathode pin on the square pad.
-

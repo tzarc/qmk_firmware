@@ -5,4 +5,3 @@ Based on this layout: http://www.keyboard-layout-editor.com/#/gists/c885816c6b76
 - US QWERTY Keys
 - Esc instead of CAPS
 - F Keys on FN Layer
-

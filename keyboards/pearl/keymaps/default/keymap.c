@@ -31,4 +31,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       UG_NEXT, BL_TOGG, KC_LGUI, KC_LSFT, KC_SPC,  KC_SPC,  KC_APP,  KC_TRNS
       ),
 };
-

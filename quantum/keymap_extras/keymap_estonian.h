@@ -115,4 +115,3 @@
 #define EE_HALF ALGR(EE_QUOT) // ½
 #define EE_PIPE ALGR(EE_LABK) // |
 #define EE_ZCAR ALGR(EE_Z)    // ž
-

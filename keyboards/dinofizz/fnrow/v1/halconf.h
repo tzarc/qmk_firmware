@@ -48,4 +48,3 @@
 #define SPI_USE_MUTUAL_EXCLUSION FALSE
 
 #include_next <halconf.h>
-

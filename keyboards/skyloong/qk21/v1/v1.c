@@ -46,4 +46,3 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 }
 
 #endif  // NUM_LOCK_INDEX
-

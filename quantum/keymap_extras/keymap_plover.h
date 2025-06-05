@@ -57,4 +57,3 @@
 #define PV_O    KC_V   
 #define PV_E    KC_N   
 #define PV_U    KC_M   
-

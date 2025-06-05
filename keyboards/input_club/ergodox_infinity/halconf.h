@@ -30,4 +30,3 @@
 #define SERIAL_BUFFERS_SIZE 128
 
 #include_next <halconf.h>
-

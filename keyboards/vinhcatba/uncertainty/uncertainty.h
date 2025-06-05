@@ -7,4 +7,3 @@
 enum my_keycodes {
     OLED_TOG = QK_KB
 };
-

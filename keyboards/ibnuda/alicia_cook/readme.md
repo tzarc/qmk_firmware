@@ -23,4 +23,3 @@ See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_to
 To enter the bootloader, there's only one way to do it:
 
 * **Keycode in layout**: Hold left spacebar and then tap `B` key in the default keymap.
-

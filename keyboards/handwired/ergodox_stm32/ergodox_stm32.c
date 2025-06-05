@@ -71,4 +71,3 @@ uint8_t init_mcp23017(void) {
     return mcp23017_status;
     // i2c_read_register(I2C_ADDR, );
 }
-

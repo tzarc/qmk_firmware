@@ -20,4 +20,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     TO(0)  ,          TO(1)
   )
 };
-

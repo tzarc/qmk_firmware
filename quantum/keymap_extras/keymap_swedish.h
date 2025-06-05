@@ -113,4 +113,3 @@
 #define SE_TILD ALGR(SE_DIAE) // ~ (dead)
 #define SE_PIPE ALGR(SE_LABK) // |
 #define SE_MICR ALGR(SE_M)    // µ
-

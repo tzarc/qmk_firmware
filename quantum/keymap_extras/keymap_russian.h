@@ -96,4 +96,3 @@
 #define RU_SLSH S(RU_BSLS) // /
 #define RU_COMM S(RU_DOT)  // ,
 #define RU_RUBL ALGR(RU_8)    // ₽
-

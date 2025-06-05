@@ -98,4 +98,3 @@ We use pull up resistor for SCL and VDA, see https://github.com/ErgoDox-EZ/docs/
 The connector is a standard TRRS (jack with audio + mic)
 
 Diode direction is row to column
-

@@ -196,4 +196,3 @@ void matrix_init_user(void) {
     RGB_current_mode = rgblight_config.mode;
 #endif
 }
-

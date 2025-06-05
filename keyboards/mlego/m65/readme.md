@@ -169,4 +169,3 @@ the pinout is the same for stm32f411
 | CAPS_LOCK   | C13 |
 | SCROLL_LOCK | B13 |
 | RBG_DI      | B15 |
-

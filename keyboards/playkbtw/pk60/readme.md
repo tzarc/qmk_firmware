@@ -13,4 +13,3 @@ Hardware Availability: [Play Keyboard](http://play-keyboard.store/)
 Make example for this keyboard (after setting up your build environment):
 
     make playkbtw/pk60:default
-

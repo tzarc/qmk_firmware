@@ -111,4 +111,3 @@
 #define UK_IACU ALGR(KC_I)    // Í
 #define UK_OACU ALGR(KC_O)    // Ó
 #define UK_AACU ALGR(KC_A)    // Á
-

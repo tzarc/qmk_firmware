@@ -32,4 +32,3 @@
 #define CH_DBG_ENABLE_STACK_CHECK FALSE
 
 #include_next <chconf.h>
-

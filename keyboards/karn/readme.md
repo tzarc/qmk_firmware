@@ -39,4 +39,3 @@ Enter the bootloader in 3 ways:
   * Press and release the NRST button.
   * Release the BOOT0 button.
 * **Keycode in layout**: Press the key mapped to `QK_BOOT` if it is available
-

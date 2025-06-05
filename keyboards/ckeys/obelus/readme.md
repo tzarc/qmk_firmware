@@ -16,4 +16,3 @@ Or to make and flash:
     make ckeys/obelus:default:dfu
 
 See [build environment setup](https://docs.qmk.fm/#/getting_started_build_tools) and [make instructions](https://docs.qmk.fm/#/getting_started_make_guide) for more information.
-

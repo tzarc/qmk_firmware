@@ -8,5 +8,3 @@ endif
 ifeq ($(strip $(AUTO_BUTTONS)), yes)
   OPT_DEFS += -DAUTO_BUTTONS
 endif
-
-

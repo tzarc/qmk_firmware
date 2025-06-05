@@ -26,4 +26,3 @@
 
 #undef WB32_SPI_USE_SPIM2
 #define WB32_SPI_USE_SPIM2 TRUE
-

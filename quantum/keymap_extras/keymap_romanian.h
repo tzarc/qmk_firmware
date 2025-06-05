@@ -131,4 +131,3 @@
 #define RO_DQUO S(ALGR(RO_TCOM)) // "
 #define RO_LDAQ S(ALGR(RO_COMM)) // «
 #define RO_RDAQ S(ALGR(RO_DOT))  // »
-

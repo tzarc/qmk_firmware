@@ -17,4 +17,3 @@
 #pragma once
 /* Setting tap term, helps not accidentally hit activate the hold functions of bottom row*/
 #define TAPPING_TERM 250
-

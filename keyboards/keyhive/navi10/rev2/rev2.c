@@ -27,4 +27,3 @@ void matrix_init_kb(void) {
   //call any user functions
   matrix_init_user();
 }
-

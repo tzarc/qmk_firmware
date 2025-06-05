@@ -406,4 +406,3 @@ if __name__ == "__main__":
             f.write(result)
     else:
         print(result)
-

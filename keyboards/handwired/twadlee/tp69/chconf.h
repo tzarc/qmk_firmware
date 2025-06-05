@@ -90,4 +90,3 @@
         { /* Trace code here.*/ }
 
 #include_next <chconf.h>
-

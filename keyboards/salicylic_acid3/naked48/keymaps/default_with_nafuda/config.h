@@ -26,4 +26,3 @@
 #define RGBLIGHT_LED_COUNT 55    // Number of LEDs
 #define RGBLIGHT_SPLIT
 #define RGBLED_SPLIT { 48, 7 }
-

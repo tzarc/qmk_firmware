@@ -20,4 +20,3 @@
 /* Function Prototype */
 void off_all_leds(void);
 void on_all_leds(void);
-

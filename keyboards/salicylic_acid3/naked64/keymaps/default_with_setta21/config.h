@@ -21,4 +21,3 @@
 
 #define RGBLIGHT_LED_COUNT 12    // Number of LEDs
 #define RGBLIGHT_LED_MAP { 0, 1, 3, 2, 2, 3, 2, 3, 4, 5, 6, 7 }
-

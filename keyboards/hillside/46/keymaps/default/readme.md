@@ -133,4 +133,3 @@ If you want, the Hillside git repo has a pretty-printing script for the keymap.j
  
 As with anything downloaded from the internet, you should take some steps to assure yourself that the script will not harm your computer nor steal your data. The script is short, so reading it should at least convince you it is rearranging and printing the keymap feed to it, not reading any banking data on your computer.
 See the [Hillside wiki](https://github.com/mmccoyd/hillside/wiki) for the script.
-

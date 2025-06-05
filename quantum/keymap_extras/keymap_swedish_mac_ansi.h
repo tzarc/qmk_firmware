@@ -180,4 +180,3 @@
 #define SE_DLQU S(A(SE_COMM)) // „
 #define SE_MDDT S(A(SE_DOT))  // ·
 #define SE_MDSH S(A(SE_MINS)) // —
-

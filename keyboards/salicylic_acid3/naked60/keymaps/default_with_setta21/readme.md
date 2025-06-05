@@ -41,4 +41,3 @@ Add Setta21 maps to the default layout.
 |LED_HUD|LED_HUI| XXXXX|     +|
 |LED_VAD|LED_VAI| XXXXX|      |
 |LED_ON/Off|      | XXXXX|LED_MOD|
-

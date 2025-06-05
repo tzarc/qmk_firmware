@@ -50,4 +50,3 @@ Entering the bootloader:
 * **Bootmagic key at [0,0]**: Hold this key down when plugging the keyboard in. Just the single key
 * **Keycode in layout**: Press the key mapped to `QK_BOOT`. Also in `layer #3` keys `DB_TOGG` `QK_RBT` `QK_BOOT` `QK_MAKE` are present at the top right corner for debug mode, keyboard reboot, bootloader mode and qmk make (`qmk flash` if shift is held ) in the respective order to make the flasing easier.
 `QK_MAKE` will type `qmk compile -kb handwired/rd_61_qmk -km default` in the terminal and `qmk flash` will type `qmk flash -kb handwired/rd_61_qmk -km default`
-

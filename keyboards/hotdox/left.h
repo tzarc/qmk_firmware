@@ -45,4 +45,3 @@ void left_unselect_rows(void);
 void left_select_row(uint8_t row);
 
 uint8_t init_mcp23017(void);
-

@@ -63,4 +63,3 @@ They only need to be done once, unless you reset the EEPROM later.
 
   - After this, you can flash both halves with the same firmware, _without_ risking a mirrored keyboard when connected the wrong way.
     If you reset your EEPROM later, you'll have to follow these steps again, though.
-

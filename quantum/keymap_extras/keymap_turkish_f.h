@@ -140,4 +140,3 @@
 #define TR_BRKP S(ALGR(TR_LABK)) // ¦
 #define TR_COPY S(ALGR(TR_V))    // ©
 #define TR_MORD S(ALGR(TR_S))    // º
-

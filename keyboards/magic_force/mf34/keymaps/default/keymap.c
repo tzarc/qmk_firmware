@@ -36,4 +36,3 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                         RM_VALU,                                KC_TRNS, KC_TRNS, KC_TRNS,
                RM_SPDD, RM_VALD, RM_SPDU,                       KC_TRNS, KC_TRNS, QK_CLEAR_EEPROM),
 };
-

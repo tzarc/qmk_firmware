@@ -52,4 +52,3 @@
 #define CH_CFG_FACTORY_PIPES TRUE
 
 #include_next <chconf.h>
-

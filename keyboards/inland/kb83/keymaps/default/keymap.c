@@ -70,4 +70,3 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [MAC_FN] = { ENCODER_CCW_CW(RM_SATU, RM_SATD) },
 };
 #endif
-

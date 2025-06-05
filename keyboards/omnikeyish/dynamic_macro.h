@@ -90,4 +90,3 @@ void dynamic_macro_load_eeprom(uint8_t macro_id);
 void dynamic_macro_save_eeprom(uint8_t macro_id);
 bool dynamic_macro_header_correct(void);
 #endif
-

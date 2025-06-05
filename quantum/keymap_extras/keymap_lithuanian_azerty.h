@@ -117,4 +117,3 @@
 #define LT_DLQU ALGR(LT_CCAR) // „
 #define LT_LDQU ALGR(LT_F)    // “
 #define LT_BSLS ALGR(LT_EOGO) // (backslash)
-

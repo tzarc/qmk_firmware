@@ -138,4 +138,3 @@ const uint8_t PROGMEM rgblight_effect_breathe_table[] = {
 };
 
 static const int table_scale = 256 / sizeof(rgblight_effect_breathe_table);
-

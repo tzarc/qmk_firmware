@@ -184,4 +184,3 @@
 #define DE_OGON S(A(DE_COMM)) // ˛
 #define DE_DIV  S(A(DE_DOT))  // ÷
 #define DE_MDSH S(A(DE_MINS)) // —
-

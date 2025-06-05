@@ -175,4 +175,3 @@
 #define PT_RDQU S(A(PT_COMM)) // ”
 #define PT_MDDT S(A(PT_DOT))  // ·
 #define PT_NDSH S(A(PT_MINS)) // –
-

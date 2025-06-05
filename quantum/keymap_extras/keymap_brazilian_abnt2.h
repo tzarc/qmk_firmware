@@ -118,4 +118,3 @@
 #define BR_FORD ALGR(BR_LBRC) // ª
 #define BR_MORD ALGR(BR_RBRC) // º
 #define BR_CRUZ ALGR(BR_C)    // ₢
-

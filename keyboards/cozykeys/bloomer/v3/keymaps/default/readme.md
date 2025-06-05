@@ -7,4 +7,3 @@
 ## Function Layer
 
 ![Function Layer](https://raw.githubusercontent.com/cozykeys/bloomer/master/keymaps/v3/default/bloomer_layer_fn.svg)
-

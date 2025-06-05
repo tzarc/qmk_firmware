@@ -27,5 +27,3 @@
 #    define WS2812_PWM_DMA_CHANNEL 3  // DMA Channel for TIMx_UP, see the respective reference manual for the appropriate values for your MCU.
 
 #endif
-
-

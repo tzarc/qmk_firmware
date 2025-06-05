@@ -14,4 +14,3 @@
 
 ## FN3 Layer - Multimedia
 [Imgur](https://i.imgur.com/K0jfHIO.png)
-

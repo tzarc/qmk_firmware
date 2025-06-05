@@ -26,4 +26,3 @@
 #define CH_CFG_TIME_QUANTUM 20
 
 #include_next <chconf.h>
-

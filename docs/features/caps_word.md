@@ -186,4 +186,3 @@ void caps_word_set_user(bool active) {
     }
 }
 ```
-

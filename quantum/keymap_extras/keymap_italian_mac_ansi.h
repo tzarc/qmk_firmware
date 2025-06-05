@@ -191,4 +191,3 @@
 #define IT_CUAC S(A(IT_M))    // Ú
 #define IT_MDDT S(A(IT_DOT))  // ·
 #define IT_MDSH S(A(IT_MINS)) // —
-

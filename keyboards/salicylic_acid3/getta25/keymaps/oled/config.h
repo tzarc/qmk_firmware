@@ -22,4 +22,3 @@
 #define TAPPING_TERM 180
 
 #define OLED_FONT_H "keyboards/salicylic_acid3/getta25/keymaps/oled/glcdfont.c"
-

@@ -3,5 +3,3 @@
 # Default RAMA M10-B Layout
 
 This is an example layout.
-
-

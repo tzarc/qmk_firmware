@@ -50,7 +50,3 @@ Needs updating
     - The new shortcut can be found under services, set it to one of the shortcuts I listed above and done
 - The same applies for applications in the Name (search) just type the application you want to have as shortcut. Don't forget to run it, then do the same steps
   to set it up as a shortcut.
-
-
-
-

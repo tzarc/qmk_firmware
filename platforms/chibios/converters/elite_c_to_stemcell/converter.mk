@@ -15,4 +15,3 @@ endif
 ifeq ($(strip $(STMC_IS)), yes)
   OPT_DEFS += -DSTEMCELL_I2C_SWAP
 endif
-

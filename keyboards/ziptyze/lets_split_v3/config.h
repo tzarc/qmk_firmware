@@ -21,4 +21,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SERIAL_USART_TX_PIN GP16
 #define SERIAL_USART_RX_PIN GP17
 #define SERIAL_USART_PIN_SWAP
-

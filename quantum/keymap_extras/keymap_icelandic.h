@@ -112,4 +112,3 @@
 #define IS_GRV  ALGR(IS_PLUS) // ` (dead)
 #define IS_PIPE ALGR(IS_LABK) // |
 #define IS_MICR ALGR(IS_M)    // µ
-

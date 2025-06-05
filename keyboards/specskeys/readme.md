@@ -38,4 +38,3 @@ If you want one, please contact me per mail. (Git profile)
 ![FOTO1](https://github.com/specs32/specs_keys/blob/main/photo_2021-05-04_18-33-33.jpg)
 
 ![FOTO2](https://github.com/specs32/specs_keys/blob/main/photo_2021-05-04_18-33-43.jpg)
-

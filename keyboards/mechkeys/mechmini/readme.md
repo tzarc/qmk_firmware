@@ -24,5 +24,3 @@ See [build environment setup](https://docs.qmk.fm/#/getting_started_build_tools)
 ## Mechmini Notes
 
 There are 2 versions of the Mechmini keyboard.  Please read the readme for the version you have for make instructions.
-
-

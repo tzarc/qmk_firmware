@@ -109,4 +109,3 @@
 #define JP_RABK S(JP_DOT)  // >
 #define JP_QUES S(JP_SLSH) // ?
 #define JP_UNDS S(JP_BSLS) // _
-

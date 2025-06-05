@@ -22,4 +22,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define CH_CFG_INTERVALS_SIZE 16
 
 #include_next <chconf.h>
-

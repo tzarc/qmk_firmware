@@ -24,4 +24,3 @@ I designed switch plate and the middle plates so that they would be glued togeth
 The end result is not too bad, but there is a few things I would do differently. Gluing 3D printed plates wasn't a good idea. The switch layer is so thin, that it bends when all the switches are slotted. As a result, the keyboard is not entirely flat. I will replace the bottom plate by a metal one so I get more weight and rigidity.
 
 Even with acrylic, I think I will have the same issue. I might switch to screws + bolts that go all the way through.
-

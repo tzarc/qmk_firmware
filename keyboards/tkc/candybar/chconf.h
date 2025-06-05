@@ -42,4 +42,3 @@
 #define CH_CFG_USE_DYNAMIC FALSE
 
 #include_next <chconf.h>
-

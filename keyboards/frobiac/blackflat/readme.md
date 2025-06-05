@@ -26,6 +26,3 @@ Enter the bootloader in 2 ways:
 
 * **Physical reset button**: Briefly press the button between left-hand topmost ringfinger key and USB socket
 * **Keycode in layout**: Press the key mapped to `QK_BOOT` if it is available
-
-
-

@@ -113,4 +113,3 @@
 #define FI_TILD ALGR(FI_DIAE) // ~ (dead)
 #define FI_PIPE ALGR(FI_LABK) // |
 #define FI_MICR ALGR(FI_M)    // µ
-

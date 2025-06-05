@@ -28,4 +28,3 @@ Or you also can [switch them by following those instructions.](https://bepo.fr/w
 
 #### N.B.
 I have been using and fine tuned this layout for about a year, and I really enjoy it. 🙂    
-

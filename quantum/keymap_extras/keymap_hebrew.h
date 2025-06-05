@@ -110,4 +110,3 @@
 #define IL_VYOD ALGR(IL_AYIN) // ױ
 #define IL_DYOD ALGR(IL_YOD)  // ײ
 #define IL_DIV  ALGR(IL_DOT)  // ÷
-

@@ -20,4 +20,3 @@ Enter the bootloader in 2 ways:
 
 * **Physical reset button**: Briefly press the button on the back of the PCB - some may have pads you must short instead.
 * **Keycode in layout**: Hold the mod key (lowest key on the right island) and then tap `R`.
-

@@ -24,4 +24,3 @@
 #define HAL_USE_PWM YES
 
 #include_next <halconf.h>
-

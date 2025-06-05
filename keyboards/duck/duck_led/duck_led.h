@@ -13,4 +13,3 @@ enum Device {
 };
 
 void show(void);
-

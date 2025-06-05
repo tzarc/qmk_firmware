@@ -28,4 +28,3 @@ Enter bootloader mode by any of the following options -
 - When unplugged, holding the top-left key (typically ESC) while plugging in the keyboard
 - When already plugged in, pressing and releasing the reset button on the pcb bottom behind the CAPSLOCK / A-key region
 - When already plugged in, shorting out the two reset metal contacts near the 'z' key (accessible through the switch LED slot)
-

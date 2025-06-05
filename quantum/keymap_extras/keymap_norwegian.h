@@ -112,4 +112,3 @@
 #define NO_ACUT ALGR(NO_BSLS) // ´ (dead)
 #define NO_TILD ALGR(NO_DIAE) // ~ (dead)
 #define NO_MICR ALGR(NO_M)    // µ
-

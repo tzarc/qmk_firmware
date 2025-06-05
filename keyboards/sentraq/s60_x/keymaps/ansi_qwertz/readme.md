@@ -88,7 +88,3 @@ To turn this layer on, please use the combination `Fn+RShift`, not `Space+RShift
 This is the function layer for German diacritics. It can be accessed via the `Fn` or by holding `Space` on the base layer.
 
 ![function_layer](https://i.imgur.com/abpqBDE.png)
-
-
-
-

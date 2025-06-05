@@ -85,5 +85,3 @@ void keyboard_post_init_user(void) {
     rgblight_enable();
 }
 #endif // endif RGBLIGHT_ENABLE
-
-

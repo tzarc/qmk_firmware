@@ -20,4 +20,3 @@ Key Lock is only able to hold standard action keys and [One Shot modifier](../on
 This does not include any of the QMK special functions (except One Shot modifiers), or shifted versions of keys such as `KC_LPRN`. If it's in the [Basic Keycodes](../keycodes_basic) list, it can be held.
 
 Switching layers will not cancel the Key Lock. The Key Lock can be cancelled by calling the `cancel_key_lock()` function.
-

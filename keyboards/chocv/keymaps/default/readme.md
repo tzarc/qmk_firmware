@@ -18,7 +18,3 @@ Repo](https://github.com/manna-harbour/miryoku_qmk/tree/miryoku/users/manna-harb
 The command to build with the default Miryoku layout is:
 
 make chocv:manna-habour_miryoku
-
-
-
-

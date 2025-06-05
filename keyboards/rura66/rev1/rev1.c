@@ -31,4 +31,3 @@ void set_mac_mode(bool macmode) {
         keymap_config.swap_lalt_lgui = keymap_config.swap_ralt_rgui = true;
     }
 }
-

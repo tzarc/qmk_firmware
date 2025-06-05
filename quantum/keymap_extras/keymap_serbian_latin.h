@@ -125,4 +125,3 @@
 #define RS_LCBR ALGR(RS_B)    // {
 #define RS_RCBR ALGR(RS_N)    // }
 #define RS_SECT ALGR(RS_M)    // §
-

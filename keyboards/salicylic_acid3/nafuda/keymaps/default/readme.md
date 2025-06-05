@@ -30,5 +30,3 @@
 |         | RGB_VAD |        |
 | Adjust  | RGB_SAD | RGB_VAI|
 | RGB_MOD | RGB_TOG | RGB_SAI|
-
-

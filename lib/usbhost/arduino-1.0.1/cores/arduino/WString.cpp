@@ -641,5 +641,3 @@ long String::toInt(void) const
 	if (buffer) return atol(buffer);
 	return 0;
 }
-
-

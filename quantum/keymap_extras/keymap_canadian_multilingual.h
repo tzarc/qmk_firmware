@@ -177,4 +177,3 @@
 #define CA_MORD RCTL(S(CA_M))    // º
 #define CA_MUL  RCTL(S(CA_COMM)) // ×
 #define CA_DIV  RCTL(S(CA_DOT))  // ÷
-

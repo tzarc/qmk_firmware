@@ -121,4 +121,3 @@
 #define GR_RDAQ ALGR(GR_RBRC) // »
 #define GR_NOT  ALGR(GR_BSLS) // ¬
 #define GR_COPY ALGR(GR_PSI)  // ©
-

@@ -21,4 +21,3 @@ const keypos_t PROGMEM hand_swap_config[MATRIX_ROWS][MATRIX_COLS] = {
     {{1, 3}, {0, 3}, {2, 3}, {3, 3}, {4, 3}}
 };
 #endif
-
