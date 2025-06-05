@@ -11,3 +11,4 @@ pygments
 pyserial
 pyusb
 pillow
+pre-commit
