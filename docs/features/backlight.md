@@ -4,13 +4,39 @@ Many keyboards support backlit keys by way of individual LEDs placed through or 
 
 QMK is able to control the brightness of these LEDs by switching them on and off rapidly in a certain ratio, a technique known as *Pulse Width Modulation*, or PWM. By altering the duty cycle of the PWM signal, it creates the illusion of dimming.
 
+::: info Modern JSON Configuration
+This documentation now shows the modern JSON-based configuration approach. All examples use `keyboard.json` or `info.json` configuration with legacy `config.h`/`rules.mk` alternatives provided for reference. For more information about data-driven configuration, see [Data Driven Configuration](data_driven_config).
+:::
+
 ## Usage {#usage}
 
+### Modern Configuration (Recommended)
+
+Configure backlight in your `keyboard.json` or `info.json`:
+
+```json
+{
+    "features": {
+        "backlight": true
+    },
+    "backlight": {
+        "pin": "B5",
+        "levels": 7,
+        "breathing": true,
+        "driver": "pwm"
+    }
+}
+```
+
+::: details Legacy Configuration
 Most keyboards have backlighting enabled by default if they support it, but if it is not working for you (or you have added support), check that your `rules.mk` includes the following:
 
 ```make
 BACKLIGHT_ENABLE = yes
 ```
+
+This method is still supported but consider migrating to the JSON configuration above.
+:::
 
 ## Keycodes {#keycodes}
 
@@ -24,8 +50,47 @@ BACKLIGHT_ENABLE = yes
 |`QK_BACKLIGHT_DOWN`            |`BL_DOWN`|Decrease the backlight level       |
 |`QK_BACKLIGHT_TOGGLE_BREATHING`|`BL_BRTG`|Toggle backlight breathing         |
 
-## Basic Configuration {#basic-configuration}
+## Configuration {#configuration}
 
+### Modern Configuration (Recommended)
+
+Configure backlight options in your `keyboard.json` or `info.json`:
+
+```json
+{
+    "backlight": {
+        "pin": "A10",
+        "levels": 5,
+        "breathing": true,
+        "breathing_period": 6,
+        "on_state": 1,
+        "max_brightness": 255,
+        "as_caps_lock": false,
+        "driver": "pwm",
+        "default": {
+            "on": true,
+            "breathing": false,
+            "brightness": 5
+        }
+    }
+}
+```
+
+### Configuration Reference
+
+* `"pin"` - The GPIO pin that controls the LEDs
+* `"levels"` - The number of brightness levels (1-31, excluding off)
+* `"breathing"` - Enable backlight breathing effect
+* `"breathing_period"` - Length of one breathing cycle in seconds
+* `"on_state"` - Pin state when LEDs are on (`1` for high, `0` for low)
+* `"max_brightness"` - Maximum PWM duty cycle (0-255)
+* `"as_caps_lock"` - Use backlight as Caps Lock indicator
+* `"driver"` - Driver to use (`"pwm"`, `"timer"`, `"software"`, `"custom"`)
+* `"default.on"` - Default enabled state
+* `"default.breathing"` - Default breathing state
+* `"default.brightness"` - Default brightness level
+
+::: details Legacy config.h Configuration
 Add the following to your `config.h`:
 
 |Define                       |Default           |Description                                                                                                      |
@@ -43,16 +108,33 @@ Add the following to your `config.h`:
 
 Unless you are designing your own keyboard, you generally should not need to change the `BACKLIGHT_PIN` or `BACKLIGHT_ON_STATE`.
 
+This method is still supported but consider migrating to the JSON configuration above.
+:::
+
 ### "On" State {#on-state}
 
 Most backlight circuits are driven by an N-channel MOSFET or NPN transistor. This means that to turn the transistor *on* and light the LEDs, you must drive the backlight pin, connected to the gate or base, *high*.
 Sometimes, however, a P-channel MOSFET, or a PNP transistor is used. In this case, when the transistor is on, the pin is driven *low* instead.
 
+### Modern "On" State Configuration
+
+Configure the "on" state in your `keyboard.json`:
+
+```json
+{
+    "backlight": {
+        "on_state": 0
+    }
+}
+```
+
+::: details Legacy config.h Configuration
 To configure the "on" state of the backlight circuit, add the following to your `config.h`:
 
 ```c
 #define BACKLIGHT_ON_STATE 0
 ```
+:::
 
 ### Multiple Backlight Pins {#multiple-backlight-pins}
 
@@ -61,47 +143,137 @@ The `timer` and `software` drivers allow you to define multiple backlight pins, 
 
 This feature allows to set, for instance, the Caps Lock LED's (or any other controllable LED) brightness at the same level as the other LEDs of the backlight. This is useful if you have mapped Control in place of Caps Lock and you need the Caps Lock LED to be part of the backlight instead of being activated when Caps Lock is on, as it is usually wired to a separate pin from the backlight.
 
+#### Modern Configuration
+
+Configure multiple backlight pins in your `keyboard.json`:
+
+```json
+{
+    "backlight": {
+        "pins": ["F5", "B2"],
+        "driver": "timer"
+    }
+}
+```
+
+::: details Legacy config.h Configuration
 To configure multiple backlight pins, add something like this to your `config.h`, instead of `BACKLIGHT_PIN`:
 
 ```c
 #define BACKLIGHT_PINS { F5, B2 }
 ```
+:::
 
 ## Driver Configuration {#driver-configuration}
 
-Backlight driver selection is configured in `rules.mk`. Valid drivers are `pwm` (default), `timer`, `software`, or `custom`. See below for information on individual drivers.
+### Modern Configuration (Recommended)
 
-### PWM Driver {#pwm-driver}
+Configure backlight driver in your `keyboard.json`:
 
-This is the default backlight driver, which leverages the hardware PWM output capability of the microcontroller.
+```json
+{
+    "backlight": {
+        "driver": "pwm"
+    }
+}
+```
+
+Valid drivers are `pwm` (default), `timer`, `software`, or `custom`. See below for information on individual drivers.
+
+::: details Legacy rules.mk Configuration
+Backlight driver selection is configured in `rules.mk`:
 
 ```make
 BACKLIGHT_DRIVER = pwm
 ```
 
+This method is still supported but consider migrating to the JSON configuration above.
+:::
+
+### PWM Driver {#pwm-driver}
+
+This is the default backlight driver, which leverages the hardware PWM output capability of the microcontroller.
+
+#### Modern Configuration
+
+```json
+{
+    "backlight": {
+        "driver": "pwm",
+        "pin": "B5"
+    }
+}
+```
+
+::: details Legacy rules.mk Configuration
+```make
+BACKLIGHT_DRIVER = pwm
+```
+:::
+
 ### Timer Driver {#timer-driver}
 
 This driver is similar to the PWM driver, but instead of directly configuring the pin to output a PWM signal, an interrupt handler is attached to the timer to turn the pin on and off as appropriate.
 
+#### Modern Configuration
+
+```json
+{
+    "backlight": {
+        "driver": "timer",
+        "pins": ["F4", "F5"]
+    }
+}
+```
+
+::: details Legacy rules.mk Configuration
 ```make
 BACKLIGHT_DRIVER = timer
 ```
+:::
 
 ### Software Driver {#software-driver}
 
 In this mode, PWM is "emulated" while running other keyboard tasks. It offers maximum hardware compatibility without extra platform configuration. However, breathing is not supported, and the backlight can flicker when the keyboard is busy.
 
+#### Modern Configuration
+
+```json
+{
+    "backlight": {
+        "driver": "software",
+        "pin": "GP9"
+    }
+}
+```
+
+::: details Legacy rules.mk Configuration
 ```make
 BACKLIGHT_DRIVER = software
 ```
+:::
 
 ### Custom Driver {#custom-driver}
 
 If none of the above drivers apply to your board (for example, you are using a separate IC to control the backlight), you can implement a custom backlight driver using a simple API.
 
+#### Modern Configuration
+
+```json
+{
+    "backlight": {
+        "driver": "custom"
+    }
+}
+```
+
+You must implement the backlight API in your keyboard's C code.
+
+::: details Legacy rules.mk Configuration
 ```make
 BACKLIGHT_DRIVER = custom
 ```
+:::
 
 ```c
 void backlight_init_ports(void) {

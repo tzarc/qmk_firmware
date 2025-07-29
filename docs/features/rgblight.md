@@ -6,6 +6,10 @@ QMK has the ability to control RGB LEDs attached to your keyboard. This is commo
 
 Some keyboards come with RGB LEDs preinstalled. Others must have them installed after the fact. See the [Hardware Modification](#hardware-modification) section for information on adding RGB lighting to your keyboard.
 
+::: info Modern JSON Configuration
+This documentation now shows the modern JSON-based configuration approach. All examples use `info.json` or `keyboard.json` configuration with legacy `config.h`/`rules.mk` alternatives provided for reference. For more information about data-driven configuration, see [Data Driven Configuration](data_driven_config).
+:::
+
 Currently QMK supports the following addressable LEDs:
 
  * WS2811, WS2812, WS2812B, WS2812C, etc.
@@ -16,15 +20,62 @@ These LEDs are called "addressable" because instead of using a wire per color, e
 
 ## Usage
 
+### Modern Configuration (Recommended)
+
+Configure RGB Lighting in your `keyboard.json` or `info.json`:
+
+```json
+{
+    "features": {
+        "rgblight": true
+    },
+    "ws2812": {
+        "pin": "B5"
+    },
+    "rgblight": {
+        "led_count": 10,
+        "saturation_steps": 8,
+        "brightness_steps": 8,
+        "animations": {
+            "breathing": true,
+            "rainbow_mood": true,
+            "rainbow_swirl": true,
+            "snake": true,
+            "knight": true,
+            "christmas": true,
+            "static_gradient": true,
+            "rgb_test": true,
+            "alternating": true,
+            "twinkle": true
+        }
+    }
+}
+```
+
+For APA102 LEDs:
+
+```json
+{
+    "features": {
+        "rgblight": true
+    },
+    "apa102": {
+        "data_pin": "B5",
+        "clock_pin": "B6"
+    },
+    "rgblight": {
+        "driver": "apa102",
+        "led_count": 10
+    }
+}
+```
+
+::: details Legacy Configuration
 On keyboards with onboard RGB LEDs, it is usually enabled by default. If it is not working for you, check that your `rules.mk` includes the following:
 
 ```make
 RGBLIGHT_ENABLE = yes
 ```
-
-::: tip
-There are additional configuration options for ARM controllers that offer increased performance over the default WS2812 bitbang driver. Please see [WS2812 Driver](../drivers/ws2812) for more information.
-:::
 
 For APA102 LEDs, add the following to your `rules.mk`:
 
@@ -33,7 +84,7 @@ RGBLIGHT_ENABLE = yes
 RGBLIGHT_DRIVER = apa102
 ```
 
-At minimum you must define the data pin your LED strip is connected to, and the number of LEDs in the strip, in your `config.h`. For APA102 LEDs, you must also define the clock pin. If your keyboard has onboard RGB LEDs, and you are simply creating a keymap, you usually won't need to modify these.
+At minimum you must define the data pin your LED strip is connected to, and the number of LEDs in the strip, in your `config.h`. For APA102 LEDs, you must also define the clock pin.
 
 |Define              |Description                                                              |
 |--------------------|-------------------------------------------------------------------------|
@@ -42,6 +93,13 @@ At minimum you must define the data pin your LED strip is connected to, and the 
 |`APA102_CI_PIN`     |The pin connected to the clock pin of the LEDs (APA102)                  |
 |`RGBLIGHT_LED_COUNT`|The number of LEDs connected                                             |
 |`RGBLED_SPLIT`      |(Optional) For split keyboards, the number of LEDs connected on each half|
+
+This method is still supported but consider migrating to the JSON configuration above.
+:::
+
+::: tip
+There are additional configuration options for ARM controllers that offer increased performance over the default WS2812 bitbang driver. Please see [WS2812 Driver](../drivers/ws2812) for more information.
+:::
 
 Then you should be able to use the keycodes below to change the RGB lighting to your liking.
 
@@ -93,6 +151,61 @@ These keycodes cannot be used with functions like `tap_code16()` as they are not
 
 ## Configuration
 
+### Modern Configuration (Recommended)
+
+Configure RGB Lighting options in your `keyboard.json` or `info.json`:
+
+```json
+{
+    "rgblight": {
+        "led_count": 40,
+        "hue_steps": 8,
+        "saturation_steps": 17,
+        "brightness_steps": 17,
+        "max_brightness": 255,
+        "sleep": true,
+        "split": true,
+        "split_count": [20, 20],
+        "led_map": [4, 3, 2, 1, 0],
+        "default": {
+            "on": true,
+            "animation": "static_light",
+            "hue": 0,
+            "sat": 255,
+            "val": 255,
+            "speed": 0
+        },
+        "layers": {
+            "enabled": true,
+            "max": 8,
+            "blink": false
+        }
+    }
+}
+```
+
+### Configuration Reference
+
+* `"led_count"` - The number of LEDs in the chain (required)
+* `"hue_steps"` - The value by which to increment the hue per adjustment action
+* `"saturation_steps"` - The value by which to increment the saturation per adjustment action  
+* `"brightness_steps"` - The value by which to increment the brightness per adjustment action
+* `"max_brightness"` - The maximum brightness level (0-255)
+* `"sleep"` - Turn off RGB lighting when the host goes to sleep
+* `"split"` - Enable synchronization functionality for split keyboards
+* `"split_count"` - For split keyboards, the number of LEDs on each half `[left, right]`
+* `"led_map"` - Remap LED indices (array of numbers)
+* `"default.on"` - Enable RGB lighting by default
+* `"default.animation"` - The default effect name
+* `"default.hue"` - The default hue value (0-255)
+* `"default.sat"` - The default saturation value (0-255)  
+* `"default.val"` - The default brightness value (0-255)
+* `"default.speed"` - The default animation speed (0-255)
+* `"layers.enabled"` - Enable RGB Lighting layers
+* `"layers.max"` - Maximum layer count (1-32)
+* `"layers.blink"` - Enable layer blinking API
+
+::: details Legacy config.h Configuration
 Your RGB lighting can be configured by placing these `#define`s in your `config.h`:
 
 |Define                     |Default                     |Description                                                                                                                |
@@ -110,33 +223,61 @@ Your RGB lighting can be configured by placing these `#define`s in your `config.
 |`RGBLIGHT_DEFAULT_SPD`     |`0`                         |The default speed to use upon clearing the EEPROM                                                                          |
 |`RGBLIGHT_DEFAULT_ON`      |`true`                      |Enable RGB lighting upon clearing the EEPROM                                                                               |
 
+This method is still supported but consider migrating to the JSON configuration above.
+:::
+
 ## Effects and Animations
 
-Not only can this lighting be whatever color you want,
-if `RGBLIGHT_EFFECT_xxxx` is defined, you also have a number of animation modes at your disposal:
+### Modern Configuration (Recommended)
 
-|Mode number symbol           |Additional number  |Description                            |
-|-----------------------------|-------------------|---------------------------------------|
-|`RGBLIGHT_MODE_STATIC_LIGHT` | *None*            |Solid color (this mode is always enabled) |
-|`RGBLIGHT_MODE_BREATHING`    | 0,1,2,3           |Solid color breathing                  |
-|`RGBLIGHT_MODE_RAINBOW_MOOD` | 0,1,2             |Cycling rainbow                        |
-|`RGBLIGHT_MODE_RAINBOW_SWIRL`| 0,1,2,3,4,5       |Swirling rainbow                       |
-|`RGBLIGHT_MODE_SNAKE`        | 0,1,2,3,4,5       |Snake                                  |
-|`RGBLIGHT_MODE_KNIGHT`       | 0,1,2             |Knight                                 |
-|`RGBLIGHT_MODE_CHRISTMAS`    | *None*            |Christmas                              |
-|`RGBLIGHT_MODE_STATIC_GRADIENT`| 0,1,..,9        |Static gradient                        |
-|`RGBLIGHT_MODE_RGB_TEST`     | *None*            |RGB Test                               |
-|`RGBLIGHT_MODE_ALTERNATING`  | *None*            |Alternating                            |
-|`RGBLIGHT_MODE_TWINKLE`      | 0,1,2,3,4,5       |Twinkle                                |
+Enable specific animations in your `keyboard.json` or `info.json`:
+
+```json
+{
+    "rgblight": {
+        "animations": {
+            "alternating": true,
+            "breathing": true,
+            "christmas": true,
+            "knight": true,
+            "rainbow_mood": true,
+            "rainbow_swirl": true,
+            "rgb_test": true,
+            "snake": true,
+            "static_gradient": true,
+            "twinkle": true
+        }
+    }
+}
+```
+
+### Available Animations
+
+Not only can this lighting be whatever color you want, you also have a number of animation modes at your disposal:
+
+|Animation name       |Description                            |Legacy symbol                |
+|---------------------|---------------------------------------|-----------------------------|
+|`static_light`       |Solid color (always enabled)          |`RGBLIGHT_MODE_STATIC_LIGHT` |
+|`breathing`          |Solid color breathing                  |`RGBLIGHT_MODE_BREATHING`    |
+|`rainbow_mood`       |Cycling rainbow                        |`RGBLIGHT_MODE_RAINBOW_MOOD` |
+|`rainbow_swirl`      |Swirling rainbow                       |`RGBLIGHT_MODE_RAINBOW_SWIRL`|
+|`snake`              |Snake                                  |`RGBLIGHT_MODE_SNAKE`        |
+|`knight`             |Knight Rider effect                    |`RGBLIGHT_MODE_KNIGHT`       |
+|`christmas`          |Christmas colors                       |`RGBLIGHT_MODE_CHRISTMAS`    |
+|`static_gradient`    |Static gradient                        |`RGBLIGHT_MODE_STATIC_GRADIENT`|
+|`rgb_test`           |RGB Test                               |`RGBLIGHT_MODE_RGB_TEST`     |
+|`alternating`        |Alternating colors                     |`RGBLIGHT_MODE_ALTERNATING`  |
+|`twinkle`            |Twinkling effect                       |`RGBLIGHT_MODE_TWINKLE`      |
 
 Check out [this video](https://youtube.com/watch?v=VKrpPAHlisY) for a demonstration.
 
-Note: For versions older than 0.6.117, The mode numbers were written directly. In `quantum/rgblight/rgblight.h` there is a contrast table between the old mode number and the current symbol.
 
+### Animation Control
 
-### Effect and Animation Toggles
+When you are running low on flash space, it can be helpful to disable animations you are not using. With the modern JSON configuration, simply set animations to `false` or omit them entirely.
 
-Use these defines to add or remove animations from the firmware. When you are running low on flash space, it can be helpful to disable animations you are not using.
+::: details Legacy config.h Animation Toggles
+Use these defines to add or remove animations from the firmware:
 
 |Define                              |Default      |Description                                                              |
 |------------------------------------|-------------|-------------------------------------------------------------------------|
@@ -151,6 +292,9 @@ Use these defines to add or remove animations from the firmware. When you are ru
 |`RGBLIGHT_EFFECT_SNAKE`             |*Not defined*|Enable snake animation mode.                                             |
 |`RGBLIGHT_EFFECT_STATIC_GRADIENT`   |*Not defined*|Enable static gradient mode.                                             |
 |`RGBLIGHT_EFFECT_TWINKLE`           |*Not defined*|Enable twinkle animation mode.                                           |
+
+This method is still supported but consider migrating to the JSON configuration above.
+:::
 
 ::: warning
 `RGBLIGHT_ANIMATIONS` is being deprecated and animation modes should be explicitly defined.

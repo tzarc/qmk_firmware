@@ -1,5 +1,27 @@
 # Encoders
 
+::: info Modern JSON Configuration
+This documentation now shows the modern JSON-based configuration approach. All examples use `keyboard.json` or `info.json` configuration with legacy `config.h`/`rules.mk` alternatives provided for reference. For more information about data-driven configuration, see [Data Driven Configuration](data_driven_config).
+:::
+
+### Modern Configuration (Recommended)
+
+Configure encoders in your `keyboard.json`:
+
+```json
+{
+    "features": {
+        "encoder": true
+    },
+    "encoder": {
+        "rotary": [
+            {"pin_a": "B12", "pin_b": "B13"}
+        ]
+    }
+}
+```
+
+::: details Legacy rules.mk/config.h Configuration
 Basic (EC11 compatible) encoders are supported by adding this to your `rules.mk`:
 
 ```make
@@ -13,50 +35,116 @@ and this to your `config.h`:
 #define ENCODER_B_PINS { B13 }
 ```
 
-Each PAD_A/B variable defines an array so multiple encoders can be defined, e.g.:
+This method is still supported but consider migrating to the JSON configuration above.
+:::
 
+Configure multiple encoders by adding more entries to the rotary array:
+
+```json
+{
+    "encoder": {
+        "rotary": [
+            {"pin_a": "B6", "pin_b": "B2"},
+            {"pin_a": "B3", "pin_b": "B1"}
+        ]
+    }
+}
+```
+
+### Configuration Options
+
+::: warning
+Direction configuration is not currently available in JSON format. If your encoder's clockwise directions are incorrect, swap the A & B pad definitions or use C code configuration with `#define ENCODER_DIRECTION_FLIP`.
+:::
+
+Configure the resolution (pulses between each detent):
+
+```json
+{
+    "encoder": {
+        "rotary": [
+            {"pin_a": "B12", "pin_b": "B13", "resolution": 4}
+        ]
+    }
+}
+```
+
+For different resolutions per encoder:
+
+```json
+{
+    "encoder": {
+        "rotary": [
+            {"pin_a": "B6", "pin_b": "B2", "resolution": 4},
+            {"pin_a": "B3", "pin_b": "B1", "resolution": 2}
+        ]
+    }
+}
+```
+
+::: details Legacy config.h Configuration
 ```c
 #define ENCODER_A_PINS { encoder1a, encoder2a }
 #define ENCODER_B_PINS { encoder1b, encoder2b }
-```
-
-If your encoder's clockwise directions are incorrect, you can swap the A & B pad definitions.  They can also be flipped with a define:
-
-```c
 #define ENCODER_DIRECTION_FLIP
-```
-
-Additionally, the resolution, which defines how many pulses the encoder registers between each detent, can be defined with:
-
-```c
 #define ENCODER_RESOLUTION 4
-```
-
-It can also be defined per-encoder, by instead defining:
-
-```c
 #define ENCODER_RESOLUTIONS { 4, 2 }
-```
-
-For 4× encoders you also can assign default position if encoder skips pulses when it changes direction. For example, if your encoder send high level on both pins by default, define this:
-
-```c
 #define ENCODER_DEFAULT_POS 0x3
 ```
+:::
 
 ## Split Keyboards
 
-If you are using different pinouts for the encoders on each half of a split keyboard, you can define the pinout (and optionally, resolutions) for the right half like this:
+### Modern Configuration
 
+Configure different encoders for each half of a split keyboard:
+
+```json
+{
+    "encoder": {
+        "rotary": [
+            {"pin_a": "B6", "pin_b": "B2", "resolution": 4}
+        ]
+    },
+    "split": {
+        "encoder": {
+            "right": {
+                "rotary": [
+                    {"pin_a": "B3", "pin_b": "B1", "resolution": 2}
+                ]
+            }
+        }
+    }
+}
+```
+
+For a split keyboard with only a right-side encoder:
+
+```json
+{
+    "encoder": {
+        "rotary": []
+    },
+    "split": {
+        "encoder": {
+            "right": {
+                "rotary": [
+                    {"pin_a": "B12", "pin_b": "B13", "resolution": 4}
+                ]
+            }
+        }
+    }
+}
+```
+
+::: details Legacy config.h Configuration
 ```c
 #define ENCODER_A_PINS_RIGHT { encoder1a, encoder2a }
 #define ENCODER_B_PINS_RIGHT { encoder1b, encoder2b }
 #define ENCODER_RESOLUTIONS_RIGHT { 2, 4 }
 ```
 
-If the `_RIGHT` definitions aren't specified in your `config.h`, then the non-`_RIGHT` versions will be applied to both sides of the split.
-
-Additionally, if one side does not have an encoder, you can specify `{}` for the pins/resolution -- for example, a split keyboard with only a right-side encoder:
+For a split keyboard with only a right-side encoder:
 
 ```c
 #define ENCODER_A_PINS { }
@@ -66,6 +154,7 @@ Additionally, if one side does not have an encoder, you can specify `{}` for the
 #define ENCODER_B_PINS_RIGHT { B13 }
 #define ENCODER_RESOLUTIONS_RIGHT { 4 }
 ```
+:::
 
 ::: warning
 Keep in mind that whenver you change the encoder resolution, you will need to reflash the half that has the encoder affected by the change.
@@ -73,11 +162,27 @@ Keep in mind that whenver you change the encoder resolution, you will need to re
 
 ## Encoder map {#encoder-map}
 
-Encoder mapping may be added to your `keymap.c`, which replicates the normal keyswitch layer handling functionality, but with encoders. Add this to your keymap's `rules.mk`:
+Encoder mapping may be added to your `keymap.c`, which replicates the normal keyswitch layer handling functionality, but with encoders.
+
+### Modern Configuration
+
+Enable encoder map in your `keymap.json`:
+
+```json
+{
+    "features": {
+        "encoder_map": true
+    }
+}
+```
+
+::: details Legacy rules.mk Configuration
+Add this to your keymap's `rules.mk`:
 
 ```make
 ENCODER_MAP_ENABLE = yes
 ```
+:::
 
 Your `keymap.c` will then need an encoder mapping defined (for four layers and two encoders):
 
@@ -96,11 +201,19 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 This should only be enabled at the keymap level.
 :::
 
-Using encoder mapping pumps events through the normal QMK keycode processing pipeline, resulting in a _keydown/keyup_ combination pushed through `process_record_xxxxx()`. To configure the amount of time between the encoder "keyup" and "keydown", you can add the following to your `config.h`:
+Using encoder mapping pumps events through the normal QMK keycode processing pipeline, resulting in a _keydown/keyup_ combination pushed through `process_record_xxxxx()`.
+
+::: warning
+Encoder map key delay configuration is not currently available in JSON format and requires C code configuration using `#define ENCODER_MAP_KEY_DELAY`.
+:::
+
+::: details Legacy config.h Configuration
+To configure the amount of time between the encoder "keyup" and "keydown", you can add the following to your `config.h`:
 
 ```c
 #define ENCODER_MAP_KEY_DELAY 10
 ```
+:::
 
 ::: tip
 By default, the encoder map delay matches the value of `TAP_CODE_DELAY`.

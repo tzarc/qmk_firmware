@@ -1,13 +1,63 @@
 # Audio
 
+::: info Modern JSON Configuration
+This documentation now shows the modern JSON-based configuration approach. All examples use `keyboard.json` or `info.json` configuration with legacy `config.h`/`rules.mk` alternatives provided for reference. For more information about data-driven configuration, see [Data Driven Configuration](data_driven_config).
+:::
+
 Your keyboard can make sounds! If you've got a spare pin you can hook up a simple speaker and make it beep. You can use those beeps to indicate layer transitions, modifiers, special keys, or just to play some funky 8bit tunes.
 
+### Modern Configuration (Recommended)
+
+Enable audio in your `keyboard.json`:
+
+```json
+{
+    "features": {
+        "audio": true
+    },
+    "audio": {
+        "pins": ["C6"]
+    }
+}
+```
+
+::: details Legacy rules.mk Configuration
 To activate this feature, add `AUDIO_ENABLE = yes` to your `rules.mk`.
+
+This method is still supported but consider migrating to the JSON configuration above.
+:::
 
 ## AVR based boards
 On Atmega32U4 based boards, up to two simultaneous tones can be rendered.
 With one speaker connected to a PWM capable pin on PORTC driven by timer 3 and the other on one of the PWM pins on PORTB driven by timer 1.
 
+#### Modern Pin Configuration
+
+Configure audio pins in your `keyboard.json` - for one speaker:
+
+```json
+{
+    "audio": {
+        "pins": ["C6"]
+    }
+}
+```
+
+Available pins: `C4`, `C5`, `C6`, `B5`, `B6`, `B7`
+
+For a second speaker (dual audio):
+
+```json
+{
+    "audio": {
+        "pins": ["C6", "B5"]
+    }
+}
+```
+
+Second speaker pins: `B5`, `B6`, `B7`
+
+::: details Legacy config.h Configuration
 The following pins can be configured as audio outputs in `config.h` - for one speaker set either one out of:
 
 * `#define AUDIO_PIN C4`
@@ -21,6 +71,7 @@ and *optionally*, for a second speaker, one of:
 * `#define AUDIO_PIN_ALT B5`
 * `#define AUDIO_PIN_ALT B6`
 * `#define AUDIO_PIN_ALT B7`
+:::
 
 ### Wiring
 per speaker is - for example with a piezo buzzer - the black lead to Ground, and the red lead connected to the selected AUDIO_PIN for the primary; and similarly with AUDIO_PIN_ALT for the secondary.
@@ -31,35 +82,97 @@ for more technical details, see the notes on [Audio driver](../drivers/audio).
 
 <!-- because I'm not sure where to fit this in: https://waveeditonline.com/ -->
 ### DAC (basic)
-Most STM32 MCUs have DAC peripherals, with a notable exception of the STM32F1xx series. Generally, the DAC peripheral drives pins A4 or A5. To enable DAC-based audio output on STM32 devices, add `AUDIO_DRIVER = dac_basic` to `rules.mk` and set in `config.h` either:
+Most STM32 MCUs have DAC peripherals, with a notable exception of the STM32F1xx series. Generally, the DAC peripheral drives pins A4 or A5.
+
+#### Modern Configuration
+
+Configure DAC basic audio in your `keyboard.json`:
+
+```json
+{
+    "audio": {
+        "driver": "dac_basic",
+        "pins": ["A5"]
+    }
+}
+```
+
+For dual DAC channels with secondary speaker:
+
+```json
+{
+    "audio": {
+        "driver": "dac_basic",
+        "pins": ["A5", "A4"]
+    }
+}
+```
+
+Available pins: `A4`, `A5`
+
+::: details Legacy rules.mk/config.h Configuration
+To enable DAC-based audio output on STM32 devices, add `AUDIO_DRIVER = dac_basic` to `rules.mk` and set in `config.h` either:
 
 `#define AUDIO_PIN A4` or `#define AUDIO_PIN A5`
 
 the other DAC channel can optionally be used with a secondary speaker, just set:
 
 `#define AUDIO_PIN_ALT A4` or `#define AUDIO_PIN_ALT A5`
+:::
 
 Do note though that the dac_basic driver is only capable of reproducing one tone per speaker/channel at a time, for more tones simultaneously, try the dac_additive driver.
 
 #### Wiring:
 for two piezos, for example configured as `AUDIO_PIN A4` and `AUDIO_PIN_ALT A5` would be: red lead to A4 and black to Ground, and similarly with the second one: A5 = red, and Ground = black
 
-another alternative is to drive *one* piezo with both DAC pins - for an extra "push".
-wiring red to A4 and black to A5 (or the other way round) and add `#define AUDIO_PIN_ALT_AS_NEGATIVE` to `config.h`
+Another alternative is to drive *one* piezo with both DAC pins for extra "push" - wire red to A4 and black to A5 (or the other way round). This requires additional C code configuration.
 
 ##### Proton-C Example:
-The Proton-C comes (optionally) with one 'builtin' piezo, which is wired to A4+A5.
-For this board `config.h` would include these defines:
+The Proton-C comes (optionally) with one 'builtin' piezo, which is wired to A4+A5:
 
+```json
+{
+    "audio": {
+        "driver": "dac_basic",
+        "pins": ["A5", "A4"]
+    }
+}
+```
+
+::: warning
+For dual-pin wiring configurations, additional C code configuration may be required using `#define AUDIO_PIN_ALT_AS_NEGATIVE`.
+:::
+
+::: details Legacy config.h Configuration
 ```c
 #define AUDIO_PIN A5
 #define AUDIO_PIN_ALT A4
 #define AUDIO_PIN_ALT_AS_NEGATIVE
 ```
+:::
 
 ### DAC (additive)
 Another option, besides dac_basic (which produces sound through a square-wave), is to use the DAC to do additive wave synthesis.
 With a number of predefined wave-forms or by providing your own implementation to generate samples on the fly.
+
+#### Modern Configuration
+
+Configure DAC additive audio in your `keyboard.json`:
+
+```json
+{
+    "audio": {
+        "driver": "dac_additive",
+        "pins": ["A4"]
+    }
+}
+```
+
+::: warning
+Waveform selection requires additional C code configuration using defines like `#define AUDIO_DAC_SAMPLE_WAVEFORM_SINE`.
+:::
+
+::: details Legacy rules.mk/config.h Configuration
 To use this feature set `AUDIO_DRIVER = dac_additive` in your `rules.mk`, and select in `config.h` EITHER `#define AUDIO_PIN A4` or `#define AUDIO_PIN A5`.
 
 The used waveform *defaults* to sine, but others can be selected by adding one of the following defines to `config.h`:
@@ -68,18 +181,36 @@ The used waveform *defaults* to sine, but others can be selected by adding one o
 * `#define AUDIO_DAC_SAMPLE_WAVEFORM_TRIANGLE`
 * `#define AUDIO_DAC_SAMPLE_WAVEFORM_TRAPEZOID`
 * `#define AUDIO_DAC_SAMPLE_WAVEFORM_SQUARE`
+:::
 
 Should you rather choose to generate and use your own sample-table with the DAC unit, implement `uint16_t dac_value_generate(void)` with your keyboard - for an example implementation see keyboards/planck/keymaps/synth_sample or keyboards/planck/keymaps/synth_wavetable
 
 
 ### PWM (software)
-if the DAC pins are unavailable (or the MCU has no usable DAC at all, like STM32F1xx); PWM can be an alternative.
+If the DAC pins are unavailable (or the MCU has no usable DAC at all, like STM32F1xx), PWM can be an alternative.
 Note that there is currently only one speaker/pin supported.
 
+#### Modern Configuration
+
+Configure PWM software audio in your `keyboard.json`:
+
+```json
+{
+    "audio": {
+        "driver": "pwm_software",
+        "pins": ["C13"]
+    }
+}
+```
+
+Any pin can be used - the selected pin will output a PWM signal generated from a timer callback.
+
+::: details Legacy rules.mk/config.h Configuration
 set in `rules.mk`:
 
 `AUDIO_DRIVER = pwm_software` and in `config.h`: 
 `#define AUDIO_PIN C13` (can be any pin) to have the selected pin output a pwm signal, generated from a timer callback which toggles the pin in software.
+:::
 
 #### Wiring
 the usual piezo wiring: red goes to the selected AUDIO_PIN, black goes to ground.
@@ -87,27 +218,52 @@ the usual piezo wiring: red goes to the selected AUDIO_PIN, black goes to ground
 OR if you can chose to drive one piezo with two pins, for example `#define AUDIO_PIN B1`, `#define AUDIO_PIN_ALT B2` in `config.h`, with `#define AUDIO_PIN_ALT_AS_NEGATIVE` - then the red lead could go to B1, the black to B2.
 
 ### PWM (hardware)
-STM32F1xx have to fall back to using PWM, but can do so in hardware; but again on currently only one speaker/pin.
+STM32F1xx have to fall back to using PWM, but can do so in hardware; but again only one speaker/pin is currently supported.
 
+#### Modern Configuration
+
+Configure PWM hardware audio in your `keyboard.json`:
+
+```json
+{
+    "audio": {
+        "driver": "pwm_hardware",
+        "pins": ["A8"]
+    }
+}
+```
+
+This will use Timer 1 to directly drive pin PA8 through the PWM hardware (TIM1_CH1 = PA8).
+
+::: details Legacy rules.mk/config.h Configuration
 `AUDIO_DRIVER = pwm_hardware` in `rules.mk`, and in `config.h`:
-`#define AUDIO_PIN A8`
-`#define AUDIO_PWM_DRIVER PWMD1`
-`#define AUDIO_PWM_CHANNEL 1`
+```c
+#define AUDIO_PIN A8
+#define AUDIO_PWM_DRIVER PWMD1
+#define AUDIO_PWM_CHANNEL 1
+```
 (as well as `#define AUDIO_PWM_PAL_MODE 42` if you are on STM32F2 or larger)
-which will use Timer 1 to directly drive pin PA8 through the PWM hardware (TIM1_CH1 = PA8).
+
 Should you want to use the pwm-hardware on another pin and timer - be ready to dig into the STM32 data-sheet to pick the right TIMx_CHy and pin-alternate function.
+:::
 
 
 ## Tone Multiplexing
 Since most drivers can only render one tone per speaker at a time (with the one exception: arm dac-additive) there also exists a "workaround-feature" that does time-slicing/multiplexing - which does what the name implies: cycle through a set of active tones (e.g. when playing chords in Music Mode) at a given rate, and put one tone at a time out through the one/few speakers that are available.
 
+::: warning
+Tone multiplexing configuration is not currently available in JSON format and requires C code configuration.
+:::
+
+The audio core offers interface functions to get/set/change the tone multiplexing rate from within `keymap.c`.
+
+::: details Legacy config.h Configuration
 To enable this feature, and configure a starting-rate, add the following defines to `config.h`:
 ```c
 #define AUDIO_ENABLE_TONE_MULTIPLEXING
 #define AUDIO_TONE_MULTIPLEXING_RATE_DEFAULT 10
 ```
-
-The audio core offers interface functions to get/set/change the tone multiplexing rate from within `keymap.c`.
+:::
 
 
 ## Songs
@@ -173,6 +329,38 @@ These keycodes turn all of the audio functionality on and off.  Turning it off m
 
 ## Audio Config
 
+### Modern Configuration (Recommended)
+
+Configure audio settings in your `keyboard.json`:
+
+```json
+{
+    "audio": {
+        "default": {
+            "on": true,
+            "clicky": false
+        },
+        "macro_beep": false,
+        "voices": true,
+        "power_control": {
+            "pin": "GP14",
+            "on_state": 1
+        }
+    }
+}
+```
+
+### Configuration Reference
+
+* `"default.on"` - Default audio enabled state
+* `"default.clicky"` - Default audio clicky mode state  
+* `"macro_beep"` - Enable beep sound when macros are played
+* `"voices"` - Enable audio voices/effects feature
+* `"power_control.pin"` - Pin for controlling speaker power (e.g., with amplifier)
+* `"power_control.on_state"` - Pin state when audio is on (`1` for high, `0` for low)
+
+::: details Legacy config.h Configuration
+
 | Settings                         | Default              | Description                                                                                 |
 |----------------------------------|----------------------|---------------------------------------------------------------------------------------------|
 |`AUDIO_PIN`                       | *Not defined*        |Configures the pin that the speaker is connected to.                                         |
@@ -199,8 +387,16 @@ These keycodes turn all of the audio functionality on and off.  Turning it off m
 |`DEFAULT_LAYER_SONGS`             | *Not defined*        |Plays song when switched default layers with [`set_single_persistent_default_layer(layer)`](../ref_functions#setting-the-persistent-default-layer)(quantum.c). |
 |`SENDSTRING_BELL`                 | *Not defined*        |Plays chime when the "enter" ("\a") character is sent (send_string.c)                        |
 
+This method is still supported but consider migrating to the JSON configuration above where possible.
+:::
+
 ## Tempo
-the 'speed' at which SONGs are played is dictated by the set Tempo, which is measured in beats-per-minute. Note lengths are defined relative to that.
+
+::: warning
+Tempo configuration is not currently available in JSON format and requires C code configuration.
+:::
+
+The 'speed' at which SONGs are played is dictated by the set Tempo, which is measured in beats-per-minute. Note lengths are defined relative to that.
 The initial/default tempo is set to 120 bpm, but can be configured by setting `TEMPO_DEFAULT` in `config.c`.
 There is also a set of functions to modify the tempo from within the user/keymap code:
 ```c
@@ -210,6 +406,10 @@ void audio_decrease_tempo(uint8_t tempo_change);
 ```
 
 ## ARM Audio Volume
+
+::: warning
+Audio volume configuration is not currently available in JSON format and requires C code configuration.
+:::
 
 For ARM devices, you can adjust the DAC sample values. If your board is too loud for you or your coworkers, you can set the max using `AUDIO_DAC_SAMPLE_MAX` in your `config.h`:
 
@@ -221,9 +421,26 @@ the DAC usually runs in 12Bit mode, hence a volume of 100% = 4095U
 Note: this only adjusts the volume aka 'works' if you stick to WAVEFORM_SQUARE, since its samples are generated on the fly - any other waveform uses a hardcoded/precomputed sample-buffer.
 
 ## Voices
+
+### Modern Configuration (Recommended)
+
+Enable audio voices (effects) in your `keyboard.json`:
+
+```json
+{
+    "audio": {
+        "voices": true
+    }
+}
+```
+
+::: details Legacy config.h Configuration
 Aka "audio effects", different ones can be enabled by setting in `config.h` these defines:
 `#define AUDIO_VOICES` to enable the feature, and `#define AUDIO_VOICE_DEFAULT something` to select a specific effect
 for details see quantum/audio/voices.h and .c
+
+This method is still supported but consider migrating to the JSON configuration above.
+:::
 
 Keycodes available:
 
@@ -233,6 +450,10 @@ Keycodes available:
 |`QK_AUDIO_VOICE_PREVIOUS`|`AU_PREV`|Cycles through the audio voices in reverse |
 
 ## Music Mode
+
+::: warning
+Music mode configuration is not currently available in JSON format and requires C code configuration.
+:::
 
 The music mode maps your columns to a chromatic scale, and your rows to octaves. This works best with ortholinear keyboards, but can be made to work with others. All keycodes less than `0xFF` get blocked, so you won't type while playing notes - if you have special keys/mods, those will still work. A work-around for this is to jump to a different layer with KC_NOs before (or after) enabling music mode.
 
@@ -322,7 +543,31 @@ You can look at the [Planck Keyboard](https://github.com/qmk/qmk_firmware/blob/e
 
 ## Audio Click
 
+### Modern Configuration (Recommended)
+
+Enable audio click (clicky) mode in your `keyboard.json`:
+
+```json
+{
+    "audio": {
+        "default": {
+            "clicky": true
+        }
+    }
+}
+```
+
+::: details Legacy config.h Configuration
 This adds a click sound each time you hit a button, to simulate click sounds from the keyboard. And the sounds are slightly different for each keypress, so it doesn't sound like a single long note, if you type rapidly. 
+
+The feature is disabled by default, to save space.  To enable it, add this to your `config.h`:
+
+```c
+#define AUDIO_CLICKY
+```
+
+This method is still supported but consider migrating to the JSON configuration above.
+:::
 
 Keycodes available:
 
@@ -335,11 +580,9 @@ Keycodes available:
 |`QK_AUDIO_CLICKY_DOWN`   |`CK_DOWN`|Decreases frequency of the clicks          |
 |`QK_AUDIO_CLICKY_RESET`  |`CK_RST` |Resets frequency to default                |
 
-The feature is disabled by default, to save space.  To enable it, add this to your `config.h`:
-
-```c
-#define AUDIO_CLICKY
-```
+::: warning
+Detailed audio clicky configuration options are not currently available in JSON format and require C code configuration.
+:::
 
 You can configure the default, min and max frequencies, the stepping and built in randomness by defining these values: 
 

@@ -1,5 +1,9 @@
 # Split Keyboard 
 
+::: info Modern JSON Configuration
+This documentation now shows the modern JSON-based configuration approach. All examples use `keyboard.json` or `info.json` configuration with legacy `config.h`/`rules.mk` alternatives provided for reference. For more information about data-driven configuration, see [Data Driven Configuration](data_driven_config).
+:::
+
 Many keyboards in the QMK Firmware repo are "split" keyboards. They use two controllers—one plugging into USB, and the second connected by a serial or an I<sup>2</sup>C connection over a TRRS or similar cable. 
 
 Split keyboards can have a lot of benefits, but there is some additional work needed to get them enabled.  
@@ -75,6 +79,37 @@ Note that the total resistance for the connected system should be within spec at
 
 ## Firmware Configuration
 
+### Modern Configuration (Recommended)
+
+Configure split keyboard in your `keyboard.json`:
+
+```json
+{
+    "features": {
+        "split_keyboard": true
+    },
+    "split": {
+        "enabled": true,
+        "serial": {
+            "pin": "D1"
+        }
+    }
+}
+```
+
+For custom transport (communication method):
+
+```json
+{
+    "split": {
+        "transport": {
+            "protocol": "custom"
+        }
+    }
+}
+```
+
+::: details Legacy rules.mk Configuration
 To enable the split keyboard feature, add the following to your `rules.mk`: 
 
 ```make
@@ -86,6 +121,9 @@ If you're using a custom transport (communication method), then you will also ne
 ```make
 SPLIT_TRANSPORT = custom
 ```
+
+This method is still supported but consider migrating to the JSON configuration above.
+:::
 
 ### Layout Macro
 
@@ -103,37 +141,79 @@ By default, the firmware does not know which side is which; it needs some help t
 
 #### Handedness by Pin
 
-You can configure the firmware to read a pin on the controller to determine handedness.  To do this, add the following to your `config.h` file:
+You can configure the firmware to read a pin on the controller to determine handedness.
+
+##### Modern Configuration
+
+Configure handedness pin in your `keyboard.json`:
+
+```json
+{
+    "split": {
+        "handedness": {
+            "pin": "D5"
+        }
+    }
+}
+```
+
+::: warning
+Pin polarity configuration (`low_is_left`) is not currently available in JSON format and requires C code configuration using `#define SPLIT_HAND_PIN_LOW_IS_LEFT`.
+:::
+
+::: details Legacy config.h Configuration
+Add the following to your `config.h` file:
 
 ```c
 #define SPLIT_HAND_PIN B7
 ```
-
-This will read the specified pin. By default, if it's high, then the controller assumes it is the left hand, and if it's low, it's assumed to be the right side. 
 
 This behaviour can be flipped by adding this to you `config.h` file:
 
 ```c
 #define	SPLIT_HAND_PIN_LOW_IS_LEFT
 ```
+:::
 
 #### Handedness by Matrix Pin
 
-You can configure the firmware to read key matrix pins on the controller to determine handedness.  To do this, add the following to your `config.h` file:
+You can configure the firmware to read key matrix pins on the controller to determine handedness.
 
-```c
-#define SPLIT_HAND_MATRIX_GRID D0, F1
+##### Modern Configuration
+
+Configure handedness matrix grid in your `keyboard.json`:
+
+```json
+{
+    "split": {
+        "handedness": {
+            "matrix_grid": ["D0", "F1"]
+        }
+    }
+}
 ```
 
 The first pin is the output pin and the second is the input pin.
 
 Some keyboards have unused intersections in the key matrix. This setting uses one of these unused intersections to determine the handedness.
 
-Normally, when a diode is connected to an intersection, it is judged to be right. If you add the following definition, it will be judged to be left.
+::: warning
+Matrix grid polarity configuration (`matrix_grid_low_is_left`) is not currently available in JSON format and requires C code configuration using `#define SPLIT_HAND_MATRIX_GRID_LOW_IS_LEFT`.
+:::
+
+::: details Legacy config.h Configuration
+Add the following to your `config.h` file:
+
+```c
+#define SPLIT_HAND_MATRIX_GRID D0, F1
+```
+
+To make it judge as left when diode is connected:
 
 ```c
 #define SPLIT_HAND_MATRIX_GRID_LOW_IS_LEFT
 ```
+:::
 
 Note that adding a diode at a previously unused intersection will effectively tell the firmware that there is a key held down at that point. You can instruct qmk to ignore that intersection by defining `MATRIX_MASKED` and then defining a `matrix_row_t matrix_mask[MATRIX_ROWS]` array in your keyboard config. Each bit of a single value (starting form the least-significant bit) is used to tell qmk whether or not to pay attention to key presses at that intersection.
 
@@ -143,12 +223,17 @@ While `MATRIX_MASKED` isn't necessary to use `SPLIT_HAND_MATRIX_GRID` successful
 
 This method sets the keyboard's handedness by setting a flag in the persistent storage (`EEPROM`).  This is checked when the controller first starts up, and determines what half the keyboard is, and how to orient the keyboard layout. 
 
+::: warning
+EEPROM handedness configuration is not currently available in JSON format and requires C code configuration.
+:::
 
+::: details Legacy config.h Configuration
 To enable this method, add the following to your `config.h` file: 
 
 ```c
 #define EE_HANDS
 ```
+:::
 
 Next, you will have to flash the correct handedness option to the controller on each halve. You can do this manually with the following bootloader targets using `qmk flash -kb <keyboard> -km <keymap> -bl <bootloader>` command to flash:
 
@@ -185,6 +270,11 @@ You can find the `EEPROM` files in the QMK firmware repo, [here](https://github.
 
 You can use this option when USB cable is always connected to just one side of the split keyboard.
 
+::: warning
+Fixed handedness configuration is not currently available in JSON format and requires C code configuration.
+:::
+
+::: details Legacy config.h Configuration
 If the USB cable is always connected to the right side, add the following to your `config.h` file and flash both sides with this option:
 ```c
 #define MASTER_RIGHT
@@ -194,16 +284,46 @@ If the USB cable is always connected to the left side, add the following to your
 ```c
 #define MASTER_LEFT
 ```
+:::
 
 ::: tip
-If neither options are defined, the handedness defaults to `MASTER_LEFT`.
+If neither options are defined, the handedness defaults to left side.
 :::
 
 
 ### Communication Options
 
-Because not every split keyboard is identical, there are a number of additional options that can be configured in your `config.h` file.
+Because not every split keyboard is identical, there are a number of additional options that can be configured.
 
+#### Modern Configuration
+
+Configure I<sup>2</sup>C transport (AVR only):
+
+```json
+{
+    "split": {
+        "transport": {
+            "protocol": "i2c"
+        }
+    }
+}
+```
+
+Configure serial communication pin:
+
+```json
+{
+    "split": {
+        "serial": {
+            "pin": "D0"
+        }
+    }
+}
+```
+
+If you are using serial and I<sup>2</sup>C on the board, you will need to set the serial pin to something other than D0 and D1 (as these are used for I<sup>2</sup>C communication).
+
+::: details Legacy config.h Configuration
 ```c
 #define USE_I2C
 ```
@@ -214,15 +334,20 @@ This configures the use of I<sup>2</sup>C support for split keyboard transport (
 #define SOFT_SERIAL_PIN D0
 ```
 
-This sets the pin to be used for serial communication. If you're not using serial, you shouldn't need to define this.  
+This sets the pin to be used for serial communication.
+:::
 
-However, if you are using serial and I<sup>2</sup>C on the board, you will need to set this, and to something other than D0 and D1 (as these are used for I<sup>2</sup>C communication).
+Configure serial communication speed if you're having issues with serial communication:
 
-```c
-#define SELECT_SOFT_SERIAL_SPEED {#}
+```json
+{
+    "split": {
+        "soft_serial_speed": 1
+    }
+}
 ```
 
-If you're having issues with serial communication, you can change this value, as it controls the communication speed for serial.  The default is 1, and the possible values are:
+The default is 1, and the possible values are:
 
 * **`0`**: about 189kbps (Experimental only)
 * **`1`**: about 137kbps (default)
@@ -231,96 +356,132 @@ If you're having issues with serial communication, you can change this value, as
 * **`4`**: about 26kbps
 * **`5`**: about 20kbps
 
+::: warning
+Sync throttle configuration is not currently available in JSON format and requires C code configuration using `#define FORCED_SYNC_THROTTLE_MS`.
+:::
+
+::: warning
+Connection error limits and sync matrix/modifier options are not currently available in JSON format and require C code configuration.
+:::
+
+::: details Legacy config.h Configuration
 ```c
 #define FORCED_SYNC_THROTTLE_MS 100
 ```
 
-This sets the maximum number of milliseconds before forcing a synchronization of data from master to slave. Under normal circumstances this sync occurs whenever the data _changes_, for safety a data transfer occurs after this number of milliseconds if no change has been detected since the last sync. 
+This sets the maximum number of milliseconds before forcing a synchronization of data from master to slave.
 
 ```c
 #define SPLIT_MAX_CONNECTION_ERRORS 10
 ```
-This sets the maximum number of failed communication attempts (one per scan cycle) from the master part before it assumes that no slave part is connected. This makes it possible to use a master part without the slave part connected.
-
-Set to 0 to disable the disconnection check altogether.
+This sets the maximum number of failed communication attempts before assuming no slave is connected.
 
 ```c
 #define SPLIT_CONNECTION_CHECK_TIMEOUT 500
 ```
-How long (in milliseconds) the master part should block all connection attempts to the slave after the communication has been flagged as disconnected (see `SPLIT_MAX_CONNECTION_ERRORS` above).
-
-One communication attempt will be allowed everytime this amount of time has passed since the last attempt. If that attempt succeeds, the communication is seen as working again.
-
-Set to 0 to disable this throttling of communications while disconnected. This can save you a couple of bytes of firmware size.
+How long (in milliseconds) the master part should block all connection attempts to the slave after communication is flagged as disconnected.
+:::
 
 
 ### Data Sync Options
 
-The following sync options add overhead to the split communication protocol and may negatively impact the matrix scan speed when enabled. These can be enabled by adding the chosen option(s) to your `config.h` file.
+The following sync options add overhead to the split communication protocol and may negatively impact the matrix scan speed when enabled.
 
+#### Modern Configuration
+
+Configure data synchronization between halves in your `keyboard.json`:
+
+```json
+{
+    "split": {
+        "transport": {
+            "sync": {
+                "matrix_state": true,
+                "layer_state": true,
+                "indicators": true,
+                "modifiers": true,
+                "wpm": true,
+                "oled": true,
+                "st7565": true,
+                "activity": true
+            }
+        }
+    }
+}
+```
+
+#### Configuration Reference
+
+* `"matrix_state"` - Mirrors the master side matrix to the slave side for features that react to key presses (e.g. RGB reacting to keypresses)
+* `"layer_state"` - Syncs layer state between halves (for OLED display of active layer)
+* `"indicators"` - Syncs Host LED status (caps lock, num lock, etc) between halves
+* `"modifiers"` - Transmits modifier state to support cosmetic use (e.g. OLED status display)
+* `"wpm"` - Transmits current WPM to slave side for display purposes
+* `"oled"` - Transmits OLED on/off status for state syncing
+* `"st7565"` - Transmits ST7565 on/off status for state syncing  
+* `"activity"` - Synchronizes activity timestamps for timeout features
+
+::: details Legacy config.h Configuration
 ```c
 #define SPLIT_TRANSPORT_MIRROR
 ```
-
-This mirrors the master side matrix to the slave side for features that react or require knowledge of master side key presses on the slave side. The purpose of this feature is to support cosmetic use of key events (e.g. RGB reacting to keypresses).
+Mirrors the master side matrix to the slave side.
 
 ```c
 #define SPLIT_LAYER_STATE_ENABLE
 ```
-
-This enables syncing of the layer state between both halves of the split keyboard. The main purpose of this feature is to enable support for use of things like OLED display of the currently active layer.
+Enables syncing of the layer state between halves.
 
 ```c
 #define SPLIT_LED_STATE_ENABLE
 ```
-
-This enables syncing of the Host LED status (caps lock, num lock, etc) between both halves of the split keyboard. The main purpose of this feature is to enable support for use of things like OLED display of the Host LED status.
+Enables syncing of the Host LED status between halves.
 
 ```c
 #define SPLIT_MODS_ENABLE
 ```
-
-This enables transmitting modifier state (normal, weak, oneshot and oneshot locked) to the non primary side of the split keyboard. The purpose of this feature is to support cosmetic use of modifer state (e.g. displaying status on an OLED screen).
+Enables transmitting modifier state to the slave side.
 
 ```c
 #define SPLIT_WPM_ENABLE
 ```
-
-This enables transmitting the current WPM to the slave side of the split keyboard. The purpose of this feature is to support cosmetic use of WPM (e.g. displaying the current value on an OLED screen).
+Enables transmitting the current WPM to the slave side.
 
 ```c
 #define SPLIT_OLED_ENABLE
 ```
-
-This enables transmitting the current OLED on/off status to the slave side of the split keyboard. The purpose of this feature is to support state (on/off state only) syncing.
+Enables transmitting OLED on/off status.
 
 ```c
 #define SPLIT_ST7565_ENABLE
 ```
-
-This enables transmitting the current ST7565 on/off status to the slave side of the split keyboard. The purpose of this feature is to support state (on/off state only) syncing.
-
-```c
-#define SPLIT_POINTING_ENABLE
-```
-
-This enables transmitting the pointing device status to the master side of the split keyboard. The purpose of this feature is to enable use pointing devices on the slave side. 
-
-::: warning
-There is additional required configuration for `SPLIT_POINTING_ENABLE` outlined in the [pointing device documentation](pointing_device#split-keyboard-configuration).
-:::
-
-```c
-#define SPLIT_HAPTIC_ENABLE
-```
-
-This enables the triggering of haptic feedback on the slave side of the split keyboard. This will send information to the slave side such as the mode, dwell, and whether buzz is enabled.
+Enables transmitting ST7565 on/off status.
 
 ```c
 #define SPLIT_ACTIVITY_ENABLE
 ```
+Synchronizes activity timestamps between sides.
+:::
 
-This synchronizes the activity timestamps between sides of the split keyboard, allowing for activity timeouts to occur.
+::: warning
+Pointing device synchronization is not currently available in JSON format and requires C code configuration. See the [pointing device documentation](pointing_device#split-keyboard-configuration) for details.
+:::
+
+For haptic feedback synchronization:
+
+```json
+{
+    "split": {
+        "transport": {
+            "sync": {
+                "haptic": true
+            }
+        }
+    }
+}
+```
+
+This enables the triggering of haptic feedback on the slave side of the split keyboard.
 
 ### Custom data sync between sides {#custom-data-sync}
 
@@ -401,14 +562,68 @@ By default, the inbound and outbound data is limited to a maximum of 32 bytes ea
 
 ### Hardware Configuration Options
 
-There are some settings that you may need to configure, based on how the hardware is set up. 
+There are some settings that you may need to configure, based on how the hardware is set up.
 
+#### Modern Configuration
+
+Configure different matrix pins for the right side:
+
+```json
+{
+    "split": {
+        "matrix_pins": {
+            "right": {
+                "cols": ["F4", "F5", "F6", "F7", "B1", "B3", "B2"],
+                "rows": ["B6", "B2", "B3", "B1", "F7"]
+            }
+        }
+    }
+}
+```
+
+This is useful for boards with differently-shaped halves. The number of pins in the right and left matrices must be the same.
+
+Configure different direct pins for the right side:
+
+```json
+{
+    "split": {
+        "matrix_pins": {
+            "right": {
+                "direct": [
+                    ["F1", "F0", "B0", "C7"],
+                    ["F4", "F5", "F6", "F7"]
+                ]
+            }
+        }
+    }
+}
+```
+
+Configure different encoder pins for the right side:
+
+```json
+{
+    "split": {
+        "encoder": {
+            "right": {
+                "rotary": [
+                    {"pin_a": "F1", "pin_b": "F0"},
+                    {"pin_a": "F4", "pin_b": "F5"}
+                ]
+            }
+        }
+    }
+}
+```
+
+::: details Legacy config.h Configuration
 ```c
 #define MATRIX_ROW_PINS_RIGHT { <row pins> }
 #define MATRIX_COL_PINS_RIGHT { <col pins> }
 ```
 
-This allows you to specify a different set of pins for the matrix on the right side.  This is useful if you have a board with differently-shaped halves that requires a different configuration (such as Keebio's Quefrency). The number of pins in the right and left matrices must be the same, if you have a board with a different number of rows or columns on one side, pad out the extra spaces with `NO_PIN` and make sure you add the unused rows or columns to your matrix.
+This allows you to specify a different set of pins for the matrix on the right side.
 
 ```c
 #define DIRECT_PINS_RIGHT { { F1, F0, B0, C7 }, { F4, F5, F6, F7 } }
@@ -422,58 +637,97 @@ This allows you to specify a different set of direct pins for the right side.
 ```
 
 This allows you to specify a different set of encoder pins for the right side.
+:::
 
+Configure RGB Light synchronization for split keyboards with directly wired RGB LEDs:
+
+```json
+{
+    "rgblight": {
+        "split": true,
+        "split_count": [6, 6]
+    }
+}
+```
+
+The `split_count` array sets how many LEDs are directly connected to each controller - first number is the left side, second is the right side.
+
+::: details Legacy config.h Configuration
 ```c
 #define RGBLIGHT_SPLIT
 ```
 
-This option enables synchronization of the RGB Light modes between the controllers of the split keyboard.  This is for keyboards that have RGB LEDs that are directly wired to the controller (that is, they are not using the "extra data" option on the TRRS cable).
+This option enables synchronization of the RGB Light modes between controllers.
 
 ```c
 #define RGBLED_SPLIT { 6, 6 }
 ```
 
-This sets how many LEDs are directly connected to each controller.  The first number is the left side, and the second number is the right side.  
-
-::: tip
-This setting implies that `RGBLIGHT_SPLIT` is enabled, and will forcibly enable it, if it's not.
+This sets how many LEDs are directly connected to each controller.
 :::
 
 
-```c
-#define SPLIT_USB_DETECT
+Configure USB detection for master/slave delegation:
+
+```json
+{
+    "split": {
+        "usb_detect": {
+            "enabled": true,
+            "timeout": 2000,
+            "polling_interval": 10
+        }
+    }
+}
 ```
 
-Enabling this option changes the startup behavior to listen for an active USB communication to delegate which part is master and which is slave. With this option enabled and active USB communication, then that half assumes it is the master, otherwise it assumes it is the slave.
-
-Without this option, the master is the half that can detect voltage on the physical USB connection (VBUS detection).
-
-Enabled by default on ChibiOS/ARM.
+This changes startup behavior to listen for active USB communication to determine which half is master. Enabled by default on ChibiOS/ARM.
 
 ::: tip
 This setting will stop the ability to demo using battery packs.
 :::
 
+Configure software watchdog for slave communication timeout:
+
+```json
+{
+    "split": {
+        "transport": {
+            "watchdog": true,
+            "watchdog_timeout": 3000
+        }
+    }
+}
+```
+
+This enables a software watchdog on the slave side that will reboot if no successful communication occurs within the timeout period.
+
+::: details Legacy config.h Configuration
+```c
+#define SPLIT_USB_DETECT
+```
+Changes startup behavior to listen for active USB communication.
+
 ```c
 #define SPLIT_USB_TIMEOUT 2000
 ```
-This sets the maximum timeout when detecting master/slave when using `SPLIT_USB_DETECT`.
+Sets the maximum timeout when detecting master/slave.
 
 ```c
 #define SPLIT_USB_TIMEOUT_POLL 10
 ```
-This sets the poll frequency when detecting master/slave when using `SPLIT_USB_DETECT`
+Sets the poll frequency when detecting master/slave.
 
 ```c
 #define SPLIT_WATCHDOG_ENABLE
 ```
-
-This will enable a software watchdog on any side delegated as slave and will reboot the keyboard if no successful communication occurs within `SPLIT_WATCHDOG_TIMEOUT`. This can be particularly helpful when `SPLIT_USB_DETECT` delegates both sides as slave in some circumstances.
+Enables a software watchdog on the slave side.
 
 ```c
 #define SPLIT_WATCHDOG_TIMEOUT 3000
 ```
-This set the maximum slave timeout when waiting for communication from master when using `SPLIT_WATCHDOG_ENABLE`
+Sets the maximum slave timeout when waiting for communication.
+:::
 
 ## Hardware Considerations and Mods
 

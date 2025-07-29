@@ -1,5 +1,9 @@
 # LED Matrix Lighting {#led-matrix-lighting}
 
+::: info Modern JSON Configuration
+This documentation now shows the modern JSON-based configuration approach. All examples use `keyboard.json` or `info.json` configuration with legacy `config.h`/`rules.mk` alternatives provided for reference. For more information about data-driven configuration, see [Data Driven Configuration](data_driven_config).
+:::
+
 This feature allows you to use LED matrices driven by external drivers. It hooks into the backlight system so you can use the same keycodes as backlighting to control it.
 
 If you want to use RGB LED's you should use the [RGB Matrix Subsystem](rgb_matrix) instead.
@@ -24,15 +28,61 @@ LED Matrix is an abstraction layer on top of an underlying LED driver API. The l
 |[IS31FL3746A](../drivers/is31fl3746a)|72      |
 |[SNLED27351](../drivers/snled27351)  |192     |
 
+### Modern Configuration (Recommended)
+
+Configure the LED Matrix driver in your `keyboard.json`:
+
+```json
+{
+    "features": {
+        "led_matrix": true
+    },
+    "led_matrix": {
+        "driver": "is31fl3731"
+    }
+}
+```
+
+::: details Legacy rules.mk Configuration
 To assign the LED Matrix driver, add the following to your `rules.mk`, for example:
 
 ```make
 LED_MATRIX_DRIVER = is31fl3218
 ```
 
+This method is still supported but consider migrating to the JSON configuration above.
+:::
+
 ## Common Configuration {#common-configuration}
 
-From this point forward the configuration is the same for all the drivers. The `led_config_t` struct provides a key electrical matrix to led index lookup table, what the physical position of each LED is on the board, and what type of key or usage the LED if the LED represents. Here is a brief example:
+From this point forward the configuration is the same for all the drivers.
+
+### Modern Configuration (Recommended)
+
+Configure LED layout in your `keyboard.json`:
+
+```json
+{
+    "led_matrix": {
+        "layout": [
+            {"matrix": [0, 0], "x": 0, "y": 0, "flags": 1},
+            {"matrix": [0, 3], "x": 43, "y": 0, "flags": 4},
+            {"matrix": [3, 3], "x": 149, "y": 64, "flags": 4},
+            {"matrix": [3, 0], "x": 37, "y": 48, "flags": 4},
+            {"matrix": [2, 0], "x": 37, "y": 48, "flags": 4},
+            {"matrix": [0, 0], "x": 188, "y": 16, "flags": 1}
+        ]
+    }
+}
+```
+
+Each LED entry contains:
+- `"matrix"`: `[row, col]` - The key's electrical matrix position (or omit for non-key LED)
+- `"x"`, `"y"`: Physical position on keyboard (0-224 for x, 0-64 for y)  
+- `"flags"`: LED type flags (see [Flags](#flags) section)
+
+::: details Legacy C Configuration
+The `led_config_t` struct provides a key electrical matrix to led index lookup table, what the physical position of each LED is on the board, and what type of key or usage the LED if the LED represents. Here is a brief example:
 
 ```c
 led_config_t g_led_config = { {
@@ -49,6 +99,7 @@ led_config_t g_led_config = { {
   1, 4, 4, 4, 4, 1
 } };
 ```
+:::
 
 The first part, `// Key Matrix to LED Index`, tells the system what key this LED represents by using the key's electrical matrix row & col. The second part, `// LED Index to Physical Position` represents the LED's physical `{ x, y }` position on the keyboard. The default expected range of values for `{ x, y }` is the inclusive range `{ 0..224, 0..64 }`. This default expected range is due to effects that calculate the center of the keyboard for their animations. The easiest way to calculate these positions is imagine your keyboard is a grid, and the top left of the keyboard represents `{ x, y }` coordinate `{ 0, 0 }` and the bottom right of your keyboard represents `{ 224, 64 }`. Using this as a basis, you can use the following formula to calculate the physical position:
 
@@ -121,6 +172,40 @@ enum led_matrix_effects {
 };
 ```
 
+### Modern Configuration (Recommended)
+
+Enable LED Matrix effects in your `keyboard.json`:
+
+```json
+{
+    "led_matrix": {
+        "animations": {
+            "alphas_mods": true,
+            "breathing": true,
+            "band": true,
+            "band_pinwheel": true,
+            "band_spiral": true,
+            "cycle_left_right": true,
+            "cycle_up_down": true,
+            "cycle_out_in": true,
+            "dual_beacon": true,
+            "solid_reactive_simple": true,
+            "solid_reactive_wide": true,
+            "solid_reactive_multiwide": true,
+            "solid_reactive_cross": true,
+            "solid_reactive_multicross": true,
+            "solid_reactive_nexus": true,
+            "solid_reactive_multinexus": true,
+            "solid_splash": true,
+            "solid_multisplash": true,
+            "wave_left_right": true,
+            "wave_up_down": true
+        }
+    }
+}
+```
+
+::: details Legacy config.h Configuration
 You can enable a single effect by defining `ENABLE_[EFFECT_NAME]` in your `config.h`:
 
 
@@ -234,8 +319,45 @@ const char* effect_name = led_matrix_get_mode_name(led_matrix_get_mode());
 :::
 
 
-## Additional `config.h` Options {#additional-configh-options}
+## Additional Configuration Options {#additional-configuration-options}
 
+### Modern Configuration (Recommended)
+
+Configure additional LED Matrix options in your `keyboard.json`:
+
+```json
+{
+    "led_matrix": {
+        "timeout": 0,
+        "sleep": true,
+        "led_process_limit": 4,
+        "led_flush_limit": 16,
+        "max_brightness": 255,
+        "split_count": [36, 36],
+        "default": {
+            "on": true,
+            "animation": "solid",
+            "val": 255,
+            "speed": 127
+        }
+    }
+}
+```
+
+### Configuration Reference
+
+* `"timeout"` - Milliseconds to wait until LED automatically turns off (0 = never)
+* `"sleep"` - Turn off effects when suspended  
+* `"led_process_limit"` - Limits LEDs processed per animation task run (increases responsiveness)
+* `"led_flush_limit"` - Limits animation update frequency in milliseconds (16ms = 60fps)
+* `"max_brightness"` - Maximum brightness of LEDs (0-255)
+* `"split_count"` - For split keyboards: `[left_leds, right_leds]`
+* `"default.on"` - Default enabled state
+* `"default.animation"` - Default animation mode
+* `"default.val"` - Default brightness value
+* `"default.speed"` - Default animation speed
+
+::: details Legacy config.h Configuration
 ```c
 #define LED_MATRIX_MODE_NAME_ENABLE // enables led_matrix_get_mode_name()
 #define LED_MATRIX_KEYRELEASES // reactive effects respond to keyreleases (instead of keypresses)
@@ -254,6 +376,7 @@ const char* effect_name = led_matrix_get_mode_name(led_matrix_get_mode());
 #define LED_MATRIX_SPLIT { X, Y }   // (Optional) For split keyboards, the number of LEDs connected on each half. X = left, Y = Right.
                                     // If reactive effects are enabled, you also will want to enable SPLIT_TRANSPORT_MIRROR
 ```
+:::
 
 ## EEPROM storage {#eeprom-storage}
 
