@@ -298,22 +298,25 @@ enum usb_endpoints {
 #    error There are not enough available endpoints to support all functions. Please disable one or more of the following: Mouse Keys, Extra Keys, Console, NKRO, MIDI, Serial, Steno
 #endif
 
+// Endpoint sizes must be a multiple of 4: the ChibiOS block queue stores a size_t
+// length header per buffer (see BQ_BUFFER_SIZE) that must stay 4-byte aligned.
+// EPSIZE_ALIGN() rounds up so this holds regardless of the value given.
+#define EPSIZE_ALIGN(n) (((n) + 3) & ~3)
+
 #ifdef NKRO_BOOT_COMPAT_ENABLE
-// Sized to the combined report (report_keyboard_nkro_t, 38 bytes); the
-// STATIC_ASSERT in usb_descriptor.c verifies it fits.
-#    define KEYBOARD_EPSIZE 38
+#    define KEYBOARD_EPSIZE EPSIZE_ALIGN(38)
 #else
-#    define KEYBOARD_EPSIZE 8
+#    define KEYBOARD_EPSIZE EPSIZE_ALIGN(8)
 #endif
-#define SHARED_EPSIZE 32
-#define MOUSE_EPSIZE 16
-#define RAW_EPSIZE 32
-#define PLOVER_HID_EPSIZE 9
-#define CONSOLE_EPSIZE 32
-#define MIDI_STREAM_EPSIZE 64
-#define CDC_NOTIFICATION_EPSIZE 8
-#define CDC_EPSIZE 16
-#define JOYSTICK_EPSIZE 8
-#define DIGITIZER_EPSIZE 8
+#define SHARED_EPSIZE EPSIZE_ALIGN(32)
+#define MOUSE_EPSIZE EPSIZE_ALIGN(16)
+#define RAW_EPSIZE EPSIZE_ALIGN(32)
+#define PLOVER_HID_EPSIZE EPSIZE_ALIGN(9)
+#define CONSOLE_EPSIZE EPSIZE_ALIGN(32)
+#define MIDI_STREAM_EPSIZE EPSIZE_ALIGN(64)
+#define CDC_NOTIFICATION_EPSIZE EPSIZE_ALIGN(8)
+#define CDC_EPSIZE EPSIZE_ALIGN(16)
+#define JOYSTICK_EPSIZE EPSIZE_ALIGN(8)
+#define DIGITIZER_EPSIZE EPSIZE_ALIGN(8)
 
 uint16_t get_usb_descriptor(const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, const void** const DescriptorAddress);

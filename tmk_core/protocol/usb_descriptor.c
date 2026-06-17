@@ -135,8 +135,50 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM KeyboardReport[] = {
 };
 #endif
 
-#ifdef NKRO_BOOT_COMPAT_ENABLE
+// Each report must fit the endpoint it is transmitted on (mirrors the routing in
+// tmk_core/protocol/chibios/usb_endpoints.c).
+#ifdef KEYBOARD_SHARED_EP
+STATIC_ASSERT(sizeof(report_keyboard_t) <= SHARED_EPSIZE, "report_keyboard_t must fit within SHARED_EPSIZE");
+#elif defined(NKRO_BOOT_COMPAT_ENABLE)
 STATIC_ASSERT(sizeof(report_keyboard_nkro_t) <= KEYBOARD_EPSIZE, "report_keyboard_nkro_t must fit within KEYBOARD_EPSIZE");
+#else
+STATIC_ASSERT(sizeof(report_keyboard_t) <= KEYBOARD_EPSIZE, "report_keyboard_t must fit within KEYBOARD_EPSIZE");
+#endif
+
+#if defined(NKRO_ENABLE) && !defined(NKRO_BOOT_COMPAT_ENABLE)
+STATIC_ASSERT(sizeof(report_nkro_t) <= SHARED_EPSIZE, "report_nkro_t must fit within SHARED_EPSIZE");
+#endif
+
+#ifdef MOUSE_ENABLE
+#    ifdef MOUSE_SHARED_EP
+STATIC_ASSERT(sizeof(report_mouse_t) <= SHARED_EPSIZE, "report_mouse_t must fit within SHARED_EPSIZE");
+#    else
+STATIC_ASSERT(sizeof(report_mouse_t) <= MOUSE_EPSIZE, "report_mouse_t must fit within MOUSE_EPSIZE");
+#    endif
+#endif
+
+#ifdef EXTRAKEY_ENABLE
+STATIC_ASSERT(sizeof(report_extra_t) <= SHARED_EPSIZE, "report_extra_t must fit within SHARED_EPSIZE");
+#endif
+
+#ifdef PROGRAMMABLE_BUTTON_ENABLE
+STATIC_ASSERT(sizeof(report_programmable_button_t) <= SHARED_EPSIZE, "report_programmable_button_t must fit within SHARED_EPSIZE");
+#endif
+
+#ifdef JOYSTICK_ENABLE
+#    ifdef JOYSTICK_SHARED_EP
+STATIC_ASSERT(sizeof(report_joystick_t) <= SHARED_EPSIZE, "report_joystick_t must fit within SHARED_EPSIZE");
+#    else
+STATIC_ASSERT(sizeof(report_joystick_t) <= JOYSTICK_EPSIZE, "report_joystick_t must fit within JOYSTICK_EPSIZE");
+#    endif
+#endif
+
+#ifdef DIGITIZER_ENABLE
+#    ifdef DIGITIZER_SHARED_EP
+STATIC_ASSERT(sizeof(report_digitizer_t) <= SHARED_EPSIZE, "report_digitizer_t must fit within SHARED_EPSIZE");
+#    else
+STATIC_ASSERT(sizeof(report_digitizer_t) <= DIGITIZER_EPSIZE, "report_digitizer_t must fit within DIGITIZER_EPSIZE");
+#    endif
 #endif
 
 #ifdef MOUSE_ENABLE
@@ -518,9 +560,10 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM PloverReport[] = {
     HID_RI_END_COLLECTION(0),
 };
 
-// The Plover HID report is sent with sizeof(report_plover_hid_t), but the endpoint and descriptor
-// are sized with PLOVER_HID_EPSIZE; they must match or reports get truncated/padded.
-STATIC_ASSERT(sizeof(report_plover_hid_t) == PLOVER_HID_EPSIZE, "report_plover_hid_t size must match PLOVER_HID_EPSIZE");
+// The Plover HID report is sent with sizeof(report_plover_hid_t); PLOVER_HID_EPSIZE
+// sizes the endpoint and must be at least as large (and, like all endpoint sizes, a
+// multiple of 4 - see usb_descriptor.h).
+STATIC_ASSERT(sizeof(report_plover_hid_t) <= PLOVER_HID_EPSIZE, "report_plover_hid_t must fit within PLOVER_HID_EPSIZE");
 #endif
 
 #ifdef CONSOLE_ENABLE
