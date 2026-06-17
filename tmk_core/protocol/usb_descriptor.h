@@ -298,7 +298,13 @@ enum usb_endpoints {
 #    error There are not enough available endpoints to support all functions. Please disable one or more of the following: Mouse Keys, Extra Keys, Console, NKRO, MIDI, Serial, Steno
 #endif
 
-#define KEYBOARD_EPSIZE 8
+#ifdef NKRO_BOOT_COMPAT_ENABLE
+// Sized to the combined report (report_keyboard_nkro_t, 38 bytes); the
+// STATIC_ASSERT in usb_descriptor.c verifies it fits.
+#    define KEYBOARD_EPSIZE 38
+#else
+#    define KEYBOARD_EPSIZE 8
+#endif
 #define SHARED_EPSIZE 32
 #define MOUSE_EPSIZE 16
 #define RAW_EPSIZE 32
