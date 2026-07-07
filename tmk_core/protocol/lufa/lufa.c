@@ -179,6 +179,39 @@ void raw_hid_task(void) {
 }
 #endif
 
+#ifdef COMMUNITY_MODULE_USB_HID_ENDPOINT_TABLE
+// Send/receive/drain plumbing for module-provided HID endpoints, mirroring send_raw_hid /
+// raw_hid_task above. The core main loop drains `<name>_task`.
+#    define _ENTRY(lower, UPPER, usage_page, usage_id, epsize, in_cap, out_cap)             \
+        void lower##_send(uint8_t *data, uint8_t length) {                                 \
+            if (length != epsize) {                                                        \
+                return;                                                                    \
+            }                                                                              \
+            send_report(UPPER##_IN_EPNUM, data, epsize);                                   \
+        }                                                                                  \
+        __attribute__((weak)) void lower##_receive(uint8_t *data, uint8_t length) {}       \
+        void lower##_task(void) {                                                          \
+            uint8_t data[epsize];                                                          \
+            if (USB_DeviceState != DEVICE_STATE_Configured) {                              \
+                return;                                                                    \
+            }                                                                              \
+            Endpoint_SelectEndpoint(UPPER##_OUT_EPNUM);                                    \
+            if (Endpoint_IsOUTReceived()) {                                                \
+                bool data_read = false;                                                    \
+                if (Endpoint_IsReadWriteAllowed()) {                                       \
+                    Endpoint_Read_Stream_LE(data, sizeof(data), NULL);                     \
+                    data_read = true;                                                      \
+                }                                                                          \
+                Endpoint_ClearOUT();                                                       \
+                if (data_read) {                                                           \
+                    lower##_receive(data, sizeof(data));                                   \
+                }                                                                          \
+            }                                                                              \
+        }
+COMMUNITY_MODULE_USB_HID_ENDPOINT_TABLE(_ENTRY)
+#    undef _ENTRY
+#endif
+
 /*******************************************************************************
  * Console
  ******************************************************************************/
@@ -378,6 +411,15 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 #if defined(DIGITIZER_ENABLE) && !defined(DIGITIZER_SHARED_EP)
     /* Setup digitizer endpoint */
     ConfigSuccess &= Endpoint_ConfigureEndpoint((DIGITIZER_IN_EPNUM | ENDPOINT_DIR_IN), EP_TYPE_INTERRUPT, DIGITIZER_EPSIZE, 1);
+#endif
+
+#ifdef COMMUNITY_MODULE_USB_HID_ENDPOINT_TABLE
+    /* Setup community module HID endpoints */
+#    define _ENTRY(lower, UPPER, usage_page, usage_id, epsize, in_cap, out_cap)                                    \
+        ConfigSuccess &= Endpoint_ConfigureEndpoint((UPPER##_IN_EPNUM | ENDPOINT_DIR_IN), EP_TYPE_INTERRUPT, epsize, 1);    \
+        ConfigSuccess &= Endpoint_ConfigureEndpoint((UPPER##_OUT_EPNUM | ENDPOINT_DIR_OUT), EP_TYPE_INTERRUPT, epsize, 1);
+    COMMUNITY_MODULE_USB_HID_ENDPOINT_TABLE(_ENTRY)
+#    undef _ENTRY
 #endif
 
     usb_device_state_set_configuration(USB_DeviceState == DEVICE_STATE_Configured, USB_Device_ConfigurationNumber);
