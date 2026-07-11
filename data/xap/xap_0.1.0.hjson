@@ -178,7 +178,7 @@
                 0x03: {
                     type: command
                     name: Secure Status
-                    define: SECURE_STATUS
+                    define: GET_SECURE_STATUS
                     description:
                         '''
                         Query secure route status
@@ -247,7 +247,7 @@
                 0x02: {
                     type: command
                     name: Board identifiers
-                    define: BOARD_IDENTIFIERS
+                    define: GET_BOARD_IDENTIFIERS
                     description:
                         '''
                         Retrieves the set of identifying information for the board.
@@ -282,7 +282,7 @@
                 0x03: {
                     type: command
                     name: Board Manufacturer
-                    define: BOARD_MANUFACTURER
+                    define: GET_BOARD_MANUFACTURER
                     description: Retrieves the name of the manufacturer
                     return_type: string
                     return_constant: QSTR(MANUFACTURER)
@@ -290,7 +290,7 @@
                 0x04: {
                     type: command
                     name: Product Name
-                    define: PRODUCT_NAME
+                    define: GET_PRODUCT_NAME
                     description: Retrieves the product name
                     return_type: string
                     return_constant: QSTR(PRODUCT)
@@ -298,7 +298,7 @@
                 0x05: {
                     type: command
                     name: Config Blob Length
-                    define: CONFIG_BLOB_LEN
+                    define: GET_CONFIG_BLOB_LENGTH
                     description: Retrieves the length of the configuration data bundled within the firmware
                     return_type: u16
                     return_constant: CONFIG_BLOB_GZ_LEN
@@ -306,7 +306,7 @@
                 0x06: {
                     type: command
                     name: Config Blob Chunk
-                    define: CONFIG_BLOB_CHUNK
+                    define: GET_CONFIG_BLOB_CHUNK
                     description: Retrieves a chunk of the configuration data bundled within the firmware
                     request_type: u16
                     request_purpose: offset
@@ -334,7 +334,7 @@
                 0x08: {
                     type: command
                     name: Hardware Identifier
-                    define: HARDWARE_ID
+                    define: GET_HARDWARE_ID
                     description: Retrieves a unique identifier for the board.
                     return_type: u32[4]
                     return_execute: get_hardware_id

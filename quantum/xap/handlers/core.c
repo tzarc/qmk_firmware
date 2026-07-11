@@ -6,7 +6,7 @@
 #include "hardware_id.h"
 
 bool xap_execute_get_config_blob_chunk(xap_token_t token, uint16_t offset) {
-    xap_route_qmk_config_blob_chunk_t ret = {0};
+    xap_route_qmk_get_config_blob_chunk_t ret = {0};
 
     bool get_config_blob_chunk(uint16_t offset, uint8_t *data, uint8_t data_len);
     if (!get_config_blob_chunk(offset, (uint8_t *)&ret, sizeof(ret))) {
@@ -32,7 +32,7 @@ bool xap_execute_secure_lock(xap_token_t token) {
 }
 
 #ifdef BOOTLOADER_JUMP_SUPPORTED
-bool xap_execute_request_bootloader(xap_token_t token) {
+bool xap_execute_request_bootloader_jump(xap_token_t token) {
     uint8_t ret = secure_is_unlocked();
 
     // TODO: post to deferred queue so this request can return?
