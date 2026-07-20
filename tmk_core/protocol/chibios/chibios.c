@@ -63,6 +63,9 @@ void send_keyboard(report_keyboard_t *report);
 void send_nkro(report_nkro_t *report);
 void send_mouse(report_mouse_t *report);
 void send_extra(report_extra_t *report);
+#ifdef JOYSTICK_ENABLE
+void send_joystick(report_joystick_t *report);
+#endif
 void send_raw_hid(uint8_t *data, uint8_t length);
 
 /* host struct */
@@ -72,6 +75,9 @@ host_driver_t chibios_driver = {
     .send_nkro     = send_nkro,
     .send_mouse    = send_mouse,
     .send_extra    = send_extra,
+#ifdef JOYSTICK_ENABLE
+    .send_joystick = send_joystick,
+#endif
 #ifdef RAW_ENABLE
     .send_raw_hid = send_raw_hid,
 #endif

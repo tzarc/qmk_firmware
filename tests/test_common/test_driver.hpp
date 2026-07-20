@@ -37,13 +37,23 @@ class TestDriver {
     MOCK_METHOD1(send_nkro_mock, void(report_nkro_t&));
     MOCK_METHOD1(send_mouse_mock, void(report_mouse_t&));
     MOCK_METHOD1(send_extra_mock, void(report_extra_t&));
+#ifdef JOYSTICK_ENABLE
+    MOCK_METHOD1(send_joystick_mock, void(report_joystick_t&));
+
+    void clear_send_joystick() {
+        m_driver.send_joystick = nullptr;
+    }
+#endif
 
    private:
-    static uint8_t     keyboard_leds(void);
-    static void        send_keyboard(report_keyboard_t* report);
-    static void        send_nkro(report_nkro_t* report);
-    static void        send_mouse(report_mouse_t* report);
-    static void        send_extra(report_extra_t* report);
+    static uint8_t keyboard_leds(void);
+    static void    send_keyboard(report_keyboard_t* report);
+    static void    send_nkro(report_nkro_t* report);
+    static void    send_mouse(report_mouse_t* report);
+    static void    send_extra(report_extra_t* report);
+#ifdef JOYSTICK_ENABLE
+    static void send_joystick(report_joystick_t* report);
+#endif
     host_driver_t      m_driver;
     uint8_t            m_leds = 0;
     static TestDriver* m_this;

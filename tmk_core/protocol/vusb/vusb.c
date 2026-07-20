@@ -216,6 +216,9 @@ static void send_keyboard(report_keyboard_t *report);
 static void send_nkro(report_nkro_t *report);
 static void send_mouse(report_mouse_t *report);
 static void send_extra(report_extra_t *report);
+#ifdef JOYSTICK_ENABLE
+static void send_joystick(report_joystick_t *report);
+#endif
 #ifdef RAW_ENABLE
 static void send_raw_hid(uint8_t *data, uint8_t length);
 #endif
@@ -226,6 +229,9 @@ static host_driver_t driver = {
     .send_nkro     = send_nkro,
     .send_mouse    = send_mouse,
     .send_extra    = send_extra,
+#ifdef JOYSTICK_ENABLE
+    .send_joystick = send_joystick,
+#endif
 #ifdef RAW_ENABLE
     .send_raw_hid = send_raw_hid,
 #endif
@@ -271,11 +277,11 @@ static void send_extra(report_extra_t *report) {
 #endif
 }
 
-void send_joystick(report_joystick_t *report) {
 #ifdef JOYSTICK_ENABLE
+static void send_joystick(report_joystick_t *report) {
     send_report(SHARED_IN_EPNUM, report, sizeof(report_joystick_t));
-#endif
 }
+#endif
 
 void send_digitizer(report_digitizer_t *report) {
 #ifdef DIGITIZER_ENABLE

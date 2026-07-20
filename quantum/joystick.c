@@ -15,6 +15,7 @@
  */
 
 #include "joystick.h"
+#include "host.h"
 #include "wait.h"
 
 #if defined(JOYSTICK_ANALOG)
@@ -68,8 +69,6 @@ static inline bool is_virtual_axis(uint8_t axis) {
 void joystick_flush(void) {
     if (!joystick_state.dirty) return;
 
-    // TODO: host.h?
-    void host_joystick_send(joystick_t * joystick);
     host_joystick_send(&joystick_state);
     joystick_state.dirty = false;
 }

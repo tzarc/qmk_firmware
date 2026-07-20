@@ -33,6 +33,9 @@ uint8_t hex_digit_to_keycode(uint8_t digit) {
 } // namespace
 
 TestDriver::TestDriver() : m_driver{&TestDriver::keyboard_leds, &TestDriver::send_keyboard, &TestDriver::send_nkro, &TestDriver::send_mouse, &TestDriver::send_extra} {
+#ifdef JOYSTICK_ENABLE
+    m_driver.send_joystick = &TestDriver::send_joystick;
+#endif
     host_set_driver(&m_driver);
     m_this = this;
 }
@@ -62,6 +65,12 @@ void TestDriver::send_mouse(report_mouse_t* report) {
 void TestDriver::send_extra(report_extra_t* report) {
     m_this->send_extra_mock(*report);
 }
+
+#ifdef JOYSTICK_ENABLE
+void TestDriver::send_joystick(report_joystick_t* report) {
+    m_this->send_joystick_mock(*report);
+}
+#endif
 
 namespace internal {
 void expect_unicode_code_point(TestDriver& driver, uint32_t code_point) {

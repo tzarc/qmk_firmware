@@ -253,7 +253,8 @@ void host_consumer_send(uint16_t usage) {
 
 #ifdef JOYSTICK_ENABLE
 void host_joystick_send(joystick_t *joystick) {
-    if (!driver) return;
+    host_driver_t *driver = host_get_active_driver();
+    if (!driver || !driver->send_joystick) return;
 
     report_joystick_t report = {
 #    ifdef JOYSTICK_SHARED_EP
@@ -304,11 +305,9 @@ void host_joystick_send(joystick_t *joystick) {
 #    endif
     };
 
-    send_joystick(&report);
+    (*driver->send_joystick)(&report);
 }
 #endif
-
-__attribute__((weak)) void send_joystick(report_joystick_t *report) {}
 
 #ifdef DIGITIZER_ENABLE
 void host_digitizer_send(digitizer_t *digitizer) {
